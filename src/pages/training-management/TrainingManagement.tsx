@@ -13,9 +13,7 @@ export const TrainingManagement = (): ReactElement => {
 	type Option = { value: string; label: string }
 
 	const dispatch = useAppDispatch()
-	const countFilter = useAppSelector(
-		state => state.filters.selectedAction?.value
-	)
+	const countFilter = useAppSelector(state => state.filters)
 
 	console.log('Selected action:', countFilter)
 

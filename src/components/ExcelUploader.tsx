@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
-import axios from 'axios'
+// import axios from 'axios'
 import { useSnackbar } from 'notistack'
 
+import { ExcelPreviewTable } from './excelPreviewTable/ExcelPreviewTable'
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import { parseExcelFile } from '@/lib/excelParser'
+import { setExcelData } from '@/store/actionSlice'
 
 interface ExcelRow {
 	[key: string]: string | number | boolean | null
@@ -13,6 +16,8 @@ interface ExcelRow {
 export const ExcelUploader: React.FC = () => {
 	const [loading, setLoading] = useState<boolean>(false)
 	const { enqueueSnackbar } = useSnackbar()
+	const dispatch = useAppDispatch()
+	const excelData = useAppSelector(state => state.filters.excelObj)
 
 	const handleFileUpload = async (
 		e: React.ChangeEvent<HTMLInputElement>
@@ -27,12 +32,13 @@ export const ExcelUploader: React.FC = () => {
 			console.log('Parsed JSON:', jsonData)
 
 			// Отправляем данные на сервер
-			const response = await axios.post('/api/upload', jsonData)
-			console.log('Server response:', response.data)
+			// const response = await axios.post('/api/upload', jsonData)
+			// console.log('Server response:', response.data)
 
 			enqueueSnackbar('Файл успешно обработан и отправлен!', {
 				variant: 'success'
 			})
+			dispatch(setExcelData(jsonData))
 		} catch (error) {
 			console.error('Error parsing or sending file:', error)
 			enqueueSnackbar('Ошибка при обработке файла!', { variant: 'error' })
@@ -63,6 +69,8 @@ export const ExcelUploader: React.FC = () => {
 					<Typography>Обработка файла...</Typography>
 				</Box>
 			)}
+
+			<ExcelPreviewTable data={excelData} />
 		</Box>
 	)
 }
