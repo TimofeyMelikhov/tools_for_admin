@@ -1,0 +1,48 @@
+@use 'variables' as *;
+
+* {
+	margin: 0;
+	padding: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	font-family: $default-font;
+	letter-spacing: 0.5px;
+	&:before,
+	&:after {
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+	&:focus {
+		outline: none;
+	}
+}
+
+html,
+body,
+#root {
+	width: 100%;
+	min-width: 320px;
+	position: relative;
+}
+
+body {
+	font-size: $default-font-size;
+	color: $default-font-color;
+}
+
+img {
+	max-width: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}

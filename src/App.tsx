@@ -1,11 +1,16 @@
-import { MainPage } from '@/pages/MainPage'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 
-import './App.css'
+import { type RouteConfig, routesConfig } from './lib/routesConfig'
 
 export const App = () => {
-	return (
-		<>
-			<MainPage />
-		</>
-	)
+	const mapRoutes = (routes: RouteConfig[]): RouteConfig[] =>
+		routes.map(({ isProtected, element, children, ...rest }) => ({
+			...rest,
+			element,
+			children: children ? mapRoutes(children) : undefined
+		}))
+
+	const router = createBrowserRouter(mapRoutes(routesConfig))
+
+	return <RouterProvider router={router} />
 }

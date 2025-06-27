@@ -4,7 +4,7 @@ import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
 
-import { parseExcelFile } from '@/utils/excelParser'
+import { parseExcelFile } from '@/lib/excelParser'
 
 interface ExcelRow {
 	[key: string]: string | number | boolean | null
@@ -27,8 +27,8 @@ export const ExcelUploader: React.FC = () => {
 			console.log('Parsed JSON:', jsonData)
 
 			// Отправляем данные на сервер
-			// const response = await axios.post('/api/upload', jsonData)
-			// console.log('Server response:', response.data)
+			const response = await axios.post('/api/upload', jsonData)
+			console.log('Server response:', response.data)
 
 			enqueueSnackbar('Файл успешно обработан и отправлен!', {
 				variant: 'success'

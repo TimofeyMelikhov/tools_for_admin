@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react'
+import { type ReactElement } from 'react'
 import Select from 'react-select'
 
 import { Container, Typography } from '@mui/material'
@@ -6,10 +6,18 @@ import { SnackbarProvider } from 'notistack'
 
 import ExcelUploader from '@/components/ExcelUploader'
 
-export const MainPage = (): ReactElement => {
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
+import { setFilters } from '@/store/actionSlice'
+
+export const TrainingManagement = (): ReactElement => {
 	type Option = { value: string; label: string }
 
-	const [actions, setActions] = useState<string>()
+	const dispatch = useAppDispatch()
+	const countFilter = useAppSelector(
+		state => state.filters.selectedAction?.value
+	)
+
+	console.log('Selected action:', countFilter)
 
 	const optionsForAction: Option[] = [
 		{ value: 'assignTest', label: 'Назначить тест' },
@@ -26,7 +34,15 @@ export const MainPage = (): ReactElement => {
 				<div>
 					<Select
 						options={optionsForAction}
-						value={}
+						placeholder='Выберите действие'
+						onChange={option => {
+							if (option) {
+								dispatch(setFilters(option))
+							} else {
+								dispatch(setFilters(null))
+							}
+						}}
+						isClearable
 					/>
 				</div>
 				<ExcelUploader />
