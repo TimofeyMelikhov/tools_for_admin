@@ -40,32 +40,47 @@ function HttpError(errorObject) {
 }
 /* --- global --- */
 var curUserId = DEV_MODE
-	? OptInt("7079554317075315721") // х с горы: 7060846761882554848 анисимов - 1105387902724063510
+	? OptInt("7079554317075315721") // id пользователя
 	: OptInt(Request.Session.Env.curUserID);
 var curUser = DEV_MODE ? tools.open_doc(curUserId).TopElem : Request.Session.Env.curUser;
 /* --- logic --- */
 function show(obj) {
-	alert(tools.object_to_text(obj, "json"));
+	alert("Объект с фронта: " + tools.object_to_text(obj, "json"));
 }
 
-function getSubDivisions() {
-	return selectAll("SELECT id, name FROM subdivisions");
+function getCourses() {
+	return selectAll("SELECT id, name FROM courses");
 }
+function getAssessments() {
+	return selectAll("SELECT id, title FROM assessments");
+}
+function assignCourses() {
+	// var selectedCourse =  body.selectedCourse.value
+	var excelObj = body
 
-function createSQLQuery(body) {
-  var selectedCourse =  body.selectedCourse.value
-  var startDate = body.selectedStartDate.start_date
-  var finishDate = body.selectedStartDate.finish_date
 
-var query = ""
 
-  return selectAll(query);
+	show(excelObj)
+}
+function assignAssessments() {
+	
+}
+function addToGroup() {
+	
 }
 
 function handler(body, method) {
 	try {
-		if (method === "getSubDivisions") {
-			return getSubDivisions(body);
+
+		switch (method) {
+			case 'getCourses': return getCourses(); break;
+			case 'getAssessments': return getAssessments(); break;
+			case 'assignCourse': return assignCourses(); break;
+			case 'assignTest': return assignAssessments(); break;
+			case 'addToGroup': return addToGroup(); break;
+			default:
+				Response.SetRespStatus(400, '');
+      	Response.Write('{"error":"unknown action"}');
 		}
 	}
 	catch (err) {

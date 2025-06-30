@@ -8,10 +8,7 @@ export interface ExcelRow {
 const COLUMN_MAP: Record<string, string> = {
 	Сотрудник: 'person',
 	Должность: 'position',
-	Отдел: 'subdivision',
-	Код: 'elemCode',
-	Срок: 'time',
-	Количество: 'count'
+	Отдел: 'subdivision'
 }
 
 // Основная функция чтения и маппинга Excel-файла
@@ -46,7 +43,6 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
 							newRow[engKey] = value != null && value !== '' ? value : null
 						}
 					}
-
 					return newRow
 				})
 

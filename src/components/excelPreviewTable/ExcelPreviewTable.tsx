@@ -32,13 +32,7 @@ export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
 				header: 'Отдел',
 				accessorKey: 'subdivision',
 				cell: i => i.getValue() ?? '-'
-			},
-			{
-				header: 'Код',
-				accessorKey: 'elemCode',
-				cell: i => i.getValue() ?? '-'
-			},
-			{ header: 'Срок', accessorKey: 'time', cell: i => i.getValue() ?? '-' }
+			}
 		],
 		[]
 	)

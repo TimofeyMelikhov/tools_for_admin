@@ -2,20 +2,18 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 import type { ExcelRow } from '@/lib/excelParser'
-
-type SelectOption = {
-	value: string
-	label: string
-}
+import type { ICoursesList, SelectOption } from '@/models/filtersModel'
 
 interface IInitialState {
 	selectedAction: SelectOption | null
 	excelObj: ExcelRow[]
+	coursesList: ICoursesList[]
 }
 
 const initialState: IInitialState = {
 	selectedAction: null,
-	excelObj: []
+	excelObj: [],
+	coursesList: []
 }
 
 const actionSlice = createSlice({
@@ -27,9 +25,12 @@ const actionSlice = createSlice({
 		},
 		setExcelData: (state, action: PayloadAction<ExcelRow[]>) => {
 			state.excelObj = action.payload
+		},
+		setCoursesList: (state, action: PayloadAction<ICoursesList[]>) => {
+			state.coursesList = action.payload
 		}
 	}
 })
 
-export const { setFilters, setExcelData } = actionSlice.actions
+export const { setFilters, setExcelData, setCoursesList } = actionSlice.actions
 export default actionSlice.reducer
