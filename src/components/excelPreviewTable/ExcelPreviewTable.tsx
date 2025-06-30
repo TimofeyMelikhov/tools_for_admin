@@ -1,23 +1,12 @@
 import {
-	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
 	useReactTable
 } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import React from 'react'
 
-import {
-	Box,
-	Paper,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	Typography
-} from '@mui/material'
-
+import styles from './ExcelPreviewTable.module.scss'
 import type { ExcelRow } from '@/lib/excelParser'
 
 interface ExcelPreviewTableProps {
@@ -27,39 +16,29 @@ interface ExcelPreviewTableProps {
 export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
 	data
 }) => {
-	// Определяем колонки таблицы
 	const columns: ColumnDef<ExcelRow>[] = React.useMemo(
 		() => [
 			{
 				header: 'Сотрудник',
 				accessorKey: 'person',
-				cell: info => info.getValue() ?? '-'
+				cell: i => i.getValue() ?? '-'
 			},
 			{
 				header: 'Должность',
 				accessorKey: 'position',
-				cell: info => info.getValue() ?? '-'
+				cell: i => i.getValue() ?? '-'
 			},
 			{
 				header: 'Отдел',
 				accessorKey: 'subdivision',
-				cell: info => info.getValue() ?? '-'
+				cell: i => i.getValue() ?? '-'
 			},
 			{
 				header: 'Код',
 				accessorKey: 'elemCode',
-				cell: info => info.getValue() ?? '-'
+				cell: i => i.getValue() ?? '-'
 			},
-			{
-				header: 'Срок',
-				accessorKey: 'time',
-				cell: info => info.getValue() ?? '-'
-			},
-			{
-				header: 'Количество',
-				accessorKey: 'count',
-				cell: info => info.getValue() ?? '-'
-			}
+			{ header: 'Срок', accessorKey: 'time', cell: i => i.getValue() ?? '-' }
 		],
 		[]
 	)
@@ -70,50 +49,41 @@ export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
 		getCoreRowModel: getCoreRowModel()
 	})
 
-	if (data.length === 0) {
-		return null
-	}
+	if (data.length === 0) return null
 
 	return (
-		<Box mt={4}>
-			<Typography variant='h6' gutterBottom>
-				Превью данных
-			</Typography>
-			<TableContainer
-				component={Paper}
-				sx={{ maxHeight: 400, overflow: 'auto' }}
-			>
-				<Table stickyHeader size='small'>
-					<TableHead>
-						{table.getHeaderGroups().map(headerGroup => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => (
-									<TableCell key={header.id}>
+		<div className={styles.container}>
+			<h3 className={styles.title}>Превью данных</h3>
+			<div className={styles.tableWrapper}>
+				<table className={styles.table}>
+					<thead>
+						{table.getHeaderGroups().map(hg => (
+							<tr key={hg.id}>
+								{hg.headers.map(header => (
+									<th key={header.id} className={styles.th}>
 										{flexRender(
 											header.column.columnDef.header,
 											header.getContext()
 										)}
-									</TableCell>
+									</th>
 								))}
-							</TableRow>
+							</tr>
 						))}
-					</TableHead>
-					<TableBody>
+					</thead>
+					<tbody>
 						{table.getRowModel().rows.map(row => (
-							<TableRow key={row.id}>
+							<tr key={row.id}>
 								{row.getVisibleCells().map(cell => (
-									<TableCell key={cell.id}>
+									<td key={cell.id} className={styles.td}>
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</TableCell>
+									</td>
 								))}
-							</TableRow>
+							</tr>
 						))}
-					</TableBody>
-				</Table>
-			</TableContainer>
-			<Typography variant='caption' display='block' mt={1}>
-				Всего строк: {data.length}
-			</Typography>
-		</Box>
+					</tbody>
+				</table>
+			</div>
+			<div className={styles.footer}>Всего строк: {data.length}</div>
+		</div>
 	)
 }

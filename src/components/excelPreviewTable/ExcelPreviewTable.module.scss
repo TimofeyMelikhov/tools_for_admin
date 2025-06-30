@@ -1,0 +1,41 @@
+.container {
+	margin-top: 16px;
+}
+
+.title {
+	font-size: 1.25rem;
+	margin-bottom: 8px;
+}
+
+.tableWrapper {
+	max-height: 400px;
+	overflow: auto;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.th {
+	position: sticky;
+	top: 0;
+	background: #f9f9f9;
+	border-bottom: 1px solid #ccc;
+	padding: 8px;
+	text-align: left;
+	z-index: 1;
+}
+
+.td {
+	border-bottom: 1px solid #eee;
+	padding: 6px 8px;
+}
+
+.footer {
+	margin-top: 8px;
+	font-size: 0.875rem;
+	color: #555;
+}
