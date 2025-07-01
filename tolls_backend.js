@@ -15,14 +15,14 @@ Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
 function getParam(name) {
   return tools_web.get_web_param(curParams, name, undefined, 0);
 }
-/
+/*
 * Выбирает все записи sql запроса
 * @param {string} query - sql-выражение
 */
 function selectAll(query) {
   return ArraySelectAll(tools.xquery("sql: " + query));
 }
-/
+/*
 * Выбирает первую запись sql запроса
 * @param {string} query - sql-выражение
 * @param {any} defaultObj - значение по умолчанию
@@ -52,7 +52,10 @@ function getCourses() {
   return selectAll("SELECT id, code, name, modification_date FROM courses");
 }
 function getAssessments() {
-  return selectAll("SELECT id, title FROM assessments");
+  return selectAll("SELECT id, code, title, modification_date FROM assessments");
+}
+function getGroups() {
+  return selectAll("SELECT id, code, name, modification_date FROM assessments");
 }
 function assignCourses() {
   // var selectedCourse =  body.selectedCourse.value
@@ -75,6 +78,7 @@ function handler(body, method) {
     switch (method) {
       case 'getCourses': return getCourses(); break;
       case 'getAssessments': return getAssessments(); break;
+      case 'getGroups': return getGroups(); break;
       case 'assignCourse': return assignCourses(); break;
       case 'assignTest': return assignAssessments(); break;
       case 'addToGroup': return addToGroup(); break;
