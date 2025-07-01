@@ -4,6 +4,14 @@ export type SelectOption = {
 }
 
 export interface ICoursesList {
-	id: number
+	id: string
+	code: string
 	name: string
+	modification_date: string
+}
+export interface ITestsList {
+	id: string
+	code: string
+	title: string
+	modification_date: string
 }

@@ -1,0 +1,16 @@
+.option {
+	display: flex;
+	flex-direction: column;
+	padding: 8px 12px;
+	cursor: pointer;
+}
+
+.topRow {
+	font-weight: 600;
+	color: #333;
+}
+
+.bottomRow {
+	font-size: 0.8rem;
+	color: #666;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { memo, useState } from 'react'
 
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
@@ -14,7 +14,7 @@ interface ExcelRow {
 	[key: string]: string | number | boolean | null
 }
 
-export const ExcelUploader: React.FC = () => {
+export const ExcelUploader: React.FC = memo(() => {
 	const [loading, setLoading] = useState<boolean>(false)
 	const { enqueueSnackbar } = useSnackbar()
 	const dispatch = useAppDispatch()
@@ -84,6 +84,4 @@ export const ExcelUploader: React.FC = () => {
 			<ExcelPreviewTable data={excelData} />
 		</Box>
 	)
-}
-
-export default ExcelUploader
+})
