@@ -1,16 +1,15 @@
-import { type ReactElement, memo, useEffect, useMemo } from 'react'
+import { type ReactElement, memo, useMemo } from 'react'
 import Select from 'react-select'
 
-import { Container, Typography } from '@mui/material'
-import axios from 'axios'
+import { Button, Container, Typography } from '@mui/material'
 import { SnackbarProvider } from 'notistack'
 
 import { ExcelUploader } from '@/components/ExcelUploader'
-import { CourseSelect } from '@/components/customCourseOption/CustomSelect'
+import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 
-import { BACKEND_URL } from '@/config/global'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
-import { setCoursesList, setFilters } from '@/store/actionSlice'
+import type { IInitialState } from '@/models/filtersModel'
+import { setFilters, setTimeAssign } from '@/store/actionSlice'
 
 export const TrainingManagement = memo((): ReactElement => {
 	type Option = { value: string; label: string }
@@ -20,28 +19,16 @@ export const TrainingManagement = memo((): ReactElement => {
 	const selectedAction = useAppSelector(
 		state => state.filters.selectedAction?.value
 	)
-	const coursesList = useAppSelector(state => state.filters.coursesList)
 
-	console.log(selectedAction)
-
-	const getCurrentList = async () => {
-		const response = await axios
-			.get(`${BACKEND_URL}&method=getCourses`)
-			.then(response => response.data)
-		dispatch(setCoursesList(response))
-	}
-
-	useEffect(() => {
-		getCurrentList()
-	}, [selectedAction])
+	const uploadToServer = (countFilter: IInitialState) => {}
 
 	console.log('Selected action:', countFilter)
 
 	const optionsForAction: Option[] = useMemo(
 		() => [
-			{ value: 'assignTest', label: 'Назначить тест' },
-			{ value: 'assignCourse', label: 'Назначить курс' },
-			{ value: 'addToGroup', label: 'Добавить в группу' }
+			{ value: 'getCourses', label: 'Назначить курс' },
+			{ value: 'getAssessments', label: 'Назначить тест' },
+			{ value: 'getGroups', label: 'Добавить в группу' }
 		],
 		[]
 	)
@@ -65,11 +52,21 @@ export const TrainingManagement = memo((): ReactElement => {
 						}}
 						isClearable
 					/>
-					{selectedAction === 'assignCourse' && (
-						<CourseSelect coursesList={coursesList} />
-					)}
+					{selectedAction && <UniversalSelect method={selectedAction} />}
+					<input
+						type='text'
+						placeholder='Введите время назначения в днях'
+						onChange={e => dispatch(setTimeAssign(e.target.value))}
+					/>
 				</div>
 				<ExcelUploader />
+				<Button
+					variant='contained'
+					component='span'
+					onClick={() => uploadToServer(countFilter)}
+				>
+					Назначить
+				</Button>
 			</Container>
 		</SnackbarProvider>
 	)
