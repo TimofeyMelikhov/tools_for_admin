@@ -55,7 +55,7 @@ function getAssessments() {
   return selectAll("SELECT id, code, title, modification_date FROM assessments");
 }
 function getGroups() {
-  return selectAll("SELECT id, code, name, modification_date FROM assessments");
+  return selectAll("SELECT id, code, name, modification_date FROM groups");
 }
 function assignCourses() {
   // var selectedCourse =  body.selectedCourse.value
