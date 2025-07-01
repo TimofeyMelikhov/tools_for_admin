@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import { backendId, baseServerPath } from '@/config/global'
-import type { IUploadList, IUploadRaw } from '@/models/filtersModel'
+import type { IInitialState, IUploadList } from '@/models/filtersModel'
 
 export const tutorApi = createApi({
 	reducerPath: 'tutorApi',
@@ -9,17 +9,16 @@ export const tutorApi = createApi({
 	endpoints: build => ({
 		getCurrentList: build.query<IUploadList[], string>({
 			query: method =>
-				`custom_web_template.html?object_id=${backendId}&method=${method}`,
-			transformResponse: (response: IUploadRaw[]) => {
-				return response.map(item => ({
-					id: item.id,
-					code: item.code,
-					name: item.name ?? item.title ?? '',
-					modification_date: item.modification_date
-				}))
-			}
+				`custom_web_template.html?object_id=${backendId}&method=${method}`
+		}),
+		assignCourse: build.mutation<IInitialState[], any>({
+			query: assignCourseObj => ({
+				url: `custom_web_template.html?object_id=${backendId}&method=assignCourse`,
+				method: 'POST',
+				body: assignCourseObj
+			})
 		})
 	})
 })
 
-export const { useGetCurrentListQuery } = tutorApi
+export const { useGetCurrentListQuery, useAssignCourseMutation } = tutorApi

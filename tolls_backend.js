@@ -52,18 +52,22 @@ function getCourses() {
   return selectAll("SELECT id, code, name, modification_date FROM courses");
 }
 function getAssessments() {
-  return selectAll("SELECT id, code, title, modification_date FROM assessments");
+  return selectAll("SELECT id, code, title AS name, modification_date FROM assessments");
 }
 function getGroups() {
   return selectAll("SELECT id, code, name, modification_date FROM groups");
 }
 function assignCourses() {
-  // var selectedCourse =  body.selectedCourse.value
-  var excelObj = body
+  var selectedCourse =  body.currentObj.id
+  var excelObj = body.excelObj
+  var time = body.time
+  var selectedAction = body.selectedAction.value
 
-
-
+  show(selectedCourse)
   show(excelObj)
+  show(time)
+  show(selectedAction)
+
 }
 function assignAssessments() {
   

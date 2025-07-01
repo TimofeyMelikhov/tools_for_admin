@@ -12,14 +12,6 @@ export type SelectOption = {
 	label: string
 }
 
-export interface IUploadRaw {
-	id: string
-	code: string
-	title?: string // условно: может быть undefined, если это не «тесты»
-	name?: string // условно: может быть undefined, если это «тесты», а не «курсы/группы»
-	modification_date: string
-}
-
 export interface IUploadList {
 	id: string
 	code: string

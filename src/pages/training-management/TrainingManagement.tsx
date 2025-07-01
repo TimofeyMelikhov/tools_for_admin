@@ -10,6 +10,7 @@ import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import type { IInitialState } from '@/models/filtersModel'
 import { setFilters, setTimeAssign } from '@/store/actionSlice'
+import { useAssignCourseMutation } from '@/store/tutorApi'
 
 export const TrainingManagement = memo((): ReactElement => {
 	type Option = { value: string; label: string }
@@ -20,7 +21,16 @@ export const TrainingManagement = memo((): ReactElement => {
 		state => state.filters.selectedAction?.value
 	)
 
-	const uploadToServer = (countFilter: IInitialState) => {}
+	const [assign, { isLoading }] = useAssignCourseMutation()
+
+	const uploadToServer = async (countFilter: IInitialState) => {
+		try {
+			const response = await assign(countFilter).unwrap
+			console.log(`респонс: ${response}`)
+		} catch (error) {
+			console.log(error)
+		}
+	}
 
 	console.log('Selected action:', countFilter)
 
