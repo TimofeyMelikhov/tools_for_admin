@@ -57,23 +57,75 @@ function getAssessments() {
 function getGroups() {
   return selectAll("SELECT id, code, name, modification_date FROM groups");
 }
-function assignCourses() {
-  var selectedCourse =  body.currentObj.id
-  var excelObj = body.excelObj
-  var time = body.time
-  var selectedAction = body.selectedAction.value
 
-  show(selectedCourse)
-  show(excelObj)
-  show(time)
-  show(selectedAction)
+function assignCourses(body) {
+  var selectedCourse = body.GetOptProperty("currentObj").id
+  var excelData = body.excelObj
+  var time = body.GetOptProperty("time")
 
+  var resultObj = {
+    notFoundPersons: [],
+    counterPersons: 0
+  }
+
+  alert('Зашли в нужную функцию')
+
+  for(var i = 0; i < excelData.length; i++) {
+    _query_str = "for $elem in collaborators where $elem/fullname = " + XQueryLiteral(excelData[i].person)
+
+    if(excelData[i].position != null) {
+      _query_str += " and $elem/position_name = " + XQueryLiteral(excelData[i].position)
+    }
+    if(excelData[i].subdivision != null) {
+      _query_str += " and $elem/position_parent_name = " + XQueryLiteral(excelData[i].subdivision)
+    }
+    _query_str += ' return $elem';
+
+    alert(_query_str)
+
+    try {
+      foundEmployee = XQuery(_query_str);
+      firstPerson = ArrayOptFirstElem(foundEmployee);
+      alert('Найденный сотрудник: ' + firstPerson)
+    } catch (err) {
+      alert("Ошибка при выполнении запроса XQuery: " + err.message);
+      continue;
+    }
+
+    if (firstPerson == undefined) {
+      resultObj.notFoundPersons.push(excelData[i])
+      continue;
+    }
+     tools.activate_course_to_person(firstPerson.id, selectedCourse, null, null, null, time)
+     resultObj.counterPersons++
+  }
+  return resultObj;
 }
-function assignAssessments() {
+function assignAssessments(body) {
+  alert("Назначение тестов, а не курсов")
+  return {
+    test: 'Тестовый объект'
+  }
+}
+function addToGroup(body) {
   
 }
-function addToGroup() {
-  
+
+function dataReducer(body) {
+  var selectedAction = body.GetOptProperty("selectedAction").value
+
+  try {
+    switch(selectedAction) {
+      case 'getCourses': return assignCourses(body); break;
+      case 'getAssessments': return assignAssessments(body); break;
+      case 'getGroups': return addToGroup(body); break;
+      default:
+        Response.SetRespStatus(400, '');
+        Response.Write('{"error":"unknown action"}');
+    }
+  } catch (error) {
+  }
+
 }
 
 function handler(body, method) {
@@ -83,9 +135,7 @@ function handler(body, method) {
       case 'getCourses': return getCourses(); break;
       case 'getAssessments': return getAssessments(); break;
       case 'getGroups': return getGroups(); break;
-      case 'assignCourse': return assignCourses(); break;
-      case 'assignTest': return assignAssessments(); break;
-      case 'addToGroup': return addToGroup(); break;
+      case 'dataReducer': return dataReducer(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');

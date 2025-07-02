@@ -26,10 +26,7 @@ export const ExcelUploader: React.FC = memo(() => {
 
 		setLoading(true)
 		try {
-			// Используем вынесенную функцию
 			const jsonData: ExcelRow[] = await parseExcelFile(file)
-			console.log('Parsed JSON:', jsonData)
-
 			enqueueSnackbar('Файл успешно обработан!', {
 				variant: 'success'
 			})

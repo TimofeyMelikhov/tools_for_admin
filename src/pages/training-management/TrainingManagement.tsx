@@ -1,4 +1,4 @@
-import { type ReactElement, memo, useMemo } from 'react'
+import { type ReactElement, memo, useEffect, useMemo } from 'react'
 import Select from 'react-select'
 
 import { Button, Container, Typography } from '@mui/material'
@@ -21,18 +21,19 @@ export const TrainingManagement = memo((): ReactElement => {
 		state => state.filters.selectedAction?.value
 	)
 
-	const [assign, { isLoading }] = useAssignCourseMutation()
+	const [assign, { data, isLoading }] = useAssignCourseMutation()
 
 	const uploadToServer = async (countFilter: IInitialState) => {
 		try {
-			const response = await assign(countFilter).unwrap
-			console.log(`респонс: ${response}`)
+			await assign(countFilter).unwrap()
 		} catch (error) {
 			console.log(error)
 		}
 	}
 
-	console.log('Selected action:', countFilter)
+	useEffect(() => {
+		console.log(data)
+	}, [data])
 
 	const optionsForAction: Option[] = useMemo(
 		() => [
@@ -77,6 +78,14 @@ export const TrainingManagement = memo((): ReactElement => {
 				>
 					Назначить
 				</Button>
+				{isLoading && <div>Обработка...</div>}
+				{data !== undefined && (
+					<div>
+						Найдено и назначено {data.counterPersons} сотрудника. Не найденные
+						сотрудники:
+						{data.notFoundPersons.map(p => p.person).join(', ')}
+					</div>
+				)}
 			</Container>
 		</SnackbarProvider>
 	)

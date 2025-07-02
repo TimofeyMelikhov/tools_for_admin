@@ -7,6 +7,11 @@ export interface IInitialState {
 	time?: string
 }
 
+export interface IServerResponse {
+	counterPersons: number
+	notFoundPersons: ExcelRow[]
+}
+
 export type SelectOption = {
 	value: string
 	label: string
