@@ -7,9 +7,17 @@ export interface IInitialState {
 	time?: string
 }
 
+interface IPersonFromServer {
+	id: string
+	fullname: string
+	position_name: string
+	position_parent_name: string
+}
+
 export interface IServerResponse {
 	counterPersons: number
 	notFoundPersons: ExcelRow[]
+	dublicatePersons: IPersonFromServer[]
 }
 
 export type SelectOption = {
