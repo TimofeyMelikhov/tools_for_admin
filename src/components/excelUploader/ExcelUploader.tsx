@@ -3,14 +3,11 @@ import React, { memo, useState } from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import { useSnackbar } from 'notistack'
 
-import { ExcelPreviewTable } from './excelPreviewTable/ExcelPreviewTable'
-import { useAppDispatch, useAppSelector } from '@/hooks/redux'
-import { parseExcelFile } from '@/lib/excelParser'
-import { setExcelData } from '@/store/actionSlice'
+import { ExcelPreviewTable } from '../excelPreviewTable/ExcelPreviewTable'
 
-interface ExcelRow {
-	[key: string]: string | number | boolean | null
-}
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
+import { type ExcelRow, parseExcelFile } from '@/lib/excelParser'
+import { setExcelData } from '@/store/actionSlice'
 
 export const ExcelUploader: React.FC = memo(() => {
 	const [loading, setLoading] = useState<boolean>(false)
@@ -41,7 +38,13 @@ export const ExcelUploader: React.FC = memo(() => {
 	}
 
 	return (
-		<Box display='flex' flexDirection='column' alignItems='center' gap={2}>
+		<Box
+			display='flex'
+			flexDirection='column'
+			alignItems='center'
+			gap={2}
+			sx={{ mt: 2 }}
+		>
 			<input
 				type='file'
 				accept='.xlsx, .xls'
@@ -60,6 +63,9 @@ export const ExcelUploader: React.FC = memo(() => {
 					<CircularProgress size={24} />
 					<Typography>Обработка файла...</Typography>
 				</Box>
+			)}
+			{excelData.length !== 0 && !loading && (
+				<Typography>Превью данных файла</Typography>
 			)}
 
 			<ExcelPreviewTable data={excelData} />

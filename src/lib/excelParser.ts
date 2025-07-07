@@ -1,14 +1,13 @@
 import * as XLSX from 'xlsx'
 
-export interface ExcelRow {
-	[key: string]: string | number | boolean | null
-}
+export type ExcelRow = Record<string, string | number | null | undefined>
 
 // Маппинг «Русское название столбца» → «ключ для JSON»
-const COLUMN_MAP: Record<string, string> = {
-	Сотрудник: 'person',
-	Должность: 'position',
-	Отдел: 'subdivision'
+export const COLUMN_MAP: Record<string, string> = {
+	Сотрудник: 'fullname',
+	Должность: 'position_name',
+	Отдел: 'position_parent_name',
+	Почта: 'email'
 }
 
 // Основная функция чтения и маппинга Excel-файла

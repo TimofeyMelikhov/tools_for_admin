@@ -1,40 +1,30 @@
+// ExcelPreviewTable.tsx
 import {
+	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
 	useReactTable
 } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
 import React from 'react'
 
 import styles from './ExcelPreviewTable.module.scss'
-import type { ExcelRow } from '@/lib/excelParser'
+import { COLUMN_MAP } from '@/lib/excelParser'
 
-interface ExcelPreviewTableProps {
-	data: ExcelRow[]
+// разворачиваем маппинг из excelParser.ts
+const REVERSE_COLUMN_MAP: Record<string, string> = Object.fromEntries(
+	Object.entries(COLUMN_MAP).map(([rus, eng]) => [eng, rus])
+)
+
+interface ExcelPreviewTableProps<T extends Record<string, any>> {
+	data: T[]
 }
 
-export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
+export function ExcelPreviewTable<T extends Record<string, any>>({
 	data
-}) => {
-	const columns: ColumnDef<ExcelRow>[] = React.useMemo(
-		() => [
-			{
-				header: 'Сотрудник',
-				accessorKey: 'person',
-				cell: i => i.getValue() ?? '-'
-			},
-			{
-				header: 'Должность',
-				accessorKey: 'position',
-				cell: i => i.getValue() ?? '-'
-			},
-			{
-				header: 'Отдел',
-				accessorKey: 'subdivision',
-				cell: i => i.getValue() ?? '-'
-			}
-		],
-		[]
+}: ExcelPreviewTableProps<T>) {
+	const columns = React.useMemo<ColumnDef<T>[]>(
+		() => generateColumns(data),
+		[data]
 	)
 
 	const table = useReactTable({
@@ -43,11 +33,10 @@ export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
 		getCoreRowModel: getCoreRowModel()
 	})
 
-	if (data.length === 0) return null
+	if (!data.length) return null
 
 	return (
 		<div className={styles.container}>
-			<h3 className={styles.title}>Превью данных</h3>
 			<div className={styles.tableWrapper}>
 				<table className={styles.table}>
 					<thead>
@@ -80,4 +69,19 @@ export const ExcelPreviewTable: React.FC<ExcelPreviewTableProps> = ({
 			<div className={styles.footer}>Всего строк: {data.length}</div>
 		</div>
 	)
+}
+
+function generateColumns<T extends Record<string, any>>(
+	data: T[]
+): ColumnDef<T>[] {
+	if (!data.length) return []
+	const allKeys = Object.keys(
+		data.reduce((acc, row) => ({ ...acc, ...row }), {})
+	)
+	// отфильтровать пустые, если нужно, как раньше
+	return allKeys.map(key => ({
+		accessorKey: key as keyof T,
+		header: REVERSE_COLUMN_MAP[key] || key,
+		cell: info => info.getValue() ?? '-'
+	}))
 }

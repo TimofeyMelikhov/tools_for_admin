@@ -4,9 +4,12 @@ import Select from 'react-select'
 import { Button, Container, Typography } from '@mui/material'
 import { SnackbarProvider } from 'notistack'
 
-import { ExcelUploader } from '@/components/ExcelUploader'
+import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
+import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
+import { Preloader } from '@/components/preloader/Preloader'
 import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 
+import styles from './TrainingManagement.module.scss'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import type { IInitialState } from '@/models/filtersModel'
 import { setFilters, setTimeAssign } from '@/store/actionSlice'
@@ -50,7 +53,7 @@ export const TrainingManagement = memo((): ReactElement => {
 				<Typography variant='h5' gutterBottom>
 					Назначение курсов/тестов, добавление в группу
 				</Typography>
-				<div>
+				<div className={styles.container}>
 					<Select
 						options={optionsForAction}
 						placeholder='Выберите действие'
@@ -78,9 +81,12 @@ export const TrainingManagement = memo((): ReactElement => {
 				>
 					Назначить
 				</Button>
-				{isLoading && <div>Обработка...</div>}
+
+				{isLoading && <Preloader />}
 				{data !== undefined && (
 					<div>
+						Дубликаты в системе:
+						<ExcelPreviewTable data={data.dublicatePersons} />
 						Найдено и назначено {data.counterPersons} сотрудника. Не найденные
 						сотрудники:
 						{data.notFoundPersons.map(p => p.person).join(', ')}
