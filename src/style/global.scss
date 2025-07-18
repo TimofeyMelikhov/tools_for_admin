@@ -46,3 +46,19 @@ input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
+footer {
+	flex: 0 0 auto;
+}
+
+.page-content {
+	flex: 1 0 auto;
+	width: 95%;
+	padding: 0;
+	font-size: 16px;
+}
+
+#wt-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}

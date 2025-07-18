@@ -1,12 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-import type { ExcelRow } from '@/lib/excelParser'
 import type {
 	IInitialState,
 	IUploadList,
 	SelectOption
 } from '@/models/filtersModel'
+
+import type { ExcelRow } from '@/lib/excelParser'
 
 const initialState: IInitialState = {
 	selectedAction: null,
@@ -30,10 +31,18 @@ const actionSlice = createSlice({
 		},
 		setTimeAssign: (state, action: PayloadAction<string>) => {
 			state.time = action.payload
+		},
+		cleanExcelObj: state => {
+			state.excelObj = []
 		}
 	}
 })
 
-export const { setFilters, setExcelData, setCurrentObj, setTimeAssign } =
-	actionSlice.actions
+export const {
+	setFilters,
+	setExcelData,
+	setCurrentObj,
+	setTimeAssign,
+	cleanExcelObj
+} = actionSlice.actions
 export default actionSlice.reducer

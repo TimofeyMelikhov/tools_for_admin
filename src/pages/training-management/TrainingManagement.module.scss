@@ -1,4 +1,18 @@
 .container {
-	display: flex;
-	gap: 10px;
+	width: 95%;
+	margin: 0 auto;
+
+	.filters {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		margin-bottom: 10px;
+	}
+	.tableTitle {
+		display: flex;
+		justify-content: space-between;
+	}
+	.errorsBlock {
+		margin-bottom: 15px;
+	}
 }

@@ -7,8 +7,12 @@ export interface IInitialState {
 	time?: string
 }
 
+export type excelObj = {
+	excelObj: ExcelRow[]
+}
+
 interface IPersonFromServer {
-	id: string
+	id?: string
 	fullname: string
 	position_name: string
 	position_parent_name: string
@@ -18,6 +22,12 @@ export interface IServerResponse {
 	counterPersons: number
 	notFoundPersons: ExcelRow[]
 	dublicatePersons: IPersonFromServer[]
+}
+
+export interface IMenuResponse {
+	id: number
+	title: string
+	route: string
 }
 
 export type SelectOption = {

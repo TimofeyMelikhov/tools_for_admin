@@ -20,7 +20,15 @@ export const tutorApi = createApi({
 				url: `custom_web_template.html?object_id=${backendId}&method=dataReducer`,
 				method: 'POST',
 				body: assignCourseObj
-			})
+			}),
+			transformResponse: (response: IServerResponse): IServerResponse => {
+				return {
+					...response,
+					dublicatePersons: response.dublicatePersons.map(
+						({ id, ...rest }) => rest
+					)
+				}
+			}
 		})
 	})
 })

@@ -12,6 +12,10 @@
 		"<THIRD_PARTY_MODULES>",
 		"/pages/",
 		"/components/",
+		"/store/",
+		"/hooks/",
+		"/models/",
+		"/lib/",
 		"^../(.*)",
 		"^./(.*)",
 		"/module.scss/"

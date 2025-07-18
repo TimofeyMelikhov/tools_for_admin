@@ -1,4 +1,3 @@
-// ExcelPreviewTable.tsx
 import {
 	type ColumnDef,
 	flexRender,
@@ -7,10 +6,10 @@ import {
 } from '@tanstack/react-table'
 import React from 'react'
 
-import styles from './ExcelPreviewTable.module.scss'
 import { COLUMN_MAP } from '@/lib/excelParser'
 
-// разворачиваем маппинг из excelParser.ts
+import styles from './ExcelPreviewTable.module.scss'
+
 const REVERSE_COLUMN_MAP: Record<string, string> = Object.fromEntries(
 	Object.entries(COLUMN_MAP).map(([rus, eng]) => [eng, rus])
 )
@@ -78,7 +77,6 @@ function generateColumns<T extends Record<string, any>>(
 	const allKeys = Object.keys(
 		data.reduce((acc, row) => ({ ...acc, ...row }), {})
 	)
-	// отфильтровать пустые, если нужно, как раньше
 	return allKeys.map(key => ({
 		accessorKey: key as keyof T,
 		header: REVERSE_COLUMN_MAP[key] || key,

@@ -1,8 +1,9 @@
 import Select from 'react-select'
 
+import { useGetCurrentListQuery } from '@/store/api/tutorApi'
+import { setCurrentObj } from '@/store/slices/actionSlice'
+
 import { useAppDispatch } from '@/hooks/redux'
-import { setCurrentObj } from '@/store/actionSlice'
-import { useGetCurrentListQuery } from '@/store/tutorApi'
 
 interface IUniversalSelectProps {
 	method: string
@@ -26,6 +27,7 @@ export const UniversalSelect = ({ method }: IUniversalSelectProps) => {
 						dispatch(setCurrentObj(null))
 					}
 				}}
+				placeholder={'Выберите элемент'}
 				isLoading={isLoading}
 				isClearable
 				isDisabled={isLoading}

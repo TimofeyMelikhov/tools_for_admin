@@ -1,40 +1,32 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+
+import { Preloader } from '@/components/preloader/Preloader'
+
+import { selectMenuItems } from '@/store/api/accessApi'
+
+import { useAppSelector } from '@/hooks/redux'
 
 import styles from './MainMenu.module.scss'
-import type { MenuItem } from './types'
 
-const menuItems: MenuItem[] = [
-	{
-		id: 1,
-		title: 'Назначение тестов/курсов, добавление в группу',
-		route: '/TrainingManagement'
-	},
-	{ id: 2, title: 'Обновление наград', route: '/notifications' },
-	{ id: 3, title: 'Обновление профилей наставников', route: '/support' }
-]
+export const MainMenu = () => {
+	const {
+		data: menuItems,
+		isLoading,
+		isError
+	} = useAppSelector(selectMenuItems)
 
-const MainMenu: React.FC = () => {
-	const navigate = useNavigate()
-
-	const handleClick = (route: string) => {
-		// Здесь можно подключить useNavigate() из react-router-dom
-		navigate(route)
-	}
+	if (isLoading) return <Preloader />
+	if (isError) return <div>Ошибка загрузки меню</div>
+	if (!menuItems?.length) return <div>У вас нет доступа ни к одному пункту</div>
 
 	return (
 		<div className={styles.menuContainer}>
+			Инструменты администратора
 			{menuItems.map(item => (
-				<div
-					key={item.id}
-					className={styles.menuItem}
-					onClick={() => handleClick(item.route)}
-				>
-					{item.title}
-				</div>
+				<Link key={item.id} to={item.route}>
+					<div className={styles.menuItem}>{item.title}</div>
+				</Link>
 			))}
 		</div>
 	)
 }
-
-export default MainMenu
