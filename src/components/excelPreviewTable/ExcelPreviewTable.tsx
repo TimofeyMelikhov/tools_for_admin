@@ -74,12 +74,24 @@ function generateColumns<T extends Record<string, any>>(
 	data: T[]
 ): ColumnDef<T>[] {
 	if (!data.length) return []
+
 	const allKeys = Object.keys(
 		data.reduce((acc, row) => ({ ...acc, ...row }), {})
 	)
-	return allKeys.map(key => ({
+
+	const filteredKeys = allKeys.filter(key =>
+		data.some(row => {
+			const val = row[key]
+			return val !== null && val !== undefined && val !== ''
+		})
+	)
+
+	return filteredKeys.map(key => ({
 		accessorKey: key as keyof T,
 		header: REVERSE_COLUMN_MAP[key] || key,
-		cell: info => info.getValue() ?? '-'
+		cell: info => {
+			const value = info.getValue()
+			return value !== null && value !== undefined && value !== '' ? value : '-'
+		}
 	}))
 }

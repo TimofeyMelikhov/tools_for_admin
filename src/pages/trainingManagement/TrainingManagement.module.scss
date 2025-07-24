@@ -1,0 +1,46 @@
+.container {
+	width: 95%;
+	margin: 0 auto;
+
+	.filters {
+		display: flex;
+		align-items: flex-start;
+		gap: 11px;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		z-index: 999;
+
+		.timeInput {
+			border: 1px solid hsl(0, 0%, 80%);
+			border-radius: 4px;
+			padding: 8px 11px;
+			box-sizing: border-box;
+			transition: all 100ms ease;
+			font-size: 14px;
+			outline: none;
+			color: hsl(0, 0%, 20%);
+			background-color: white;
+			min-width: 205px;
+
+			&:hover {
+				border-color: hsl(0, 0%, 70%);
+			}
+
+			&:focus {
+				border-color: #2684ff;
+				box-shadow: 0 0 0 1px #2684ff;
+			}
+
+			&::placeholder {
+				color: hsl(0, 0%, 50%);
+			}
+		}
+	}
+	.tableTitle {
+		display: flex;
+		justify-content: space-between;
+	}
+	.errorsBlock {
+		margin-bottom: 15px;
+	}
+}

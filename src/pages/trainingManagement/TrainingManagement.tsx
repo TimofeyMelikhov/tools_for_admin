@@ -1,11 +1,12 @@
 import { type ReactElement, memo, useMemo } from 'react'
-import Select from 'react-select'
+import Select, { type StylesConfig } from 'react-select'
 
-import { Box, Button, TextField, Typography } from '@mui/material'
-import { useSnackbar } from 'notistack'
+import { Box, Button, Typography } from '@mui/material'
+import { enqueueSnackbar } from 'notistack'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
+import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 
@@ -15,7 +16,7 @@ import {
 	setExcelData,
 	setFilters,
 	setTimeAssign
-} from '@/store/slices/actionSlice'
+} from '@/store/slices/tutorSlice'
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 
@@ -27,8 +28,11 @@ import styles from './TrainingManagement.module.scss'
 
 export const TrainingManagement = memo((): ReactElement => {
 	type Option = { value: string; label: string }
+	type OptionType = {
+		value: string
+		label: string
+	}
 
-	const { enqueueSnackbar } = useSnackbar()
 	const dispatch = useAppDispatch()
 	const [assign, { data, isLoading }] = useAssignCourseMutation()
 
@@ -43,6 +47,7 @@ export const TrainingManagement = memo((): ReactElement => {
 		countFilter.excelObj.length !== 0 &&
 		selectedAction !== null &&
 		countFilter.currentObj !== null
+
 	const optionsForAction: Option[] = useMemo(
 		() => [
 			{ value: 'getCourses', label: 'Назначить курс' },
@@ -69,30 +74,53 @@ export const TrainingManagement = memo((): ReactElement => {
 			if (hasErrors) {
 				enqueueSnackbar(
 					`Обработано ${counterPersons} из ${excelLength} записей. Есть ошибки.`,
-					{ variant: 'warning' }
+					{
+						variant: 'warning',
+						style: {
+							fontSize: '14px'
+						}
+					}
 				)
 			}
 
 			if (allSuccess) {
 				enqueueSnackbar('Все записи успешно обработаны!', {
-					variant: 'success'
+					variant: 'success',
+					style: {
+						fontSize: '14px'
+					}
 				})
 			}
 		} catch (error) {
 			enqueueSnackbar('Произошла ошибка, попробуйте позже', {
-				variant: 'error'
+				variant: 'error',
+				style: {
+					fontSize: '14px'
+				}
 			})
 			console.error('Ошибка при загрузке на сервер:', error)
 		}
 	}
 
+	const customStyles: StylesConfig<OptionType> = {
+		control: provided => ({
+			...provided,
+			zIndex: 100
+		}),
+		menu: provided => ({
+			...provided,
+			zIndex: 100
+		})
+	}
+
 	return (
 		<div className={styles.container}>
+			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Назначение курсов/тестов, добавление в группу
 			</Typography>
 			<div className={styles.filters}>
-				<Select
+				<Select<OptionType>
 					options={optionsForAction}
 					placeholder='Выберите действие'
 					onChange={option => {
@@ -102,33 +130,36 @@ export const TrainingManagement = memo((): ReactElement => {
 							dispatch(setFilters(null))
 						}
 					}}
+					styles={customStyles}
 					isClearable
 				/>
 				{selectedAction && <UniversalSelect method={selectedAction} />}
 				{(selectedAction === 'getCourses' ||
 					selectedAction === 'getAssessments') && (
-					<TextField
-						label='Введите время назначения в днях'
-						variant='outlined'
-						size='small'
+					<input
+						type='number'
+						className={styles.timeInput}
+						placeholder='Время назначения в днях'
 						onChange={e => dispatch(setTimeAssign(e.target.value))}
 					/>
 				)}
 
 				<ExcelUploader onSuccess={handleExcelData} />
-			</div>
 
-			{excelData.length !== 0 && (
-				<div className={styles.tableTitle}>
-					Превью данных файла:
+				{!!excelData.length && (
 					<Button
 						variant='contained'
 						component='span'
+						sx={{ fontSize: '14px' }}
 						onClick={() => dispatch(cleanExcelObj())}
 					>
 						Очистить таблицу
 					</Button>
-				</div>
+				)}
+			</div>
+
+			{excelData.length !== 0 && (
+				<div className={styles.tableTitle}>Превью данных файла:</div>
 			)}
 			<ExcelPreviewTable data={excelData} />
 
@@ -138,7 +169,7 @@ export const TrainingManagement = memo((): ReactElement => {
 						variant='contained'
 						component='span'
 						onClick={() => uploadToServer(countFilter)}
-						sx={{ mt: 2, mb: 2, ml: 'auto' }}
+						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
 					>
 						Назначить
 					</Button>

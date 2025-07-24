@@ -4,7 +4,7 @@ import { MainPage } from '@/pages/mainPage/MainPage'
 import { MentorProfile } from '@/pages/mentorProfile/MentorProfile'
 import { NotFoundPage } from '@/pages/notFound/NotFoundPage'
 import { RewardsUpdate } from '@/pages/rewardsUpdate/RewardsUpdate'
-import { TrainingManagement } from '@/pages/training-management/TrainingManagement'
+import { TrainingManagement } from '@/pages/trainingManagement/TrainingManagement'
 
 import { Layout } from '@/components/layout/Layout'
 

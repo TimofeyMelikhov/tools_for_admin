@@ -16,7 +16,7 @@ const initialState: IInitialState = {
 	time: ''
 }
 
-const actionSlice = createSlice({
+const tutorSlice = createSlice({
 	name: 'filters',
 	initialState,
 	reducers: {
@@ -44,5 +44,5 @@ export const {
 	setCurrentObj,
 	setTimeAssign,
 	cleanExcelObj
-} = actionSlice.actions
-export default actionSlice.reducer
+} = tutorSlice.actions
+export default tutorSlice.reducer

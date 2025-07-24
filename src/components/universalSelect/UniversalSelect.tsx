@@ -1,9 +1,11 @@
 import Select from 'react-select'
 
 import { useGetCurrentListQuery } from '@/store/api/tutorApi'
-import { setCurrentObj } from '@/store/slices/actionSlice'
+import { setCurrentObj } from '@/store/slices/tutorSlice'
 
 import { useAppDispatch } from '@/hooks/redux'
+
+import styles from './UniversalSelect.module.scss'
 
 interface IUniversalSelectProps {
 	method: string
@@ -15,7 +17,7 @@ export const UniversalSelect = ({ method }: IUniversalSelectProps) => {
 	const { data, isLoading } = useGetCurrentListQuery(method)
 
 	return (
-		<div>
+		<div className={styles.wrapper}>
 			<Select
 				options={data}
 				getOptionLabel={e => e.name}

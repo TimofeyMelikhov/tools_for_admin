@@ -3,9 +3,10 @@ import { enqueueSnackbar } from 'notistack'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
+import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 
-import { useUpdateRewardsMutation } from '@/store/api/rewardsUpdateApi'
+import { useUpdateRewardsMutation } from '@/store/api/employeApi'
 import { cleanExcelObj, setExcelData } from '@/store/slices/rewardsUpdateSlice'
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
@@ -37,8 +38,6 @@ export const RewardsUpdate = () => {
 			const { notFoundPersons, dublicatePersons, counterPersons } =
 				await updateRewards(data).unwrap()
 
-			console.log(notFoundPersons, dublicatePersons, counterPersons)
-
 			const hasErrors =
 				notFoundPersons.length > 0 || dublicatePersons.length > 0
 			const allSuccess =
@@ -47,18 +46,29 @@ export const RewardsUpdate = () => {
 			if (hasErrors) {
 				enqueueSnackbar(
 					`Обработано ${counterPersons} из ${excelLength} записей. Есть ошибки.`,
-					{ variant: 'warning' }
+					{
+						variant: 'warning',
+						style: {
+							fontSize: '14px'
+						}
+					}
 				)
 			}
 
 			if (allSuccess) {
 				enqueueSnackbar('Все записи успешно обработаны!', {
-					variant: 'success'
+					variant: 'success',
+					style: {
+						fontSize: '14px'
+					}
 				})
 			}
 		} catch (error) {
 			enqueueSnackbar('Произошла ошибка, попробуйте позже', {
-				variant: 'error'
+				variant: 'error',
+				style: {
+					fontSize: '14px'
+				}
 			})
 			console.error('Ошибка при загрузке на сервер:', error)
 		}
@@ -66,6 +76,7 @@ export const RewardsUpdate = () => {
 
 	return (
 		<div className={styles.container}>
+			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Обновление наград наставников
 			</Typography>
@@ -77,6 +88,7 @@ export const RewardsUpdate = () => {
 					<Button
 						variant='contained'
 						component='span'
+						sx={{ fontSize: '14px' }}
 						onClick={() => dispatch(cleanExcelObj())}
 					>
 						Очистить таблицу
@@ -91,7 +103,7 @@ export const RewardsUpdate = () => {
 						variant='contained'
 						component='span'
 						onClick={() => uploadToServer(excelData)}
-						sx={{ mt: 2, mb: 2, ml: 'auto' }}
+						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
 					>
 						Обновить награды
 					</Button>

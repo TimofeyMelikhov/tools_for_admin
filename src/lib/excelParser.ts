@@ -7,7 +7,15 @@ export const COLUMN_MAP: Record<string, string> = {
 	Должность: 'position_name',
 	Отдел: 'position_parent_name',
 	Птенец: 'chick',
-	Сова: 'owl'
+	Сова: 'owl',
+	Наставник: 'mentor'
+}
+
+function normalizeSpaces(
+	str: string | number | null | undefined
+): string | number | null | undefined {
+	if (typeof str !== 'string') return str
+	return str.replace(/\s+/g, ' ').trim()
 }
 
 function formatExcelDate(serial: number): string {
@@ -25,12 +33,10 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
 		reader.onload = (event: ProgressEvent<FileReader>) => {
 			try {
 				const data = new Uint8Array(event.target!.result as ArrayBuffer)
-				// Читаем без превращения в Date — чтобы на выходе все даты остались числами
 				const workbook = XLSX.read(data, { type: 'array', cellDates: false })
 				const sheetName = workbook.SheetNames[0]
 				const worksheet = workbook.Sheets[sheetName]
 
-				// Получим все строки как массив массивов (header + data)
 				const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, {
 					header: 1,
 					raw: true
@@ -41,7 +47,6 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
 					return
 				}
 
-				// Первый ряд — названия колонок на русском
 				const headerRow: string[] = rows[0].map(String)
 				const dataRows = rows.slice(1)
 
@@ -58,19 +63,33 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
 						if (!engKey) continue
 
 						const cellValue = row[col]
+						let processedValue: string | number | null | undefined
+
 						if (typeof cellValue === 'number') {
 							// Число может быть датой из Excel → форматируем вручную
-							newRow[engKey] = formatExcelDate(cellValue)
+							processedValue = formatExcelDate(cellValue)
 						} else if (
 							cellValue !== null &&
 							cellValue !== undefined &&
 							cellValue !== ''
 						) {
 							// Обычная строка или число
-							newRow[engKey] = cellValue
+							processedValue = cellValue
 						} else {
-							newRow[engKey] = null
+							processedValue = null
 						}
+
+						// Нормализуем пробелы для первых трех колонок
+						if (
+							['fullname', 'position_name', 'position_parent_name'].includes(
+								engKey
+							) &&
+							typeof processedValue === 'string'
+						) {
+							processedValue = normalizeSpaces(processedValue) as string
+						}
+
+						newRow[engKey] = processedValue
 					}
 					return newRow
 				})

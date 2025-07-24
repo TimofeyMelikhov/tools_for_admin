@@ -24,12 +24,20 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = memo(
 			try {
 				const jsonData: ExcelRow[] = await parseExcelFile(file)
 				enqueueSnackbar('Файл успешно обработан!', {
-					variant: 'success'
+					variant: 'success',
+					style: {
+						fontSize: '14px'
+					}
 				})
 				onSuccess(jsonData)
 			} catch (error) {
 				console.error('Error parsing or sending file:', error)
-				enqueueSnackbar('Ошибка при обработке файла!', { variant: 'error' })
+				enqueueSnackbar('Ошибка при обработке файла!', {
+					variant: 'error',
+					style: {
+						fontSize: '14px'
+					}
+				})
 			} finally {
 				setLoading(false)
 				e.target.value = ''

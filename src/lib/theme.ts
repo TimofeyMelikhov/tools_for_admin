@@ -1,72 +1,96 @@
 // src/theme.ts
-import { createTheme } from '@mui/material'
+import type { Components, ThemeOptions } from '@mui/material'
+import { createTheme } from '@mui/material/styles'
 
-export const theme = createTheme({
-	typography: {
-		// базовый размер шрифта: 16px
-		fontSize: 16,
-		// размер шрифта для кнопок
-		button: {
-			textTransform: 'none',
-			fontSize: '16px'
+const components: Components<Omit<ThemeOptions, 'components'>> = {
+	// 1) Глобальный reset
+	MuiCssBaseline: {
+		styleOverrides: {
+			'*, *::before, *::after': {
+				boxSizing: 'border-box',
+				margin: 0,
+				padding: 0
+			},
+			html: {
+				width: '100%',
+				height: '100%',
+				fontSize: '16px'
+			},
+			body: {
+				width: '100%',
+				height: '100%',
+				fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+				backgroundColor: '#fff',
+				color: 'rgba(0, 0, 0, 0.87)',
+				fontSize: '16px'
+			},
+			'input[type=text], input[type=number], input[type=password], textarea': {
+				all: 'unset',
+				boxSizing: 'border-box',
+				fontFamily: 'inherit',
+				fontSize: 'inherit',
+				color: 'inherit'
+			}
 		}
 	},
-	components: {
-		// 1. Кнопки MUI
-		MuiButton: {
-			styleOverrides: {
-				root: {
-					fontSize: '16px',
-					textTransform: 'none'
-				}
-			}
-		},
 
-		// 2. Outlined TextField: ввод и лейбл
-		MuiOutlinedInput: {
-			styleOverrides: {
-				// сам текст внутри input
-				input: {
+	// 2) Кнопки
+	MuiButton: {
+		styleOverrides: {
+			root: {
+				'&&': {
 					fontSize: '16px',
-					// убираем нативный outline при фокусе
-					'&:focus': {
-						outline: 'none'
-					}
-				},
-				// конкретно для size="small"
-				sizeSmall: {
-					'& .MuiOutlinedInput-input': {
-						fontSize: '16px',
-						padding: '8px 12px'
-					}
-				},
-				// бордер fieldset – оставляем тонкий серый или убираем
-				notchedOutline: {
-					border: '1px solid rgba(0, 0, 0, 0.23)'
+					textTransform: 'none',
+					borderRadius: '8px',
+					padding: '5px 16px',
+					fontWeight: 500
 				}
 			}
-		},
-		MuiInputLabel: {
-			styleOverrides: {
-				root: {
-					fontSize: '16px'
-				},
-				sizeSmall: {
-					fontSize: '16px'
-				}
-			}
-		},
+		}
+	},
 
-		// 3. enqueueSnackbar / notistack
-		MuiSnackbarContent: {
-			styleOverrides: {
-				root: {
-					fontSize: '16px',
-					'& .MuiSnackbarContent-message': {
-						fontSize: '16px'
-					}
+	// 5) Typography
+	MuiTypography: {
+		styleOverrides: {
+			root: {
+				'&&': {
+					color: 'rgba(0, 0, 0, 0.87)'
+				}
+			}
+		}
+	},
+
+	// 6) Snackbar
+	MuiSnackbar: {
+		styleOverrides: {
+			anchorOriginTopCenter: {
+				top: '24px'
+			}
+		}
+	},
+	MuiSnackbarContent: {
+		styleOverrides: {
+			root: {
+				'&&': {
+					backgroundColor: '#323232',
+					color: '#fff',
+					fontSize: '26px'
 				}
 			}
 		}
 	}
+}
+
+const theme = createTheme({
+	palette: {
+		primary: { main: '#1976d2' },
+		secondary: { main: '#dc004e' }
+	},
+	typography: {
+		fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+		fontSize: 16 // px-based
+	},
+	components
 })
+
+export default theme

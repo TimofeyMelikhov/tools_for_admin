@@ -45,7 +45,7 @@ var curUserId = DEV_MODE
 var curUser = DEV_MODE ? tools.open_doc(curUserId).TopElem : Request.Session.Env.curUser;
 /* --- logic --- */
 function show(obj) {
-  alert("Объект с фронта: " + tools.object_to_text(obj, "json"));
+  alert("Просматриваемый объект" + tools.object_to_text(obj, "json"));
 }
 
 function checkUserRole() {
@@ -87,10 +87,6 @@ function checkUserRole() {
 }
 
 function findRightPerson(personData, resultObj) {
-
-  show(personData)
-  show(resultObj)
-
   var _query_str = "SELECT id, fullname, position_name, position_parent_name FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
 
   if (personData.position_name !== null) {
@@ -114,7 +110,7 @@ function findRightPerson(personData, resultObj) {
       for (person in receivedPersons) {
         resultObj.dublicatePersons.push(person);
       }
-      return [];
+      return null;
     }
 
     return receivedPersons[0];
@@ -124,7 +120,6 @@ function findRightPerson(personData, resultObj) {
     return null;
   }
 }
-
 
 function getCourses() {
   return selectAll("SELECT id, code, name, modification_date FROM courses");
@@ -150,9 +145,9 @@ function assignCourses(body) {
   for(var i = 0; i < excelData.length; i++) {
     rightPerson = findRightPerson(excelData[i], resultObj);
 
-    alert('Данные из функции:' + rightPerson)
-
-    if (!rightPerson || Array.isArray(rightPerson)) continue;
+    if (rightPerson === null) {
+      continue;
+    }
 
     tools.activate_course_to_person(rightPerson.id, selectedCourse, null, null, null, time)
     resultObj.counterPersons++
@@ -172,7 +167,10 @@ function assignAssessments(body) {
 
   for(var i = 0; i < excelData.length; i++) {
     rightPerson = findRightPerson(excelData[i], resultObj);
-    if (!rightPerson || Array.isArray(rightPerson)) continue;
+
+    if (rightPerson === null) {
+      continue;
+    }
     tools.activate_test_to_person(rightPerson.id, selectedTest, null, null, null, null, time)
     resultObj.counterPersons++
   }
@@ -190,7 +188,10 @@ function addToGroup(body) {
 
   for(var i = 0; i < excelData.length; i++) {
     rightPerson = findRightPerson(excelData[i], resultObj);
-    if (!rightPerson || Array.isArray(rightPerson)) continue;
+
+    if (rightPerson === null) {
+      continue;
+    }
 
     gr = tools.open_doc(selectedGroup)
     gr.TopElem.collaborators.ObtainChildByKey(rightPerson.id);
@@ -208,8 +209,46 @@ function rewardsUpdate(body) {
     dublicatePersons: []
   }
 
-  show(excelData)
+  for(var i = 0; i < excelData.length; i++) {
+    rightPerson = findRightPerson(excelData[i], resultObj);
 
+    if (rightPerson === null) {
+      continue;
+    }
+
+    col_doc=tools.open_doc(rightPerson.id)
+    col_te=col_doc.TopElem
+    col_te.custom_elems.ObtainChildByKey('mentor_award_chick').value = excelData[i].chick
+    col_te.custom_elems.ObtainChildByKey('mentor_award_owl').value = excelData[i].owl
+    col_doc.Save()
+
+    resultObj.counterPersons++
+  }
+
+  return resultObj;
+}
+
+function mentorsProfileUpdate(body) {
+  var excelData = body.excelObj
+  var resultObj = {
+    counterPersons: 0,
+    notFoundPersons: [],
+    dublicatePersons: []
+  }
+
+  for(var i = 0; i < excelData.length; i++) {
+    rightPerson = findRightPerson(excelData[i], resultObj);
+
+    if (rightPerson === null) {
+      continue;
+    }
+
+    col_doc=tools.open_doc(rightPerson.id)
+    col_te=col_doc.TopElem
+    col_te.custom_elems.ObtainChildByKey('selection_procedure').value = excelData[i].mentor
+    col_doc.Save()
+    resultObj.counterPersons++
+  }
   return resultObj;
 }
 
@@ -241,6 +280,7 @@ function handler(body, method) {
       case 'dataReducer': return dataReducer(body); break;
       case 'checkUserRole': return checkUserRole(); break;
       case 'rewardsUpdate': return rewardsUpdate(body); break;
+      case 'mentorsProfileUpdate': return mentorsProfileUpdate(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');
