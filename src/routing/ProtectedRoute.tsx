@@ -24,13 +24,23 @@ export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 		}
 
 		if (isError) {
-			enqueueSnackbar('Ошибка проверки доступа', { variant: 'error' })
+			enqueueSnackbar('Ошибка проверки доступа', {
+				variant: 'error',
+				style: {
+					fontSize: '14px'
+				}
+			})
 			navigate('/', { replace: true })
 			return
 		}
 
 		if (!hasAccess) {
-			enqueueSnackbar('Доступ запрещён', { variant: 'error' })
+			enqueueSnackbar('Доступ запрещён', {
+				variant: 'error',
+				style: {
+					fontSize: '14px'
+				}
+			})
 			navigate('/', { replace: true })
 		}
 	}, [isLoading, isError, hasAccess, enqueueSnackbar, navigate])
