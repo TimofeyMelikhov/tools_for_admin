@@ -1,15 +1,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { backendId, baseServerPath } from '@/config/global'
 import type {
 	IInitialState,
 	IServerResponse,
 	IUploadList
 } from '@/models/filtersModel'
 
+import { backendId, baseServerPath } from '@/config/global'
+
 export const tutorApi = createApi({
 	reducerPath: 'tutorApi',
-	baseQuery: fetchBaseQuery({ baseUrl: baseServerPath }),
+	baseQuery: fetchBaseQuery({
+		baseUrl: baseServerPath,
+		prepareHeaders(headers) {
+			headers.set('Content-Type', 'application/json')
+			return headers
+		}
+	}),
 	endpoints: build => ({
 		getCurrentList: build.query<IUploadList[], string>({
 			query: method =>

@@ -6,7 +6,13 @@ import { backendId, baseServerPath } from '@/config/global'
 
 export const accessApi = createApi({
 	reducerPath: 'accessApi',
-	baseQuery: fetchBaseQuery({ baseUrl: baseServerPath }),
+	baseQuery: fetchBaseQuery({
+		baseUrl: baseServerPath,
+		prepareHeaders(headers) {
+			headers.set('Content-Type', 'application/json')
+			return headers
+		}
+	}),
 	tagTypes: ['AccessMenu'],
 	endpoints: build => ({
 		getAccessMenu: build.query<IMenuResponse[], void>({

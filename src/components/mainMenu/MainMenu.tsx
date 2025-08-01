@@ -12,8 +12,13 @@ export const MainMenu = () => {
 	const {
 		data: menuItems,
 		isLoading,
-		isError
+		isError,
+		error
 	} = useAppSelector(selectMenuItems)
+
+	if (isError) {
+		console.log(error)
+	}
 
 	if (isLoading) return <Preloader />
 	if (isError) return <div>Ошибка загрузки меню</div>

@@ -68,19 +68,19 @@ function checkUserRole() {
     )
   }
 
-  // var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
+  var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
 
-  // alert("Айди пользователя: " + curUserId + "Айди найденного в группе сотрудника: " + isGroupManagement.collaborator_id)
+  alert("Айди пользователя: " + curUserId)
 
-  //   if (OptInt(isGroupManagement.collaborator_id) === curUserId) {
-  //     menuItems.push(
-  //       {
-  //         id: 2,
-  //         title: 'Управление группами',
-  //         route: '/groupManagement'
-  //       }
-  //     )
-  //   }
+  if(isGroupManagement !== undefined) {
+    menuItems.push(
+      {
+        id: 2,
+        title: 'Управление группами',
+        route: '/groupManagement'
+      }
+    )
+  }
 
   var isAcessRewardsUpdate = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + acessRewardsUpdate + " AND collaborator_id = " + curUserId);  
 

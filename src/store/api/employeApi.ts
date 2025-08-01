@@ -6,7 +6,13 @@ import { backendId, baseServerPath } from '@/config/global'
 
 export const employeApi = createApi({
 	reducerPath: 'employeApi',
-	baseQuery: fetchBaseQuery({ baseUrl: baseServerPath }),
+	baseQuery: fetchBaseQuery({
+		baseUrl: baseServerPath,
+		prepareHeaders(headers) {
+			headers.set('Content-Type', 'application/json')
+			return headers
+		}
+	}),
 	endpoints: build => ({
 		updateRewards: build.mutation<IServerResponse, excelObj>({
 			query: ExcelRow => ({

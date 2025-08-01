@@ -6,7 +6,13 @@ import { backendId, baseServerPath } from '@/config/global'
 
 export const groupManagmentApi = createApi({
 	reducerPath: 'groupManagmentApi',
-	baseQuery: fetchBaseQuery({ baseUrl: baseServerPath }),
+	baseQuery: fetchBaseQuery({
+		baseUrl: baseServerPath,
+		prepareHeaders(headers) {
+			headers.set('Content-Type', 'application/json')
+			return headers
+		}
+	}),
 	endpoints: build => ({
 		getGroupList: build.query<IUploadList[], void>({
 			query: () =>
