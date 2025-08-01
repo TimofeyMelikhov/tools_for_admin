@@ -7,12 +7,19 @@ export interface IInitialState {
 	time?: string
 }
 
+export interface IInitialStateGroup {
+	selectedAction: SelectOption | null
+	excelObj: ExcelRow[]
+	currentGroup: IUploadList | null
+	usersToRemove: IPersonFromServer[]
+}
+
 export type excelObj = {
 	excelObj: ExcelRow[]
 }
 
-interface IPersonFromServer {
-	id?: string
+export interface IPersonFromServer {
+	id?: number
 	fullname: string
 	position_name: string
 	position_parent_name: string
@@ -22,6 +29,7 @@ export interface IServerResponse {
 	counterPersons: number
 	notFoundPersons: ExcelRow[]
 	dublicatePersons: IPersonFromServer[]
+	prevAssign: ExcelRow[]
 }
 
 export interface IMenuResponse {

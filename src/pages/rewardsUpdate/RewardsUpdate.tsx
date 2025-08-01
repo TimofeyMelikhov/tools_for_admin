@@ -80,7 +80,7 @@ export const RewardsUpdate = () => {
 			<Typography variant='h4' gutterBottom align='center'>
 				Обновление наград наставников
 			</Typography>
-			<ExcelUploader onSuccess={handleExcelData} />
+			{excelData.length === 0 && <ExcelUploader onSuccess={handleExcelData} />}
 
 			{excelData.length !== 0 && (
 				<div className={styles.tableTitle}>
@@ -104,6 +104,7 @@ export const RewardsUpdate = () => {
 						component='span'
 						onClick={() => uploadToServer(excelData)}
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
+						disabled={isLoading}
 					>
 						Обновить награды
 					</Button>

@@ -38,8 +38,6 @@ export const MentorProfile = () => {
 			const { notFoundPersons, dublicatePersons, counterPersons } =
 				await updateMentorProfile(data).unwrap()
 
-			console.log(notFoundPersons, dublicatePersons, counterPersons)
-
 			const hasErrors =
 				notFoundPersons.length > 0 || dublicatePersons.length > 0
 			const allSuccess =
@@ -80,9 +78,9 @@ export const MentorProfile = () => {
 		<div className={styles.container}>
 			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
-				Установка дат принятия наставников
+				Установка дат процедуры отбора
 			</Typography>
-			<ExcelUploader onSuccess={handleExcelData} />
+			{excelData.length === 0 && <ExcelUploader onSuccess={handleExcelData} />}
 
 			{excelData.length !== 0 && (
 				<div className={styles.tableTitle}>
@@ -106,8 +104,9 @@ export const MentorProfile = () => {
 						component='span'
 						onClick={() => uploadToServer(excelData)}
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
+						disabled={isLoading}
 					>
-						Обновить награды
+						Установить дату
 					</Button>
 				</Box>
 			)}

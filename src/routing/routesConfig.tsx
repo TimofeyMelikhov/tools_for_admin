@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 
+import { GroupManagement } from '@/pages/groupManagement/GroupManagement'
 import { MainPage } from '@/pages/mainPage/MainPage'
 import { MentorProfile } from '@/pages/mentorProfile/MentorProfile'
 import { NotFoundPage } from '@/pages/notFound/NotFoundPage'
@@ -30,6 +31,14 @@ export const routesConfig: RouteConfig[] = [
 				element: (
 					<ProtectedRoute>
 						<TrainingManagement />
+					</ProtectedRoute>
+				)
+			},
+			{
+				path: '/groupManagement',
+				element: (
+					<ProtectedRoute>
+						<GroupManagement />
 					</ProtectedRoute>
 				)
 			},

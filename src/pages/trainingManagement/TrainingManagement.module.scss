@@ -41,6 +41,9 @@
 		justify-content: space-between;
 	}
 	.errorsBlock {
-		margin-bottom: 15px;
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		padding-bottom: 15px;
 	}
 }

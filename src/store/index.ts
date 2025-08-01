@@ -2,7 +2,9 @@ import { configureStore } from '@reduxjs/toolkit'
 
 import { accessApi } from './api/accessApi'
 import { employeApi } from './api/employeApi'
+import { groupManagmentApi } from './api/groupManagmentApi'
 import { tutorApi } from './api/tutorApi'
+import groupManagementSlice from './slices/groupManagementSlice'
 import mentorProfileSlice from './slices/mentorProfileSlice'
 import rewardsUpdateSlice from './slices/rewardsUpdateSlice'
 import tutorSlice from './slices/tutorSlice'
@@ -12,15 +14,18 @@ export const store = configureStore({
 		[tutorApi.reducerPath]: tutorApi.reducer,
 		[accessApi.reducerPath]: accessApi.reducer,
 		[employeApi.reducerPath]: employeApi.reducer,
+		[groupManagmentApi.reducerPath]: groupManagmentApi.reducer,
 		filters: tutorSlice,
 		rewardsUpdate: rewardsUpdateSlice,
-		mentorProfile: mentorProfileSlice
+		mentorProfile: mentorProfileSlice,
+		groupManagementSlice
 	},
 	middleware: getDefaultMiddleware =>
 		getDefaultMiddleware().concat(
 			tutorApi.middleware,
 			accessApi.middleware,
-			employeApi.middleware
+			employeApi.middleware,
+			groupManagmentApi.middleware
 		)
 })
 

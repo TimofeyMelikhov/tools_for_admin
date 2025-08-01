@@ -21,7 +21,6 @@ export const MainMenu = () => {
 
 	return (
 		<div className={styles.menuContainer}>
-			Инструменты администратора
 			{menuItems.map(item => (
 				<Link key={item.id} to={item.route}>
 					<div className={styles.menuItem}>{item.title}</div>

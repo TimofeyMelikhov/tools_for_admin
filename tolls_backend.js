@@ -54,6 +54,7 @@ function checkUserRole() {
   var accessTrainingManagement = getParam("accessTrainingManagementId");
   var acessRewardsUpdate = getParam("acessRewardsUpdateId");
   var accessMentorProfile = getParam("accessMentorProfileId");
+  var groupManagement = getParam("groupManagement")
 
   var isAccessTrainingManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessTrainingManagement + " AND collaborator_id = " + curUserId);
   
@@ -61,17 +62,31 @@ function checkUserRole() {
     menuItems.push(
       {
         id: 1,
-        title: 'Назначение тестов/курсов, добавление в группу',
+        title: 'Назначение курсов',
         route: '/TrainingManagement'
       }
     )
   }
 
+  // var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
+
+  // alert("Айди пользователя: " + curUserId + "Айди найденного в группе сотрудника: " + isGroupManagement.collaborator_id)
+
+  //   if (OptInt(isGroupManagement.collaborator_id) === curUserId) {
+  //     menuItems.push(
+  //       {
+  //         id: 2,
+  //         title: 'Управление группами',
+  //         route: '/groupManagement'
+  //       }
+  //     )
+  //   }
+
   var isAcessRewardsUpdate = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + acessRewardsUpdate + " AND collaborator_id = " + curUserId);  
 
     if (isAcessRewardsUpdate !== undefined) {
       menuItems.push(
-        { id: 2, title: 'Обновление наград', route: '/RewardsUpdate' }
+        { id: 3, title: 'Обновление наград', route: '/RewardsUpdate' }
       )
   }
 
@@ -79,7 +94,7 @@ function checkUserRole() {
 
     if (isAccessMentorProfile !== undefined) {
       menuItems.push(
-        { id: 3, title: 'Обновление профилей наставников', route: '/MentorProfile' }
+        { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile' }
       )
   }
 
@@ -122,13 +137,39 @@ function findRightPerson(personData, resultObj) {
 }
 
 function getCourses() {
-  return selectAll("SELECT id, code, name, modification_date FROM courses");
+  var categoryCourseId = getParam("categoryCourseId")
+  return selectAll("SELECT c.id, c.name, c.code, c.modification_date FROM courses c CROSS APPLY c.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryCourseId + "'");
 }
 function getAssessments() {
   return selectAll("SELECT id, code, title AS name, modification_date FROM assessments");
 }
 function getGroups() {
   return selectAll("SELECT id, code, name, modification_date FROM groups");
+}
+
+function getPersonsGroup(body) {
+  var groupId = body.id
+
+  if(!groupId) {
+    alert("Айди группы неизвестно")
+    return null
+  }
+
+  return selectAll("\
+    SELECT\
+      c.id,\
+      c.fullname,\
+      c.position_name,\
+      c.position_parent_name\
+    FROM\
+      group_collaborators gc\
+    LEFT JOIN\
+      collaborators c\
+    ON\
+      c.id = gc.collaborator_id\
+    WHERE\
+      gc.group_id = '" + groupId + "'\
+    ")
 }
 
 function assignCourses(body) {
@@ -139,7 +180,8 @@ function assignCourses(body) {
   var resultObj = {
     counterPersons: 0,
     notFoundPersons: [],
-    dublicatePersons: []
+    dublicatePersons: [],
+    prevAssign: []
   }
 
   for(var i = 0; i < excelData.length; i++) {
@@ -149,7 +191,13 @@ function assignCourses(body) {
       continue;
     }
 
-    tools.activate_course_to_person(rightPerson.id, selectedCourse, null, null, null, time)
+    activeResultCourse = tools.activate_course_to_person(rightPerson.id, selectedCourse, null, null, null, time)
+
+    if(OptInt(activeResultCourse, 0) !== 0) {
+      resultObj.prevAssign.push(excelData[i])
+      continue
+    }
+
     resultObj.counterPersons++
   }
   return resultObj;
@@ -162,7 +210,8 @@ function assignAssessments(body) {
   var resultObj = {
     counterPersons: 0,
     notFoundPersons: [],
-    dublicatePersons: []
+    dublicatePersons: [],
+    prevAssign: []
   }
 
   for(var i = 0; i < excelData.length; i++) {
@@ -171,7 +220,13 @@ function assignAssessments(body) {
     if (rightPerson === null) {
       continue;
     }
-    tools.activate_test_to_person(rightPerson.id, selectedTest, null, null, null, null, time)
+    activeResultTest = tools.activate_test_to_person(rightPerson.id, selectedTest, null, null, null, null, time)
+
+    if(OptInt(activeResultTest, 0) !== 0) {
+      resultObj.prevAssign.push(excelData[i])
+      continue
+    }
+
     resultObj.counterPersons++
   }
   return resultObj;
@@ -183,7 +238,8 @@ function addToGroup(body) {
   var resultObj = {
     counterPersons: 0,
     notFoundPersons: [],
-    dublicatePersons: []
+    dublicatePersons: [],
+    prevAssign: []
   }
 
   for(var i = 0; i < excelData.length; i++) {
@@ -272,11 +328,11 @@ function dataReducer(body) {
 
 function handler(body, method) {
   try {
-
     switch (method) {
       case 'getCourses': return getCourses(); break;
       case 'getAssessments': return getAssessments(); break;
       case 'getGroups': return getGroups(); break;
+      case 'getPersonsGroup': return getPersonsGroup(body); break;
       case 'dataReducer': return dataReducer(body); break;
       case 'checkUserRole': return checkUserRole(); break;
       case 'rewardsUpdate': return rewardsUpdate(body); break;

@@ -50,9 +50,9 @@ export const TrainingManagement = memo((): ReactElement => {
 
 	const optionsForAction: Option[] = useMemo(
 		() => [
-			{ value: 'getCourses', label: 'Назначить курс' },
-			{ value: 'getAssessments', label: 'Назначить тест' },
-			{ value: 'getGroups', label: 'Добавить в группу' }
+			{ value: 'getCourses', label: 'Назначить курс' }
+			// { value: 'getAssessments', label: 'Назначить тест' }
+			// { value: 'getGroups', label: 'Добавить в группу' }
 		],
 		[]
 	)
@@ -63,13 +63,17 @@ export const TrainingManagement = memo((): ReactElement => {
 
 	const uploadToServer = async (countFilter: IInitialState) => {
 		try {
-			const { notFoundPersons, dublicatePersons, counterPersons } =
+			const { notFoundPersons, dublicatePersons, counterPersons, prevAssign } =
 				await assign(countFilter).unwrap()
 
 			const hasErrors =
-				notFoundPersons.length > 0 || dublicatePersons.length > 0
+				notFoundPersons.length > 0 ||
+				dublicatePersons.length > 0 ||
+				prevAssign?.length > 0
 			const allSuccess =
-				notFoundPersons.length === 0 && dublicatePersons.length === 0
+				notFoundPersons.length === 0 &&
+				dublicatePersons.length === 0 &&
+				prevAssign?.length === 0
 
 			if (hasErrors) {
 				enqueueSnackbar(
@@ -117,7 +121,7 @@ export const TrainingManagement = memo((): ReactElement => {
 		<div className={styles.container}>
 			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
-				Назначение курсов/тестов, добавление в группу
+				Назначение курсов
 			</Typography>
 			<div className={styles.filters}>
 				<Select<OptionType>
@@ -144,7 +148,9 @@ export const TrainingManagement = memo((): ReactElement => {
 					/>
 				)}
 
-				<ExcelUploader onSuccess={handleExcelData} />
+				{excelData.length === 0 && (
+					<ExcelUploader onSuccess={handleExcelData} />
+				)}
 
 				{!!excelData.length && (
 					<Button
@@ -170,6 +176,7 @@ export const TrainingManagement = memo((): ReactElement => {
 						component='span'
 						onClick={() => uploadToServer(countFilter)}
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
+						disabled={isLoading}
 					>
 						Назначить
 					</Button>
@@ -177,14 +184,27 @@ export const TrainingManagement = memo((): ReactElement => {
 			)}
 
 			{isLoading && <Preloader />}
-			{(!!data?.dublicatePersons.length || !!data?.notFoundPersons.length) && (
-				<div className={styles.errorsBlock}>
-					Дубликаты в системе:
-					<ExcelPreviewTable data={data.dublicatePersons} />
-					Не найденные сотрудники:{' '}
-					{data.notFoundPersons.map(p => p.fullname).join(', ')}
-				</div>
-			)}
+
+			<div className={styles.errorsBlock}>
+				{!!data?.dublicatePersons.length && (
+					<div>
+						Дубликаты в системе:
+						<ExcelPreviewTable data={data.dublicatePersons} />
+					</div>
+				)}
+				{!!data?.notFoundPersons.length && (
+					<div>
+						Не найденные сотрудники:{' '}
+						{data.notFoundPersons.map(p => p.fullname).join(', ')}
+					</div>
+				)}
+				{!!data?.prevAssign?.length && (
+					<div>
+						Были назначены ранее:{' '}
+						{data.prevAssign.map(p => p.fullname).join(', ')}
+					</div>
+				)}
+			</div>
 		</div>
 	)
 })
