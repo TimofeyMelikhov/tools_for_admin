@@ -44,8 +44,29 @@ var curUserId = DEV_MODE
   : OptInt(Request.Session.Env.curUserID);
 var curUser = DEV_MODE ? tools.open_doc(curUserId).TopElem : Request.Session.Env.curUser;
 /* --- logic --- */
-function show(obj) {
-  alert("Просматриваемый объект" + tools.object_to_text(obj, "json"));
+
+var logConfig = {
+  code: "tools_log",
+  type: "tools",
+  id: customWebTemplate.id
+}
+
+function log(message, type) {
+  type = IsEmptyValue(type) ? "INFO" : StrUpperCase(type);
+
+  if (ObjectType(message) === "JsObject" || ObjectType(message) === "JsArray" || ObjectType(message) === "XmLdsSeq") {
+    message = tools.object_to_text(message, "json")
+  }
+
+  var log = "["+type+"]["+logConfig.type+"]["+logConfig.id+"]: "+message;
+
+  if(DEV_MODE) {
+    alert(log)
+  } else {
+    EnableLog(logConfig.code, true)
+    LogEvent(logConfig.code, log);
+    EnableLog(logConfig.code, false)
+  }  
 }
 
 function checkUserRole() {
@@ -55,6 +76,7 @@ function checkUserRole() {
   var acessRewardsUpdate = getParam("acessRewardsUpdateId");
   var accessMentorProfile = getParam("accessMentorProfileId");
   var groupManagement = getParam("groupManagement")
+  var assignAdapt = getParam("adaptationGroup")
 
   var isAccessTrainingManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessTrainingManagement + " AND collaborator_id = " + curUserId);
   
@@ -70,8 +92,6 @@ function checkUserRole() {
 
   var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
 
-  alert("Айди пользователя: " + curUserId)
-
   if(isGroupManagement !== undefined) {
     menuItems.push(
       {
@@ -84,25 +104,32 @@ function checkUserRole() {
 
   var isAcessRewardsUpdate = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + acessRewardsUpdate + " AND collaborator_id = " + curUserId);  
 
-    if (isAcessRewardsUpdate !== undefined) {
-      menuItems.push(
-        { id: 3, title: 'Обновление наград', route: '/RewardsUpdate' }
-      )
+  if (isAcessRewardsUpdate !== undefined) {
+    menuItems.push(
+      { id: 3, title: 'Обновление наград', route: '/RewardsUpdate' }
+    )
   }
 
   var isAccessMentorProfile = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessMentorProfile + " AND collaborator_id = " + curUserId);  
 
-    if (isAccessMentorProfile !== undefined) {
-      menuItems.push(
-        { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile' }
-      )
+  if (isAccessMentorProfile !== undefined) {
+    menuItems.push(
+      { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile' }
+    )
+  }
+
+  var isAccessAssignAdapt = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + assignAdapt + " AND collaborator_id = " + curUserId);
+  if (isAccessAssignAdapt !== undefined) {
+    menuItems.push(
+      { id: 5, title: 'Назначение адаптации', route: '/AssignAdapt' }
+    )
   }
 
   return menuItems;
 }
 
 function findRightPerson(personData, resultObj) {
-  var _query_str = "SELECT id, fullname, position_name, position_parent_name FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
+  var _query_str = "SELECT * FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
 
   if (personData.position_name !== null) {
     _query_str += " AND position_name = " + XQueryLiteral(personData.position_name);
@@ -131,7 +158,7 @@ function findRightPerson(personData, resultObj) {
     return receivedPersons[0];
 
   } catch (err) {
-    alert("Ошибка при выполнении запроса XQuery: " + err.message);
+    log("Ошибка при выполнении запроса XQuery: " + err.message);
     return null;
   }
 }
@@ -141,7 +168,8 @@ function getCourses() {
   return selectAll("SELECT c.id, c.name, c.code, c.modification_date FROM courses c CROSS APPLY c.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryCourseId + "'");
 }
 function getAssessments() {
-  return selectAll("SELECT id, code, title AS name, modification_date FROM assessments");
+  var categoryAssessmentsId = getParam("categoryAssessmentsId")
+  return selectAll("SELECT id, code, title AS name, modification_date FROM assessments a CROSS APPLY c.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryAssessmentsId + "'");
 }
 function getGroups() {
   return selectAll("SELECT id, code, name, modification_date FROM groups");
@@ -151,7 +179,7 @@ function getPersonsGroup(body) {
   var groupId = body.id
 
   if(!groupId) {
-    alert("Айди группы неизвестно")
+    log("Айди группы неизвестно")
     return null
   }
 
@@ -308,6 +336,652 @@ function mentorsProfileUpdate(body) {
   return resultObj;
 }
 
+function assignAdaptation(body) {
+  var resultObj = {
+    countCreateAdapt: 0,
+    notFoundPersons: [],
+    dublicatePersons: [],
+    notFoundProgramm: [],
+    haveAProgramm: [],
+    haventPosDate: []
+  }
+  var aProgramChoice = ["position_common", "position_family", "subdivision_group"]
+  var excelData = body.excelObj
+  var xarrCollaborators = []
+  var xarrPositions = new Array();
+  var xarrPositionCommons = new Array();
+  var arrPositionFamilyIds = new Array();
+  var arrObjectRequiraments = new Array();
+  var xarrSubdivisionGroups = new Array();
+  var xarrObjectRequiraments = new Array();
+  var days_for_check = 20; // Проверять, была ли адаптация за последние N дней
+  var sAdaptationType = "ext";
+  var dStartDate = DateNewTime(Date(body.startDate), 0, 0, 0);
+  var aTutors = [4, 5]
+  var int_hire_date_days = 20; // кол-во дней с даты приема
+  var int_position_date_days = 20; // кол-во дней с даты вступления в должность
+  var aSendTypes = [1, 2, 3];
+  var iPersonNotificationID = OptInt("7146169092266397766"); 
+  var iTutorNotificationID = OptInt("7146169629248269491");
+  var iBossNomailNotificationID = OptInt("6992442901426592165");
+  var iAdminNobossNotificationID = OptInt("6993074572807339018");
+  var iTutorAppointmentNotificationID = OptInt("6993074572807339059");
+  var iBossTutorNomailNotificationID = OptInt("6993074572807339106");
+
+  var iGroupSuperviserID = OptInt(getParam("group_superviser"));
+  var iGroupAdminsID = OptInt(getParam("admin_adaptation_group"));
+  var INT_GROUP_SALES = OptInt(getParam("int_group_sales_id"));
+  var INT_GROUP_NOT_SALES = OptInt(getParam("int_group_not_sales_id"));
+  var INT_GROUP_LOGIST = OptInt(getParam('int_group_logist_id'));
+  var INT_GROUP_LOGIST_CUD = OptInt(getParam('int_group_logist_cud_id'));
+
+  function getSuperviser(subdivision_id) {
+    var managers = XQuery("sql:
+      WITH RecursiveCTE AS (
+          SELECT 
+            id, 
+            name, 
+            parent_object_id
+          FROM 
+            subdivisions
+          WHERE 
+            id = "+subdivision_id+"
+      
+          UNION ALL
+      
+          SELECT 
+            s.id, 
+            s.name, 
+            s.parent_object_id
+          FROM 
+            subdivisions s
+          INNER JOIN 
+            RecursiveCTE rcte ON s.id = rcte.parent_object_id
+      )
+      SELECT 
+        rcte.id AS subdivision_id,
+        rcte.name AS subdivision_name,
+        rcte.parent_object_id,
+        m.value('(./person_id)[1]', 'varchar(max)') person_id,
+        m.value('(./person_fullname)[1]', 'varchar(max)') person_fullname,
+        m.value('(./boss_type_id)[1]', 'varchar(max)') boss_type_id
+      FROM 
+        RecursiveCTE rcte
+      JOIN 
+        subdivision s ON s.id = rcte.id
+      OUTER APPLY 
+        s.data.nodes('subdivision/func_managers/func_manager') AS managers(m); 
+      ")
+
+      var superviserType = OptInt("7105332651422086498");
+
+      for (manager in managers) {
+          if (String(manager.boss_type_id) == String(superviserType)) {
+              return manager.person_id;
+          }
+      }
+      return undefined;
+  }
+
+  function getPersonFromGroup(group_id) {
+    var query = ArraySelectAll(XQuery("sql:
+    SELECT
+    cols.id,   
+        cols.fullname,
+        cols.position_id,
+        cols.position_name,
+        cols.position_parent_id,
+        cols.position_parent_name,
+        cols.org_id,
+        cols.org_name
+    FROM group_collaborators gc
+    JOIN collaborators cols ON cols.id = gc.collaborator_id
+    WHERE gc.group_id = "+group_id+""))
+    return query;
+  }
+
+  for (el in excelData) {
+    rightPerson = findRightPerson(el, resultObj);
+
+    if (rightPerson === null) {
+      continue;
+    }
+    xarrCollaborators.push(rightPerson)
+  }
+
+  if (ArrayOptFind(aProgramChoice, "This == 'position_common' || This == 'position_family'") != undefined) {
+		xarrPositions = XQuery("for $elem_qc in positions where MatchSome( $elem_qc/id, ( " + ArrayMerge(xarrCollaborators, "This.position_id", ",") + " ) ) return $elem_qc/Fields('id','position_common_id','position_family_id')");
+
+		if (ArrayOptFind(xarrPositions, "This.position_common_id.HasValue") != undefined) {
+			xarrPositionCommons = XQuery("for $elem_qc in position_commons where MatchSome( $elem_qc/id, ( " + ArrayMerge(ArraySelect(ArraySelectDistinct(xarrPositions, "This.position_common_id"), "This.position_common_id.HasValue"), "This.position_common_id", ",") + " ) ) return $elem_qc/Fields('id','position_familys')");
+		}
+
+		if (ArrayOptFind(aProgramChoice, "This == 'position_common'") != undefined) {
+			arrObjectRequiraments = ArrayExtractKeys(xarrPositionCommons, "id");
+		}
+
+		if (ArrayOptFind(aProgramChoice, "This == 'position_family'") != undefined) {
+			if (ArrayOptFind(xarrPositions, "This.position_family_id.HasValue") != undefined) {
+				arrPositionFamilyIds = ArrayExtractKeys(ArraySelect(ArraySelectDistinct(xarrPositions, "This.position_family_id"), "This.position_family_id.HasValue"), "position_family_id");
+			}
+
+			if (ArrayOptFind(xarrPositionCommons, "This.position_familys.HasValue") != undefined) {
+				for (_pc in ArraySelect(xarrPositionCommons, "This.position_familys.HasValue")) {
+					arrPositionFamilyIds = ArrayUnion(arrPositionFamilyIds, ArrayExtract(String(_pc.position_familys).split(";"), "OptInt( This )"));
+				}
+				arrPositionFamilyIds = ArraySelectDistinct(arrPositionFamilyIds, "This");
+			}
+			arrObjectRequiraments = ArrayUnion(arrObjectRequiraments, arrPositionFamilyIds);
+		}
+	}
+
+	if (ArrayOptFind(aProgramChoice, "This == 'subdivision_group'") != undefined) {
+		xarrSubdivisionGroups = XQuery("for $elem_qc in subdivision_group_subdivisions where MatchSome( $elem_qc/subdivision_id, ( " + ArrayMerge(ArraySelect(ArraySelectDistinct(xarrCollaborators, "This.position_parent_id"), "This.position_parent_id.HasValue"), "This.position_parent_id", ",") + " ) ) return $elem_qc/Fields('subdivision_id','subdivision_group_id')");
+
+		if (ArrayOptFirstElem(xarrSubdivisionGroups) != undefined) {
+			arrObjectRequiraments = ArrayUnion(arrObjectRequiraments, ArrayExtractKeys(ArraySelectDistinct(xarrSubdivisionGroups, "subdivision_group_id"), "subdivision_group_id"));
+		}
+	}
+
+	if (ArrayOptFirstElem(arrObjectRequiraments) != undefined) {
+		xarrObjectRequiraments = XQuery("for $elem in object_requirements where MatchSome( $elem/object_id, ( " + ArrayMerge(arrObjectRequiraments, "This", ",") + " ) ) and $elem/requirement_object_type = 'typical_development_program' return $elem/Fields('object_id','additional_param','requirement_object_id')");
+	}
+
+	var xarrAdaptations = XQuery("for $elem_qc in career_reserves where MatchSome( $elem_qc/person_id, ( " + ArrayMerge(xarrCollaborators, "This.id", ",") + " ) ) return $elem_qc/Fields('id','person_id','position_type','status','start_date')");
+	xarrAdaptations = ArraySelectByKey(xarrAdaptations, "adaptation", "position_type");
+	var docCollaborator, arrTempObjectRequiramentIds, arrTempObjectRequirements, catAdaptation, docAdaptation, iAdaptationID, isHireDateEmpty, isPositionDateEmpty;
+	var catPosition = null;
+	var iCountCreated = 0;
+	var catPositionCommon = null;
+	var catTutorBossType = ArrayOptFirstElem(XQuery("for $elem in boss_types where $elem/code = 'talent_pool_tutor' return $elem"));
+	var catDirectBossType = ArrayOptFirstElem(XQuery("for $elem in boss_types where $elem/code = 'main' return $elem"));
+	var catSuperviserBossType = ArrayOptFirstElem(XQuery("for $elem in boss_types where $elem/code = 'superviser_tutor' return $elem"));
+	var catAdministratorBossType = ArrayOptFirstElem(XQuery("for $elem in boss_types where $elem/code = 'talent_pool_administrator' return $elem"));
+
+	for (_col in xarrCollaborators) {
+		try {
+			docCollaborator = tools.open_doc(_col.id);
+
+			if (docCollaborator == undefined) continue;
+
+			catPosition = null;
+			catPositionCommon = null;
+			arrTempObjectRequiramentIds = new Array();
+
+			isHireDateEmpty = IsEmptyValue(RValue(docCollaborator.TopElem.hire_date));
+			isPositionDateEmpty = IsEmptyValue(RValue(docCollaborator.TopElem.position_date));
+
+			if (isHireDateEmpty || isPositionDateEmpty) {
+				log("У сотрудника [" + _col.id + "] отсутствуют поля 'Дата найма' И/ИЛИ 'Дата встпуления в должность'. Адапатция не будет назначена");
+        resultObj.haventPosDate.push(String(_col.fullname))
+				continue;
+			}
+
+			for (_pc in aProgramChoice) {
+				switch (_pc) {
+					case "position_common":
+						if (catPosition == null) {
+							catPosition = ArrayOptFindByKey(xarrPositions, _col.position_id, "id");
+						}
+						if (catPosition == undefined || !catPosition.position_common_id.HasValue) {
+							continue;
+						}
+
+						if (catPositionCommon == null) {
+
+							catPositionCommon = ArrayOptFindByKey(xarrPositionCommons, catPosition.position_common_id, "id");
+						}
+
+						if (catPositionCommon == undefined) {
+							continue;
+						}
+						arrTempObjectRequiramentIds.push(catPositionCommon.id.Value);
+						break;
+
+					case "position_family":
+						if (catPosition == null) {
+							catPosition = ArrayOptFindByKey(xarrPositions, _col.position_id, "id");
+						}
+						if (catPosition == undefined || !catPosition.position_common_id.HasValue) {
+							continue;
+						}
+						if (catPosition.position_family_id.HasValue) {
+							arrTempObjectRequiramentIds.push(catPosition.position_family_id);
+						}
+						if (!catPosition.position_common_id.HasValue) {
+							continue;
+						}
+						if (catPositionCommon == null) {
+							catPositionCommon = ArrayOptFindByKey(xarrPositionCommons, catPosition.position_common_id, "id");
+						}
+						if (catPositionCommon == undefined || !catPositionCommon.position_familys.HasValue) {
+							continue;
+						}
+						arrTempObjectRequiramentIds = ArrayUnion(arrTempObjectRequiramentIds, ArrayExtract(String(catPositionCommon.position_familys).split(";"), "OptInt( This )"));
+
+						break;
+
+					case "subdivision_group":
+						if (_col.position_parent_id.HasValue) {
+							arrTempObjectRequiramentIds = ArrayUnion(arrTempObjectRequiramentIds, ArrayExtractKeys(ArraySelectByKey(xarrSubdivisionGroups, _col.position_parent_id, "subdivision_id"), "subdivision_group_id"));
+						}
+						break;
+				}
+			}
+
+			if (ArrayOptFirstElem(arrTempObjectRequiramentIds) == undefined) {
+				log("Автоматическое назначение адаптаций - для сотрудника " + _col.id + " не найдено типовых программ для назначения")
+        resultObj.notFoundProgramm.push(String(_col.fullname))
+				continue;
+			}
+			arrTempObjectRequirements = ArrayIntersect(xarrObjectRequiraments, arrTempObjectRequiramentIds, "This.object_id", "This");
+			arrTempObjectRequirements = ArraySelect(arrTempObjectRequirements, "This.additional_param == sAdaptationType || This.additional_param == 'any'");
+			if (ArrayOptFirstElem(arrTempObjectRequirements) == undefined) {
+				log("Автоматическое назначение адаптаций - для сотрудника " + _col.id + " не найдено типовых программ для назначения")
+        resultObj.notFoundProgramm.push(String(_col.fullname))
+				continue;
+			}
+			arrTempObjectRequirements = ArraySelectDistinct(arrTempObjectRequirements, "This.requirement_object_id");
+
+			docAdaptation = null;
+			catAdaptation = {}
+			allAdapts = ArraySelectByKey(xarrAdaptations, _col.id, "person_id");
+			hasRecentAdaptation = false;
+
+			if (ArrayCount(allAdapts) > 0) {
+				currentDate = Date();
+        resultObj.haveAProgramm.push(String(_col.fullname))
+				for (elem in allAdapts) {
+					if (days_for_check > 0 && elem.start_date.HasValue) {
+						daysDiff = (DateToRawSeconds(currentDate) - DateToRawSeconds(elem.start_date)) / 86400;
+						if (daysDiff <= days_for_check) {
+							hasRecentAdaptation = true;
+							break;
+						}
+					}
+
+					if (elem.status.Value == 'active') {
+						catAdaptation.status = 'active';
+						catAdaptation.id = elem.id;
+					}
+				}
+			}
+
+			if (hasRecentAdaptation) {
+				log("У сотрудника " + _col.id + " есть адаптации за последние " + days_for_check + " дней. Адаптация не будет назначена.");
+        // resultObj.haveAProgramm.push(String(_col.fullname))
+				continue;
+			}
+
+			if (!catAdaptation.HasProperty('status')) {
+				catAdaptation = undefined;
+			}
+
+			if (catAdaptation == undefined) {
+				docAdaptation = OpenNewDoc('x-local://wtv/wtv_career_reserve.xmd');
+				docAdaptation.BindToDb();
+				docAdaptation.TopElem.person_id = _col.id;
+				docAdaptation.TopElem.status = 'active';
+				tools.common_filling('collaborator', docAdaptation.TopElem, _col.id, docCollaborator.TopElem);
+				docAdaptation.TopElem.start_date = dStartDate;
+				docAdaptation.TopElem.readiness_percent = 0;
+				docAdaptation.TopElem.position_type = "adaptation";
+				docAdaptation.TopElem.position_name = docCollaborator.TopElem.position_name;
+				docAdaptation.TopElem.subdivision_id = docCollaborator.TopElem.position_parent_id;
+				docAdaptation.TopElem.autocalculate_readiness_percent = false;
+
+				// Назначение наставников 1С
+				try {
+					if (ArrayOptFind(aTutors, "This == 4") != undefined) {
+						oDirectBoss = tools.get_uni_user_boss(docCollaborator.TopElem)
+						directTutor = ArrayOptFind(docCollaborator.TopElem.func_managers, "This.boss_type_id == " + catTutorBossType.id)
+
+						if (oDirectBoss != undefined && oDirectBoss.id) {
+							adaptationDirectBoss = docAdaptation.TopElem.tutors.ObtainChildByKey(oDirectBoss.id);
+							tools.common_filling('collaborator', adaptationDirectBoss, oDirectBoss.id);
+							if (catDirectBossType != undefined) {
+								adaptationDirectBoss.boss_type_id = catDirectBossType.id;
+							}
+						}
+
+						if (directTutor != undefined) {
+							adaptationDirectTutor = docAdaptation.TopElem.tutors.ObtainChildByKey(directTutor.person_id);
+							tools.common_filling('collaborator', adaptationDirectTutor, directTutor.person_id);
+							if (catTutorBossType != undefined) {
+								adaptationDirectTutor.boss_type_id = catTutorBossType.id;
+							}
+						}
+					}
+				} catch (e) {
+					log(e.message + " 05.02.2024 #42423 Назначение наставников 1С")
+				}
+
+				try {
+					if (ArrayOptFind(aTutors, "This == 5") != undefined) {
+						oSuperviserBoss = getSuperviser(docCollaborator.TopElem.position_parent_id);
+
+						if (oSuperviserBoss != undefined) {
+							curUserID = oSuperviserBoss;
+							inSuperviserGroup = tools.is_by_group_id(iGroupSuperviserID);
+
+							if (tools_web.is_true(inSuperviserGroup)) {
+								adaptationSuperviserBoss = docAdaptation.TopElem.tutors.ObtainChildByKey(oSuperviserBoss);
+								tools.common_filling('collaborator', adaptationSuperviserBoss, oSuperviserBoss);
+								if (catSuperviserBossType != undefined) {
+									adaptationSuperviserBoss.boss_type_id = catSuperviserBossType.id;
+								}
+							}
+						}
+					}
+				} catch (e) {
+					log(e.message + "Назначение супервайзера наставника")
+				}
+
+				docAdaptation.Save();
+
+				iCountCreated++;
+        resultObj.countCreateAdapt++
+				iAdaptationID = docAdaptation.DocID;
+
+        arrBossSendNotification = new Array();
+        for (_send_type in aSendTypes) {
+          switch (String(_send_type)) {
+            // уведомление сотруднику
+            case "1":
+              if (iPersonNotificationID != undefined)
+                try {
+                  if (docCollaborator.TopElem.email.Value == undefined || docCollaborator.TopElem.email.Value == "") {
+                    if (iBossNomailNotificationID != undefined) {
+                      oDirectBoss = tools.get_uni_user_boss(docCollaborator.TopElem)
+                      tools.create_notification(
+                        iBossNomailNotificationID,
+                        oDirectBoss.id.Value,
+                        "",
+                        iAdaptationID
+                      );
+                    }
+                  } else {
+                    tools.create_notification(iPersonNotificationID, _col.id, "", iAdaptationID, docCollaborator.TopElem, docAdaptation.TopElem);
+                  }
+                }
+              catch (err) {
+                log(err)
+              }
+              break;
+            // уведомление руководителю
+            case "2":
+              if (iTutorNotificationID != undefined) {
+                try {
+                  oDirectBoss = tools.get_uni_user_boss(docCollaborator.TopElem)
+                  if (oDirectBoss != undefined) {
+                    arrBossSendNotification.push(oDirectBoss.id.Value)
+                  } else if (iAdminNobossNotificationID != undefined) {
+                    arrAdmins = tools.open_doc(iGroupAdminsID).TopElem.collaborators
+                    for (oAdmin in arrAdmins) {
+                      tools.create_notification(
+                        iAdminNobossNotificationID,
+                        oAdmin.collaborator_id.Value,
+                        "",
+                        iAdaptationID
+                      );
+                    }
+                  }
+                } catch (e) {
+                  log(e.message)
+                }
+              }
+              break;
+            // уведомление наставнику
+            case "3":
+              try {
+                oDirectBoss = tools.get_uni_user_boss(docCollaborator.TopElem);
+                for (oTutor in docAdaptation.TopElem.tutors) {
+                  teTutor = tools.open_doc(oTutor.person_id).TopElem;
+                  if (teTutor.email.Value != undefined && teTutor.email.Value != "") {
+                    if(oTutor.boss_type_id == OptInt("5703809445382982252")) {
+                      tools.create_notification(
+                        iTutorAppointmentNotificationID,
+                        teTutor.id.Value,
+                        "",
+                        iAdaptationID
+                      );
+                    }
+                  } else {
+                    tools.create_notification(
+                      iBossTutorNomailNotificationID,
+                      oDirectBoss.id.Value,
+                      oTutor.person_fullname,
+                      iAdaptationID
+                    );
+                  }
+                }
+              } catch (e) {
+                log(e.message)
+              }
+              break;
+          }
+        }
+        for (_boss_id in ArraySelectDistinct(arrBossSendNotification, "This")) {
+          try {
+            tools.create_notification(iTutorNotificationID, _boss_id, "", _col.id, null, docAdaptation.TopElem);
+          } catch (err) {
+            log(err)
+          }
+        }
+
+        // назначение администраторов адаптации
+        try {
+          arrAdminGroup = getPersonFromGroup(iGroupAdminsID)
+          for(admin in arrAdminGroup) {
+            adaptationAdmins = docAdaptation.TopElem.tutors.ObtainChildByKey(admin.id)
+            tools.common_filling('collaborator', adaptationAdmins, admin.id)
+            if(catAdministratorBossType != undefined) {
+              adaptationAdmins.boss_type_id = catAdministratorBossType.id
+            }
+          }
+
+        } catch (error) {
+          log(error.message + "Назначение администраторов адаптации")
+        }
+
+				// Временное отключение автоназначения
+				arrDisabledAutoAppointmentTasks = []
+				try {
+					sTypicalDevelopmementProgramId = ArrayOptFirstElem(arrTempObjectRequirements).GetOptProperty("requirement_object_id").Value
+					docTypicalDevelopmementProgram = tools.open_doc(OptInt(sTypicalDevelopmementProgramId))
+					for (oTypicalTask in docTypicalDevelopmementProgram.TopElem.tasks) {
+						if (oTypicalTask.auto_appoint_learning.Value) {
+							oTypicalTask.auto_appoint_learning = false
+							arrDisabledAutoAppointmentTasks.push(oTypicalTask.id.Value)
+						}
+					}
+					docTypicalDevelopmementProgram.Save()
+				} catch (e) {
+					log(e.message + " 05.02.2024 Временное отключение автоназначения")
+				}
+
+				tools.call_code_library_method("libTalentPool", "AssignTypicalPrograms", [iAdaptationID, docAdaptation, ArrayExtract(arrTempObjectRequirements, "This.requirement_object_id")]);
+
+				// Установка статуса в работе и назначение курсов и тестов
+				try {
+					docAdaptation = tools.open_doc(docAdaptation.TopElem.id)
+					dAdaptationCreationDate = Date(docAdaptation.TopElem.doc_info.creation.date)
+					dAdaptationCreationDate = Date(Day(dAdaptationCreationDate) + '.' + Month(dAdaptationCreationDate) + '.' + Year(dAdaptationCreationDate) + ' 00:00')
+					docAdaptation.TopElem.status = 'active'
+					for (oTask in docAdaptation.TopElem.tasks) {
+						try {
+							dTaskStartDate = Date(oTask.start_date)
+							oTaskStartDate = Date(Day(dTaskStartDate) + '.' + Month(dTaskStartDate) + '.' + Year(dTaskStartDate) + ' 00:00')
+							if (dAdaptationCreationDate >= oTaskStartDate) {
+								oTask.status = 'active'
+							}
+							if (
+								oTask.status.Value == 'active' &&
+								ArrayOptFind(arrDisabledAutoAppointmentTasks, "This == " + XQueryLiteral(oTask.typical_development_program_task_id)) != undefined
+							) {
+								if (oTask.type.Value == 'learning') {
+									response = tools.activate_course_to_person(
+										docAdaptation.TopElem.person_id.Value,
+										oTask.object_id.Value
+									)
+									oTask.active_learning_id = response.TopElem.id
+
+								} else if (oTask.type.Value == 'test_learning') {
+									response = tools.activate_test_to_person(
+										docAdaptation.TopElem.person_id.Value,
+										oTask.object_id.Value
+									)
+									activeTestLearning = ArrayOptFirstElem(XQuery(
+										"for $elem in active_test_learnings where $elem/person_id = " + docAdaptation.TopElem.person_id.Value +
+										" and $elem/assessment_id = " + oTask.object_id.Value +
+										" return $elem"
+									))
+									oTask.active_test_learning_id = activeTestLearning.id
+								}
+							}
+						} catch (e) {
+							log("Установка статуса в работе и назначение курсов и тестов: " + e.message)
+						}
+					}
+
+					docAdaptation.Save()
+				} catch (e) {
+					log("Назначение статуса в работе: " + e.message)
+				}
+
+				// Восстановление автоназначения
+				try {
+					sTypicalDevelopmementProgramId = ArrayOptFirstElem(arrTempObjectRequirements).GetOptProperty("requirement_object_id").Value
+					docTypicalDevelopmementProgram = tools.open_doc(OptInt(sTypicalDevelopmementProgramId))
+					for (oTypicalTask in docTypicalDevelopmementProgram.TopElem.tasks) {
+						if (ArrayOptFind(arrDisabledAutoAppointmentTasks, "This == " + XQueryLiteral(oTypicalTask.id))) {
+							oTypicalTask.auto_appoint_learning = true
+						}
+					}
+					docTypicalDevelopmementProgram.Save()
+				} catch (e) {
+					log(e.message + "Восстановление автоназначения")
+				}
+
+				// Прикрепление профилей КПЭ к плану адаптации
+				try {
+          docAdaptation = tools.open_doc(docAdaptation.TopElem.id)
+          teAdaptation = docAdaptation.TopElem
+          xCollaborator = ArrayOptFirstElem(
+            XQuery("for $elem in collaborators where $elem/id = " + teAdaptation.person_id + " return $elem")
+          )
+          if (!xCollaborator.hire_date.Value || !xCollaborator.position_date.Value) {
+            log('У сотрудника ' + xCollaborator.id + ' нет даты приема!')
+          }
+          isCollaboratorNew = ((DateToRawSeconds(teAdaptation.start_date.Value) - DateToRawSeconds(xCollaborator.hire_date.Value)) / 86400) <= int_hire_date_days
+          isCollaboratorTransfered = ((DateToRawSeconds(teAdaptation.start_date.Value) - DateToRawSeconds(xCollaborator.position_date.Value)) / 86400) <= int_position_date_days
+          isCollaboratorSales = ArrayOptFind(
+            tools.open_doc(INT_GROUP_SALES).TopElem.collaborators,
+            "This.collaborator_id == " + xCollaborator.id.Value
+          ) != undefined
+          isCollaboratorNotSales = ArrayOptFind(
+            tools.open_doc(INT_GROUP_NOT_SALES).TopElem.collaborators,
+            "This.collaborator_id == " + xCollaborator.id.Value
+          ) != undefined
+          isCollaboratorLogist = ArrayOptFind(
+            tools.open_doc(INT_GROUP_LOGIST).TopElem.collaborators,
+            "This.collaborator_id == " + xCollaborator.id.Value
+          ) != undefined
+          isCollaboratorLogistCud = ArrayOptFind(
+            tools.open_doc(INT_GROUP_LOGIST_CUD).TopElem.collaborators,
+            "This.collaborator_id == " + xCollaborator.id.Value
+          ) != undefined
+
+          oKpiSearchParams = {
+            'Новый сотрудник': false,
+            'Переведенный сотрудник': false,
+            'Продающий': false,
+            'Непродающий': false,
+            'Логист': false,
+            'ЛогистЦУД': false
+          }
+
+          if (isCollaboratorNew) {
+            oKpiSearchParams['Новый сотрудник'] = true
+          } else if (isCollaboratorTransfered) {
+            oKpiSearchParams['Переведенный сотрудник'] = true
+          }
+
+          if (isCollaboratorSales) {
+            oKpiSearchParams['Продающий'] = true
+          } else if (isCollaboratorNotSales) {
+            oKpiSearchParams['Непродающий'] = true
+          } else if (isCollaboratorLogist) {
+            oKpiSearchParams['Логист'] = true
+          } else if (isCollaboratorLogistCud) {
+            oKpiSearchParams['ЛогистЦУД'] = true
+          }
+
+          xarrKpiProfiles = XQuery("for $elem in kpi_profiles return $elem")
+          for (xKpiProfile in xarrKpiProfiles) {
+
+            docKpiProfile = tools.open_doc(xKpiProfile.id)
+            if (docKpiProfile != undefined) {
+              isKpiFit = true
+              for (xKnowledgePart in docKpiProfile.TopElem.knowledge_parts) {
+
+                if (
+                  oKpiSearchParams.GetOptProperty(xKnowledgePart.knowledge_part_name.Value) != undefined &&
+                  !oKpiSearchParams.GetOptProperty(xKnowledgePart.knowledge_part_name.Value)
+                ) {
+                  isKpiFit = false
+                }
+              }
+
+              if (isKpiFit) {
+                oPeriod = ArrayOptFind(docKpiProfile.TopElem.knowledge_parts, "StrContains(This.knowledge_part_name, 'месяц', true)")
+                if (oPeriod != undefined) {
+                  sPeriod = oPeriod.knowledge_part_name.Value.split(' ')[0]
+                  if (sPeriod == "1") {
+                    /* oKpiProfileInAdaptaion = teAdaptation.custom_elems.ObtainChildByKey('kpi_profile_30')
+                    oKpiProfileInAdaptaion.value = xKpiProfile.id.Value */
+
+                  } else if (sPeriod == "2" || sPeriod == "3") {
+                    oKpiProfileInAdaptaion = teAdaptation.custom_elems.ObtainChildByKey('kpi_profile_60_90')
+                    oKpiProfileInAdaptaion.value = xKpiProfile.id.Value
+                  }
+                }
+              }
+            }
+          }
+          docAdaptation.Save()
+        } catch (e) {
+          log(e.message + " #42447 Прикрепление профилей КПЭ к плану адаптации")
+        }
+
+				if (!docAdaptation.TopElem.plan_readiness_date.HasValue) {
+					catMaxEndDateTask = ArrayOptMax(ArraySelect(docAdaptation.TopElem.tasks, "This.plan_date.HasValue"), "plan_date");
+					if (catMaxEndDateTask != undefined) {
+						docAdaptation.TopElem.plan_readiness_date = catMaxEndDateTask.plan_date;
+						docAdaptation.Save()
+					}
+				}
+			} else {
+				iAdaptationID = catAdaptation.id;
+				docAdaptation = tools.open_doc(iAdaptationID);
+				if (docAdaptation == undefined) {
+					log("Не удалось открыть карточку адаптации " + iAdaptationID);
+					continue;
+				}
+				arrTempObjectRequirements = ArraySelect(arrTempObjectRequirements, "!docAdaptation.TopElem.tasks.ChildByKeyExists( This.requirement_object_id, 'typical_development_program_id' )");
+				if (ArrayOptFirstElem(arrTempObjectRequirements) == undefined) {
+					continue;
+				}
+			}
+		} catch (ex) {
+			log("Автоматическое назначение адаптаций " + ex);
+		}
+	}
+	log("Создано адаптаций " + iCountCreated)
+
+  return resultObj
+}
+
 function dataReducer(body) {
   var selectedAction = body.selectedAction.value
 
@@ -321,7 +995,7 @@ function dataReducer(body) {
         Response.Write('{"error":"unknown action"}');
     }
   } catch (error) {
-    alert("Ошибка в редьюсере: " + error)
+    log("Ошибка в редьюсере: " + error)
   }
 
 }
@@ -337,13 +1011,14 @@ function handler(body, method) {
       case 'checkUserRole': return checkUserRole(); break;
       case 'rewardsUpdate': return rewardsUpdate(body); break;
       case 'mentorsProfileUpdate': return mentorsProfileUpdate(body); break;
+      case 'assignAdaptation': return assignAdaptation(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');
     }
   }
   catch (err) {
-    alert(err.message);
+    log(err.message);
   }
 }
 function main(req, res) {

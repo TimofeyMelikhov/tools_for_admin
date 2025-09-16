@@ -32,6 +32,15 @@ export interface IServerResponse {
 	prevAssign: ExcelRow[]
 }
 
+export interface IAdaptationAssign {
+	countCreateAdapt: 0
+	notFoundPersons: ExcelRow[]
+	dublicatePersons: IPersonFromServer[]
+	notFoundProgramm: string[]
+	haveAProgramm: string[]
+	haventPosDate: string[]
+}
+
 export interface IMenuResponse {
 	id: number
 	title: string

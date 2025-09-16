@@ -17,6 +17,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.10.0",
+    "dayjs": "^1.11.18",
     "notistack": "^3.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -24,6 +25,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
     "react-select": "^5.10.1",
+    "rsuite": "^5.83.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 
+import { AssignAdaptation } from '@/pages/assignAdaptation/AssignAdaptation'
 import { GroupManagement } from '@/pages/groupManagement/GroupManagement'
 import { MainPage } from '@/pages/mainPage/MainPage'
 import { MentorProfile } from '@/pages/mentorProfile/MentorProfile'
@@ -55,6 +56,14 @@ export const routesConfig: RouteConfig[] = [
 				element: (
 					<ProtectedRoute>
 						<MentorProfile />
+					</ProtectedRoute>
+				)
+			},
+			{
+				path: '/AssignAdapt',
+				element: (
+					<ProtectedRoute>
+						<AssignAdaptation />
 					</ProtectedRoute>
 				)
 			},

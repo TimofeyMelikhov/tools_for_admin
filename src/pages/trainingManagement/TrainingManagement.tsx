@@ -50,8 +50,8 @@ export const TrainingManagement = memo((): ReactElement => {
 
 	const optionsForAction: Option[] = useMemo(
 		() => [
-			{ value: 'getCourses', label: 'Назначить курс' }
-			// { value: 'getAssessments', label: 'Назначить тест' }
+			{ value: 'getCourses', label: 'Назначить курс' },
+			{ value: 'getAssessments', label: 'Назначить тест' }
 			// { value: 'getGroups', label: 'Добавить в группу' }
 		],
 		[]

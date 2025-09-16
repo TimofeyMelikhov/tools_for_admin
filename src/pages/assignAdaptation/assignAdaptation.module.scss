@@ -1,0 +1,20 @@
+.container {
+	width: 95%;
+	margin: 0 auto;
+
+	.tableTitle {
+		display: flex;
+		justify-content: space-between;
+		align-self: flex-start;
+		gap: 11px;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		z-index: 999;
+	}
+	.errorsBlock {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		padding-bottom: 15px;
+	}
+}
