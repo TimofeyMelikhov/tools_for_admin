@@ -169,7 +169,7 @@ function getCourses() {
 }
 function getAssessments() {
   var categoryAssessmentsId = getParam("categoryAssessmentsId")
-  return selectAll("SELECT id, code, title AS name, modification_date FROM assessments a CROSS APPLY c.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryAssessmentsId + "'");
+  return selectAll("SELECT id, code, title AS name, modification_date FROM assessments a CROSS APPLY a.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryAssessmentsId + "'");
 }
 function getGroups() {
   return selectAll("SELECT id, code, name, modification_date FROM groups");

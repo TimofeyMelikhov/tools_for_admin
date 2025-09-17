@@ -34,8 +34,6 @@ export const AssignAdaptation = () => {
 		state => state.assignAdaptationSlice.startDateAdapt
 	)
 
-	console.log(startDateAdapt)
-
 	const [assignAdaptationHandler, { data, isLoading }] =
 		useAssignAdaptationMutation()
 

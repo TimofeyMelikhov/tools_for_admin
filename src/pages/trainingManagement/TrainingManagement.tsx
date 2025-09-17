@@ -121,7 +121,7 @@ export const TrainingManagement = memo((): ReactElement => {
 		<div className={styles.container}>
 			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
-				Назначение курсов
+				Назначение курсов и тестов
 			</Typography>
 			<div className={styles.filters}>
 				<Select<OptionType>
