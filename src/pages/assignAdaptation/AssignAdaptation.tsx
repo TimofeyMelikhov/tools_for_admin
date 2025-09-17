@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { Box, Button, Typography } from '@mui/material'
 import { enqueueSnackbar } from 'notistack'
 import { CustomProvider, DatePicker } from 'rsuite'
@@ -24,6 +26,8 @@ import type { ExcelRow } from '@/lib/excelParser'
 import styles from './assignAdaptation.module.scss'
 
 export const AssignAdaptation = () => {
+	const [isFuturedDate, setIsFuturedDate] = useState<boolean>(false)
+
 	const dispatch = useAppDispatch()
 
 	const excelData = useAppSelector(
@@ -101,6 +105,32 @@ export const AssignAdaptation = () => {
 		dispatch(setExcelData(data))
 	}
 
+	const changeDateHandler = (date: Date | null) => {
+		if (date === null) {
+			setIsFuturedDate(false)
+			dispatch(setStartDate(null))
+			return
+		}
+
+		const today = new Date()
+		today.setHours(0, 0, 0, 0)
+		const inputDate = new Date(date)
+		inputDate.setHours(0, 0, 0, 0)
+
+		if (inputDate > today) {
+			setIsFuturedDate(true)
+			enqueueSnackbar(`Дата старта адаптации не может быть будущим днем!`, {
+				variant: 'error',
+				style: {
+					fontSize: '14px'
+				}
+			})
+		} else {
+			setIsFuturedDate(false)
+		}
+		dispatch(setStartDate(formatDate(date)))
+	}
+
 	return (
 		<div className={styles.container}>
 			<GoBack />
@@ -116,7 +146,7 @@ export const AssignAdaptation = () => {
 							placeholder={'Дата начала адаптации'}
 							format={'dd.MM.yyyy'}
 							value={startDateAdapt ? new Date(startDateAdapt) : null}
-							onChange={date => dispatch(setStartDate(formatDate(date)))}
+							onChange={date => changeDateHandler(date)}
 							oneTap
 						/>
 					</CustomProvider>
@@ -139,7 +169,7 @@ export const AssignAdaptation = () => {
 						component='span'
 						onClick={() => uploadToServer()}
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
-						disabled={isLoading || !startDateAdapt}
+						disabled={isLoading || !startDateAdapt || isFuturedDate}
 					>
 						Назначить адаптацию
 					</Button>
