@@ -84,7 +84,7 @@ function checkUserRole() {
     menuItems.push(
       {
         id: 1,
-        title: 'Назначение курсов',
+        title: 'Назначение курсов и тестов',
         route: '/TrainingManagement'
       }
     )
