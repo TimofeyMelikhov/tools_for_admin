@@ -25,11 +25,8 @@ const components: Components<Omit<ThemeOptions, 'components'>> = {
 				fontSize: '16px'
 			},
 			'input[type=text], input[type=number], input[type=password], textarea': {
-				all: 'unset',
-				boxSizing: 'border-box',
-				fontFamily: 'inherit',
-				fontSize: 'inherit',
-				color: 'inherit'
+				borderRadius: '6px !important',
+				boxShadow: 'none !important'
 			}
 		}
 	},

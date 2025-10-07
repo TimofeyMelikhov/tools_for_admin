@@ -6,7 +6,6 @@ import { enqueueSnackbar } from 'notistack'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
-import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 
@@ -52,7 +51,6 @@ export const TrainingManagement = memo((): ReactElement => {
 		() => [
 			{ value: 'getCourses', label: 'Назначить курс' },
 			{ value: 'getAssessments', label: 'Назначить тест' }
-			// { value: 'getGroups', label: 'Добавить в группу' }
 		],
 		[]
 	)
@@ -119,7 +117,6 @@ export const TrainingManagement = memo((): ReactElement => {
 
 	return (
 		<div className={styles.container}>
-			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Назначение курсов и тестов
 			</Typography>

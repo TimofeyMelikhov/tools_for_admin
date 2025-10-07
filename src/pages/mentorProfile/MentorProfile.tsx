@@ -3,7 +3,6 @@ import { enqueueSnackbar } from 'notistack'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
-import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { useMentorProfileMutation } from '@/store/api/employeApi'
@@ -76,7 +75,6 @@ export const MentorProfile = () => {
 
 	return (
 		<div className={styles.container}>
-			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Установка дат процедуры отбора
 			</Typography>

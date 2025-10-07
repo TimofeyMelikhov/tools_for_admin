@@ -54,7 +54,7 @@ var logConfig = {
 function log(message, type) {
   type = IsEmptyValue(type) ? "INFO" : StrUpperCase(type);
 
-  if (ObjectType(message) === "JsObject" || ObjectType(message) === "JsArray" || ObjectType(message) === "XmLdsSeq") {
+  if (ObjectType(message) === "JsObject" || ObjectType(message) === "JsArray" || ObjectType(message) === "XmLdsSeq" || ObjectType(message) === "XmElem") {
     message = tools.object_to_text(message, "json")
   }
 
@@ -128,9 +128,14 @@ function checkUserRole() {
   return menuItems;
 }
 
-function findRightPerson(personData, resultObj) {
-  var _query_str = "SELECT * FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
-
+function findRightPerson(personData, resultObj, adaptMode) {
+  var _query_str
+  if(adaptMode === true) {
+    _query_str = "SELECT * FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
+  } else {
+    _query_str = "SELECT id, fullname, position_name, position_parent_name FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
+  }
+  
   if (personData.position_name !== null) {
     _query_str += " AND position_name = " + XQueryLiteral(personData.position_name);
   }
@@ -172,7 +177,12 @@ function getAssessments() {
   return selectAll("SELECT id, code, title AS name, modification_date FROM assessments a CROSS APPLY a.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryAssessmentsId + "'");
 }
 function getGroups() {
-  return selectAll("SELECT id, code, name, modification_date FROM groups");
+  var categoryGroupId = getParam("categoryGroupId")
+  return selectAll("SELECT g.id, g.code, g.name, g.modification_date FROM groups g CROSS APPLY g.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryGroupId + "'");
+}
+function getCollaborators(body) {
+  var strQuery = body.search
+  return selectAll("SELECT c.id, c.fullname, c.position_name, c.position_parent_name FROM collaborators c WHERE c.is_dismiss = '0' AND c.fullname LIKE '%" + strQuery + "%'")
 }
 
 function getPersonsGroup(body) {
@@ -213,7 +223,7 @@ function assignCourses(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -243,7 +253,7 @@ function assignAssessments(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -260,29 +270,175 @@ function assignAssessments(body) {
   return resultObj;
 }
 function addToGroup(body) {
-  var selectedGroup = body.GetOptProperty("currentObj").id
+  var selectedGroup = OptInt(body.currentGroup.id)
+  var selectedUser = body.selectedUser
   var excelData = body.excelObj
 
-  var resultObj = {
+  var responseObj = {
+    success: true,
+    code: 201,
+    message: "Все сотрудники успешно добавлены",
     counterPersons: 0,
     notFoundPersons: [],
-    dublicatePersons: [],
-    prevAssign: []
+    dublicatePersons: []
   }
 
-  for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+  gr = tools.open_doc(selectedGroup)
 
-    if (rightPerson === null) {
-      continue;
+  if(excelData.length > 0) {
+    for(var i = 0; i < excelData.length; i++) {
+      rightPerson = findRightPerson(excelData[i], responseObj, false);
+  
+      if (rightPerson === null) {
+        continue;
+      }
+  
+      gr.TopElem.collaborators.ObtainChildByKey(rightPerson.id);
+      responseObj.counterPersons++
+    }
+  } else {
+      gr.TopElem.collaborators.ObtainChildByKey(OptInt(selectedUser.id));
+      responseObj.counterPersons++
+  }
+
+  gr.Save();
+
+  if(responseObj.notFoundPersons.length > 0 || responseObj.dublicatePersons.length > 0) {
+    responseObj.success = false
+    responseObj.code = 101
+    responseObj.message = "Добавлено " + responseObj.counterPersons + " сотрудников, есть ошибки"
+  }
+
+  return responseObj;
+}
+function deletePersonFromGroup(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Все сотрудники успешно удалены",
+    counterPersons: 0,
+    notProcessed: []
+  }
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var personsArray = body.selectedUsers
+
+    var groupDoc = tools.open_doc(selectedGroup)
+
+    for(person in personsArray) {
+      try {
+        groupDoc.TopElem.collaborators.DeleteOptChildByKey(OptInt(person.id))
+        responseObj.counterPersons++
+      } catch (error) {
+        responseObj.notProcessed.push(person.fullname)
+      }
+    }
+    groupDoc.Save()
+
+    if (responseObj.notProcessed.length > 0) {
+      responseObj.success = true
+      responseObj.code = 101
+      responseObj.message = "Удалено " + responseObj.counterPersons + " из " + personsArray.length + " сотрудников, есть ошибки"
+    }
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции"
+    responseObj.error = error.message
+  }
+  return responseObj
+}
+function moveToGroup(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Все сотрудники успешно перемещены",
+    counterPersons: 0,
+    notProcessed: []
+  }
+
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var personsArray = body.selectedUsers
+    var targetGroup = OptInt(body.targetGroup.id)
+
+    var selectedGroupDoc = tools.open_doc(selectedGroup)
+    var targetGroupDoc = tools.open_doc(targetGroup)
+
+    for(person in personsArray) {
+      try {
+        selectedGroupDoc.TopElem.collaborators.DeleteOptChildByKey(OptInt(person.id))
+        targetGroupDoc.TopElem.collaborators.ObtainChildByKey(person.id);
+        responseObj.counterPersons++
+      } catch (error) {
+        responseObj.notProcessed.push(person.fullname)
+      }
     }
 
-    gr = tools.open_doc(selectedGroup)
-    gr.TopElem.collaborators.ObtainChildByKey(rightPerson.id);
-    gr.Save();
-    resultObj.counterPersons++
+    selectedGroupDoc.Save()
+    targetGroupDoc.Save()
+
+    if (responseObj.notProcessed.length > 0) {
+      responseObj.success = true
+      responseObj.code = 101
+      responseObj.message = "Перемещено " + responseObj.counterPersons + " из " + personsArray.length + " сотрудников, есть ошибки"
+    }
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции или открытии документа"
+    responseObj.error = error.message
+    log(responseObj)
   }
-  return resultObj;
+  return responseObj
+}
+function installLeader(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Руководитель успешно установлен",
+    counterPersons: 0,
+    notProcessed: []
+  }
+  var bossTypeId = OptInt("6148914691236517290")
+
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var selectedLeadId = OptInt(body.selectedUser.id)
+    var selectedGroupDoc = tools.open_doc(selectedGroup)
+    var arrayGroupColl = selectedGroupDoc.TopElem.collaborators
+    var docCollaborator
+    var teDocCollaborator
+    var funcManagers
+    var leadId
+
+    for(collaborator in arrayGroupColl) {
+      docCollaborator = tools.open_doc(collaborator.collaborator_id)
+      teDocCollaborator = docCollaborator.TopElem
+      funcManagers = teDocCollaborator.func_managers
+      funcManagers.DeleteChildren("This.boss_type_id == " + bossTypeId)
+      docCollaborator.Save()
+    }
+    for(collaborator in arrayGroupColl) {
+      docCollaborator = tools.open_doc(collaborator.collaborator_id)
+      teDocCollaborator = docCollaborator.TopElem
+      funcManagers = teDocCollaborator.func_managers
+
+      leadId = funcManagers.ObtainChildByKey(selectedLeadId)
+      tools.common_filling('collaborator', leadId, selectedLeadId)
+      leadId.boss_type_id = bossTypeId
+      docCollaborator.Save()
+    }
+
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции или открытии документа"
+    responseObj.error = error.message
+    log(responseObj)
+  }
+
+  return responseObj
 }
 
 function rewardsUpdate(body) {
@@ -294,7 +450,7 @@ function rewardsUpdate(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -321,7 +477,7 @@ function mentorsProfileUpdate(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -441,7 +597,7 @@ function assignAdaptation(body) {
   }
 
   for (el in excelData) {
-    rightPerson = findRightPerson(el, resultObj);
+    rightPerson = findRightPerson(el, resultObj, true);
 
     if (rightPerson === null) {
       continue;
@@ -1006,6 +1162,11 @@ function handler(body, method) {
       case 'getCourses': return getCourses(); break;
       case 'getAssessments': return getAssessments(); break;
       case 'getGroups': return getGroups(); break;
+      case 'getCollaborators': return getCollaborators(body); break;
+      case 'addToGroup': return addToGroup(body); break;
+      case 'deletePersonFromGroup': return deletePersonFromGroup(body); break;
+      case 'moveToGroup': return moveToGroup(body); break;
+      case 'installLeader': return installLeader(body); break;
       case 'getPersonsGroup': return getPersonsGroup(body); break;
       case 'dataReducer': return dataReducer(body); break;
       case 'checkUserRole': return checkUserRole(); break;

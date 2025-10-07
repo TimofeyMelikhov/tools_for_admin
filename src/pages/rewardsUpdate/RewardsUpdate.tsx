@@ -3,7 +3,6 @@ import { enqueueSnackbar } from 'notistack'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
-import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { useUpdateRewardsMutation } from '@/store/api/employeApi'
@@ -76,7 +75,6 @@ export const RewardsUpdate = () => {
 
 	return (
 		<div className={styles.container}>
-			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Обновление наград наставников
 			</Typography>

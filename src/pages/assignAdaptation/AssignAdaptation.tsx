@@ -8,7 +8,6 @@ import ru from 'rsuite/locales/ru_RU'
 
 import { ExcelPreviewTable } from '@/components/excelPreviewTable/ExcelPreviewTable'
 import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
-import { GoBack } from '@/components/goBack/GoBack'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { useAssignAdaptationMutation } from '@/store/api/assignAdaptationApi'
@@ -133,7 +132,6 @@ export const AssignAdaptation = () => {
 
 	return (
 		<div className={styles.container}>
-			<GoBack />
 			<Typography variant='h4' gutterBottom align='center'>
 				Назначение адаптации
 			</Typography>

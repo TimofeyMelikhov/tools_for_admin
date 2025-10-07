@@ -11,7 +11,11 @@ export interface IInitialStateGroup {
 	selectedAction: SelectOption | null
 	excelObj: ExcelRow[]
 	currentGroup: IUploadList | null
-	usersToRemove: IPersonFromServer[]
+	targetGroup: IUploadList | null
+	selectedUsers: IPersonFromServer[]
+	searchString: string
+	collaborators: IPersonFromServer[]
+	selectedUser: IPersonFromServer | null
 }
 
 export type excelObj = {
@@ -30,6 +34,16 @@ export interface IServerResponse {
 	notFoundPersons: ExcelRow[]
 	dublicatePersons: IPersonFromServer[]
 	prevAssign: ExcelRow[]
+}
+
+export interface IManagmentGroupResponse {
+	success: boolean
+	code: number
+	message: string
+	counterPersons: number
+	notProcessed?: string[]
+	notFoundPersons?: ExcelRow[]
+	dublicatePersons?: IPersonFromServer[]
 }
 
 export interface IAdaptationAssign {
@@ -57,4 +71,14 @@ export interface IUploadList {
 	code: string
 	name: string
 	modification_date: string
+}
+
+export interface ISearchRequest {
+	search: string
+}
+
+export interface ICollaboratorOption {
+	value: number | undefined
+	label: string
+	employee: IPersonFromServer
 }

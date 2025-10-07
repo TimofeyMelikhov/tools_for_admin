@@ -14,7 +14,11 @@ const initialState: IInitialStateGroup = {
 	selectedAction: null,
 	excelObj: [],
 	currentGroup: null,
-	usersToRemove: []
+	targetGroup: null,
+	selectedUsers: [],
+	searchString: '',
+	collaborators: [],
+	selectedUser: null
 }
 
 const groupManagementSlice = createSlice({
@@ -30,14 +34,26 @@ const groupManagementSlice = createSlice({
 		setCurrentGroup: (state, action: PayloadAction<IUploadList | null>) => {
 			state.currentGroup = action.payload
 		},
-		setUsersToRemoveList: (
+		setTargetGroup: (state, action: PayloadAction<IUploadList | null>) => {
+			state.targetGroup = action.payload
+		},
+		setSearchString: (state, action: PayloadAction<string>) => {
+			state.searchString = action.payload
+		},
+		setCollaborators: (state, action: PayloadAction<IPersonFromServer[]>) => {
+			state.collaborators = action.payload
+		},
+		setSelectedUser: (
+			state,
+			action: PayloadAction<IPersonFromServer | null>
+		) => {
+			state.selectedUser = action.payload
+		},
+		setUsersToSelectList: (
 			state,
 			action: PayloadAction<IPersonFromServer[]>
 		) => {
-			state.usersToRemove = action.payload
-		},
-		cleanExcelObj: state => {
-			state.excelObj = []
+			state.selectedUsers = action.payload
 		}
 	}
 })
@@ -46,7 +62,9 @@ export const {
 	setAction,
 	setExcelData,
 	setCurrentGroup,
-	cleanExcelObj,
-	setUsersToRemoveList
+	setTargetGroup,
+	setSearchString,
+	setSelectedUser,
+	setUsersToSelectList
 } = groupManagementSlice.actions
 export default groupManagementSlice.reducer

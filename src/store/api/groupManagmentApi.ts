@@ -1,6 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import type { IPersonFromServer, IUploadList } from '@/models/filtersModel'
+import type {
+	IInitialStateGroup,
+	IManagmentGroupResponse,
+	IPersonFromServer,
+	ISearchRequest,
+	IUploadList
+} from '@/models/filtersModel'
 
 import { backendId, baseServerPath } from '@/config/global'
 
@@ -13,20 +19,54 @@ export const groupManagmentApi = createApi({
 			return headers
 		}
 	}),
+	tagTypes: ['Groups', 'Collaborators', 'Persons', 'Managment'],
 	endpoints: build => ({
 		getGroupList: build.query<IUploadList[], void>({
 			query: () =>
-				`custom_web_template.html?object_id=${backendId}&method=getGroups`
+				`custom_web_template.html?object_id=${backendId}&method=getGroups`,
+			providesTags: ['Groups']
 		}),
-		getPersonsGroup: build.mutation<IPersonFromServer[], IUploadList>({
+		getCollaborators: build.query<IPersonFromServer[], ISearchRequest>({
+			query: requestBody => ({
+				url: `custom_web_template.html?object_id=${backendId}&method=getCollaborators`,
+				method: 'POST',
+				body: requestBody
+			}),
+			providesTags: ['Collaborators']
+		}),
+		getPersonsGroup: build.query<IPersonFromServer[], IUploadList>({
 			query: groupId => ({
 				url: `custom_web_template.html?object_id=${backendId}&method=getPersonsGroup`,
 				method: 'POST',
 				body: groupId
-			})
+			}),
+			providesTags: ['Persons']
+		}),
+		manageGroup: build.mutation<
+			IManagmentGroupResponse,
+			{
+				method:
+					| 'addToGroup'
+					| 'deletePersonFromGroup'
+					| 'moveToGroup'
+					| 'installLeader'
+				data: IInitialStateGroup
+				targetGroupId?: string
+			}
+		>({
+			query: ({ method, data, targetGroupId }) => ({
+				url: `custom_web_template.html?object_id=${backendId}&method=${method}`,
+				method: 'POST',
+				body: targetGroupId ? { ...data, targetGroupId } : data
+			}),
+			invalidatesTags: ['Managment']
 		})
 	})
 })
 
-export const { useGetGroupListQuery, useGetPersonsGroupMutation } =
-	groupManagmentApi
+export const {
+	useGetGroupListQuery,
+	useLazyGetPersonsGroupQuery,
+	useManageGroupMutation,
+	useLazyGetCollaboratorsQuery
+} = groupManagmentApi
