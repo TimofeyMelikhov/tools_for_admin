@@ -59,6 +59,7 @@ export interface IMenuResponse {
 	id: number
 	title: string
 	route: string
+	image: string
 }
 
 export type SelectOption = {

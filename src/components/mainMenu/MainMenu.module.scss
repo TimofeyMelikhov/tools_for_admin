@@ -1,24 +1,48 @@
 .menuContainer {
-	width: 100%;
-	max-width: 600px;
 	margin: 0 auto;
-	padding: 2rem;
 	display: flex;
-	font-size: 19px;
-	flex-direction: column;
-	gap: 1rem;
-}
+	gap: 10px;
+	flex-wrap: wrap;
+	justify-content: center;
 
-.menuItem {
-	padding: 1.2rem 1.6rem;
-	background-color: #f5f5f5;
-	border-radius: 8px;
-	font-weight: 500;
-	color: #333;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
+	.menuItem {
+		display: flex;
+		background-color: #fff;
+		width: 550px;
+		padding: 32px;
+		gap: 10px;
+		border: 1px solid #cccccc;
 
-	&:hover {
-		background-color: #e0e0e0;
+		.actionWrap {
+			display: flex;
+			background: #ffd24b;
+			border-radius: 8px;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			&:hover {
+				color: #fff;
+			}
+		}
+
+		& .cardInfo {
+			display: flex;
+			flex-direction: column;
+
+			.cardTitel {
+				font-size: 28px;
+			}
+		}
+
+		& .cardImage {
+			img {
+				width: 159px;
+				height: 163px;
+				background-repeat: no-repeat;
+				background-size: cover;
+				background-position: center center;
+				border-radius: 8px;
+			}
+		}
 	}
 }

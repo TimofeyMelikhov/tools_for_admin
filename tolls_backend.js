@@ -85,7 +85,8 @@ function checkUserRole() {
       {
         id: 1,
         title: 'Назначение курсов и тестов',
-        route: '/TrainingManagement'
+        route: '/TrainingManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847675551799640'
       }
     )
   }
@@ -97,7 +98,8 @@ function checkUserRole() {
       {
         id: 2,
         title: 'Управление группами',
-        route: '/groupManagement'
+        route: '/groupManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847730371951683'
       }
     )
   }
@@ -106,7 +108,7 @@ function checkUserRole() {
 
   if (isAcessRewardsUpdate !== undefined) {
     menuItems.push(
-      { id: 3, title: 'Обновление наград', route: '/RewardsUpdate' }
+      { id: 3, title: 'Обновление наград', route: '/RewardsUpdate', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847762593038646' }
     )
   }
 
@@ -114,14 +116,14 @@ function checkUserRole() {
 
   if (isAccessMentorProfile !== undefined) {
     menuItems.push(
-      { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile' }
+      { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062' }
     )
   }
 
   var isAccessAssignAdapt = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + assignAdapt + " AND collaborator_id = " + curUserId);
   if (isAccessAssignAdapt !== undefined) {
     menuItems.push(
-      { id: 5, title: 'Назначение адаптации', route: '/AssignAdapt' }
+      { id: 5, title: 'Назначение адаптации', route: '/AssignAdapt', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847826781758933' }
     )
   }
 
