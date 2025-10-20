@@ -1,3 +1,4 @@
+import { MenuItem } from '@/components/mainMenu/menuItem/MenuItem'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { selectMenuItems } from '@/store/api/accessApi'
@@ -25,15 +26,7 @@ export const MainMenu = () => {
 	return (
 		<div className={styles.menuContainer}>
 			{menuItems.map(item => (
-				<div key={item.id} className={styles.menuItem}>
-					<div className={styles.cardImage}>
-						<img src={item.image} alt='Изображение' />
-					</div>
-					<span className={styles.cardInfo}>
-						<div className={styles.cardTitel}>{item.title}</div>
-						<div className={styles.actionWrap}>Перейти в раздел →</div>
-					</span>
-				</div>
+				<MenuItem key={item.id} item={item} />
 			))}
 		</div>
 	)

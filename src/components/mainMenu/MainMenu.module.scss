@@ -1,48 +1,7 @@
 .menuContainer {
+	width: 80%;
 	margin: 0 auto;
-	display: flex;
 	gap: 10px;
-	flex-wrap: wrap;
-	justify-content: center;
-
-	.menuItem {
-		display: flex;
-		background-color: #fff;
-		width: 550px;
-		padding: 32px;
-		gap: 10px;
-		border: 1px solid #cccccc;
-
-		.actionWrap {
-			display: flex;
-			background: #ffd24b;
-			border-radius: 8px;
-			font-weight: 500;
-			cursor: pointer;
-			transition: all 0.2s ease;
-			&:hover {
-				color: #fff;
-			}
-		}
-
-		& .cardInfo {
-			display: flex;
-			flex-direction: column;
-
-			.cardTitel {
-				font-size: 28px;
-			}
-		}
-
-		& .cardImage {
-			img {
-				width: 159px;
-				height: 163px;
-				background-repeat: no-repeat;
-				background-size: cover;
-				background-position: center center;
-				border-radius: 8px;
-			}
-		}
-	}
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
 }
