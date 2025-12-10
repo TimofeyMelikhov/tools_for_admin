@@ -16,11 +16,12 @@ const mentorProfileSlice = createSlice({
 		setExcelData: (state, action: PayloadAction<ExcelRow[]>) => {
 			state.excelObj = action.payload
 		},
-		cleanExcelObj: state => {
+		cleanExcelMentorProfile: state => {
 			state.excelObj = []
 		}
 	}
 })
 
-export const { setExcelData, cleanExcelObj } = mentorProfileSlice.actions
+export const { setExcelData, cleanExcelMentorProfile } =
+	mentorProfileSlice.actions
 export default mentorProfileSlice.reducer

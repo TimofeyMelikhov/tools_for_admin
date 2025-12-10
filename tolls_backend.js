@@ -70,64 +70,83 @@ function log(message, type) {
 }
 
 function checkUserRole() {
-  var menuItems = []
-
-  var accessTrainingManagement = getParam("accessTrainingManagementId");
-  var acessRewardsUpdate = getParam("acessRewardsUpdateId");
-  var accessMentorProfile = getParam("accessMentorProfileId");
-  var groupManagement = getParam("groupManagement")
-  var assignAdapt = getParam("adaptationGroup")
-
-  var isAccessTrainingManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessTrainingManagement + " AND collaborator_id = " + curUserId);
-  
-  if (isAccessTrainingManagement !== undefined) {
-    menuItems.push(
+  try {
+    var menuConfig = [
       {
         id: 1,
         title: 'Назначение курсов и тестов',
         route: '/TrainingManagement',
-        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847675551799640'
-      }
-    )
-  }
-
-  var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
-
-  if(isGroupManagement !== undefined) {
-    menuItems.push(
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847675551799640',
+        groupId: getParam("accessTrainingManagementId")
+      },
       {
         id: 2,
         title: 'Управление группами',
         route: '/groupManagement',
-        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847730371951683'
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847730371951683',
+        groupId: getParam("groupManagement")
+      },
+      {
+        id: 3,
+        title: 'Обновление наград',
+        route: '/RewardsUpdate',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847762593038646',
+        groupId: getParam("acessRewardsUpdateId")
+      },
+      {
+        id: 4,
+        title: 'Обновление профилей наставников',
+        route: '/MentorProfile',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062',
+        groupId: getParam("accessMentorProfileId")
+      },
+      {
+        id: 5,
+        title: 'Назначение адаптации',
+        route: '/AssignAdapt',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847826781758933',
+        groupId: getParam("adaptationGroup")
       }
-    )
+    ];
+    var groupId
+    var allGroupIds = [];
+    for (menuConfigItem in menuConfig) {
+      groupId = menuConfigItem.groupId;
+      if (groupId) {
+        allGroupIds.push(groupId);
+      }
+    }
+  
+    var userGroupsMap = {};
+    
+    if (allGroupIds.length > 0) {
+      var result = selectAll(
+        "SELECT group_id FROM group_collaborators " +
+        "WHERE group_id IN (" + allGroupIds.join(",") + ") " +
+        "AND collaborator_id = " + curUserId
+      );
+      
+      for (group in result) {
+        groupId = group.group_id;
+        userGroupsMap[groupId] = true;
+      }
+    }
+    var menuItems = []
+    for (menuItem in menuConfig) {
+      if (GetOptObjectProperty(userGroupsMap, menuItem.groupId)) {
+        menuItems.push({
+          id: menuItem.id,
+          title: menuItem.title,
+          route: menuItem.route,
+          image: menuItem.image
+        });
+      }
+    }
+
+    return menuItems;
+  } catch (error) {
+    alert("Ошибка при формировании пунктов меню: " + error.message)
   }
-
-  var isAcessRewardsUpdate = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + acessRewardsUpdate + " AND collaborator_id = " + curUserId);  
-
-  if (isAcessRewardsUpdate !== undefined) {
-    menuItems.push(
-      { id: 3, title: 'Обновление наград', route: '/RewardsUpdate', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847762593038646' }
-    )
-  }
-
-  var isAccessMentorProfile = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessMentorProfile + " AND collaborator_id = " + curUserId);  
-
-  if (isAccessMentorProfile !== undefined) {
-    menuItems.push(
-      { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062' }
-    )
-  }
-
-  var isAccessAssignAdapt = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + assignAdapt + " AND collaborator_id = " + curUserId);
-  if (isAccessAssignAdapt !== undefined) {
-    menuItems.push(
-      { id: 5, title: 'Назначение адаптации', route: '/AssignAdapt', image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847826781758933' }
-    )
-  }
-
-  return menuItems;
 }
 
 function findRightPerson(personData, resultObj, adaptMode) {

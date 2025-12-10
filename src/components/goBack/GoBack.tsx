@@ -5,7 +5,6 @@ import styles from './goBack.module.scss'
 
 export const GoBack = () => {
 	const navigate = useNavigate()
-
 	const goBackHandler = () => {
 		navigate(-1)
 	}

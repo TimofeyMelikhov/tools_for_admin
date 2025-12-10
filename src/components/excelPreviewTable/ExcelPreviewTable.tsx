@@ -10,9 +10,16 @@ import { COLUMN_MAP } from '@/lib/excelParser'
 
 import styles from './ExcelPreviewTable.module.scss'
 
-const REVERSE_COLUMN_MAP: Record<string, string> = Object.fromEntries(
-	Object.entries(COLUMN_MAP).map(([rus, eng]) => [eng, rus])
-)
+// Создаем обратный маппинг для отображения английских ключей на русские заголовки
+const REVERSE_COLUMN_MAP: Record<string, string> = {}
+// Берем первое русское название для каждого английского ключа
+const usedKeys = new Set()
+for (const [rusKey, engKey] of COLUMN_MAP.entries()) {
+	if (!usedKeys.has(engKey)) {
+		REVERSE_COLUMN_MAP[engKey] = rusKey
+		usedKeys.add(engKey)
+	}
+}
 
 interface ExcelPreviewTableProps<T extends Record<string, any>> {
 	data: T[]

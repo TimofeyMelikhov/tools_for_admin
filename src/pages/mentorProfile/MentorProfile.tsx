@@ -6,7 +6,10 @@ import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { useMentorProfileMutation } from '@/store/api/employeApi'
-import { cleanExcelObj, setExcelData } from '@/store/slices/mentorProfileSlice'
+import {
+	cleanExcelMentorProfile,
+	setExcelData
+} from '@/store/slices/mentorProfileSlice'
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 
@@ -87,7 +90,7 @@ export const MentorProfile = () => {
 						variant='contained'
 						component='span'
 						sx={{ fontSize: '14px' }}
-						onClick={() => dispatch(cleanExcelObj())}
+						onClick={() => dispatch(cleanExcelMentorProfile())}
 					>
 						Очистить таблицу
 					</Button>

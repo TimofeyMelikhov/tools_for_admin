@@ -32,7 +32,7 @@ const tutorSlice = createSlice({
 		setTimeAssign: (state, action: PayloadAction<string>) => {
 			state.time = action.payload
 		},
-		cleanExcelObj: state => {
+		cleanExcelTraining: state => {
 			state.excelObj = []
 		}
 	}
@@ -43,6 +43,6 @@ export const {
 	setExcelData,
 	setCurrentObj,
 	setTimeAssign,
-	cleanExcelObj
+	cleanExcelTraining
 } = tutorSlice.actions
 export default tutorSlice.reducer

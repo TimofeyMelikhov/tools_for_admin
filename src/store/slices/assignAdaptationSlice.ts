@@ -23,12 +23,12 @@ const assignAdaptationSlice = createSlice({
 		setStartDate: (state, action: PayloadAction<string | null>) => {
 			state.startDateAdapt = action.payload
 		},
-		cleanExcelObj: state => {
+		cleanExcelAdaptation: state => {
 			state.excelObj = []
 		}
 	}
 })
 
-export const { setExcelData, cleanExcelObj, setStartDate } =
+export const { setExcelData, cleanExcelAdaptation, setStartDate } =
 	assignAdaptationSlice.actions
 export default assignAdaptationSlice.reducer

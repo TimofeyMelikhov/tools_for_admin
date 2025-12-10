@@ -11,7 +11,7 @@ import { UniversalSelect } from '@/components/universalSelect/UniversalSelect'
 
 import { useAssignCourseMutation } from '@/store/api/tutorApi'
 import {
-	cleanExcelObj,
+	cleanExcelTraining,
 	setExcelData,
 	setFilters,
 	setTimeAssign
@@ -38,6 +38,7 @@ export const TrainingManagement = memo((): ReactElement => {
 	const countFilter = useAppSelector(state => state.filters)
 	const excelLength = useAppSelector(state => state.filters.excelObj.length)
 	const excelData = useAppSelector(state => state.filters.excelObj)
+	const appTime = useAppSelector(state => state.filters.time)
 	const selectedAction = useAppSelector(
 		state => state.filters.selectedAction?.value
 	)
@@ -131,6 +132,7 @@ export const TrainingManagement = memo((): ReactElement => {
 							dispatch(setFilters(null))
 						}
 					}}
+					value={countFilter.selectedAction}
 					styles={customStyles}
 					isClearable
 				/>
@@ -142,6 +144,7 @@ export const TrainingManagement = memo((): ReactElement => {
 						className={styles.timeInput}
 						placeholder='Время назначения в днях'
 						onChange={e => dispatch(setTimeAssign(e.target.value))}
+						value={appTime}
 					/>
 				)}
 
@@ -154,7 +157,7 @@ export const TrainingManagement = memo((): ReactElement => {
 						variant='contained'
 						component='span'
 						sx={{ fontSize: '14px' }}
-						onClick={() => dispatch(cleanExcelObj())}
+						onClick={() => dispatch(cleanExcelTraining())}
 					>
 						Очистить таблицу
 					</Button>

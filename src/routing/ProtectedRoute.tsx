@@ -1,4 +1,3 @@
-// src/routing/ProtectedRoute.tsx
 import { type JSX, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 

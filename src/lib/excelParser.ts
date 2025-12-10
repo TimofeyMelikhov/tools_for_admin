@@ -2,15 +2,25 @@ import * as XLSX from 'xlsx'
 
 export type ExcelRow = Record<string, string | number | null | undefined>
 
-export const COLUMN_MAP: Record<string, string> = {
-	Сотрудник: 'fullname',
-	Должность: 'position_name',
-	Отдел: 'position_parent_name',
-	Птенец: 'chick',
-	Сова: 'owl',
-	Наставник: 'mentor'
+// Обновляем маппинг с поддержкой нескольких слов
+export const COLUMN_MAP = new Map([
+	['Сотрудник', 'fullname'],
+	['Должность', 'position_name'],
+	['Отдел', 'position_parent_name'],
+	['Птенец', 'chick'],
+	['Сова', 'owl'],
+	['Процедура отбора', 'mentor']
+])
+
+// Нормализация строки для сравнения
+function normalizeKey(str: string): string {
+	return str
+		.toLowerCase()
+		.replace(/[_\s]+/g, ' ') // Заменяем подчеркивания и множественные пробелы на один пробел
+		.trim()
 }
 
+// Старые функции остаются без изменений
 function normalizeSpaces(
 	str: string | number | null | undefined
 ): string | number | null | undefined {
@@ -50,36 +60,50 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
 				const headerRow: string[] = rows[0].map(String)
 				const dataRows = rows.slice(1)
 
+				// Создаем маппинг для колонок на основе нормализованных заголовков
+				const columnMapping = new Map<number, string>()
+
+				headerRow.forEach((header, index) => {
+					const normalizedHeader = normalizeKey(header)
+
+					// Ищем подходящий ключ в COLUMN_MAP
+					for (const [rusKey, engKey] of COLUMN_MAP.entries()) {
+						if (normalizeKey(rusKey) === normalizedHeader) {
+							columnMapping.set(index, engKey)
+							break
+						}
+					}
+				})
+
 				const mappedData: ExcelRow[] = dataRows.map(row => {
 					const newRow: ExcelRow = {}
+
 					// Инициализируем все поля из COLUMN_MAP
-					for (const rusKey in COLUMN_MAP) {
-						newRow[COLUMN_MAP[rusKey]] = null
+					for (const engKey of COLUMN_MAP.values()) {
+						newRow[engKey] = null
 					}
-					// Для каждой колонки в строке
+
+					// Заполняем данные на основе маппинга
 					for (let col = 0; col < headerRow.length; col++) {
-						const rusKey = headerRow[col]
-						const engKey = COLUMN_MAP[rusKey]
+						const engKey = columnMapping.get(col)
 						if (!engKey) continue
 
 						const cellValue = row[col]
 						let processedValue: string | number | null | undefined
 
 						if (typeof cellValue === 'number') {
-							// Число может быть датой из Excel → форматируем вручную
 							processedValue = formatExcelDate(cellValue)
 						} else if (
 							cellValue !== null &&
 							cellValue !== undefined &&
 							cellValue !== ''
 						) {
-							// Обычная строка или число
 							processedValue = cellValue
 						} else {
 							processedValue = null
 						}
 
-						// Нормализуем пробелы для первых трех колонок
+						// Нормализуем пробелы для текстовых полей
 						if (
 							['fullname', 'position_name', 'position_parent_name'].includes(
 								engKey

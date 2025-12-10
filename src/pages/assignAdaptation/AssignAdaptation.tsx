@@ -12,7 +12,7 @@ import { Preloader } from '@/components/preloader/Preloader'
 
 import { useAssignAdaptationMutation } from '@/store/api/assignAdaptationApi'
 import {
-	cleanExcelObj,
+	cleanExcelAdaptation,
 	setExcelData,
 	setStartDate
 } from '@/store/slices/assignAdaptationSlice'
@@ -152,7 +152,7 @@ export const AssignAdaptation = () => {
 						variant='text'
 						component='span'
 						sx={{ fontSize: '12px' }}
-						onClick={() => dispatch(cleanExcelObj())}
+						onClick={() => dispatch(cleanExcelAdaptation())}
 					>
 						Очистить таблицу
 					</Button>

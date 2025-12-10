@@ -6,7 +6,10 @@ import { ExcelUploader } from '@/components/excelUploader/ExcelUploader'
 import { Preloader } from '@/components/preloader/Preloader'
 
 import { useUpdateRewardsMutation } from '@/store/api/employeApi'
-import { cleanExcelObj, setExcelData } from '@/store/slices/rewardsUpdateSlice'
+import {
+	cleanExcelRewards,
+	setExcelData
+} from '@/store/slices/rewardsUpdateSlice'
 
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 
@@ -87,7 +90,7 @@ export const RewardsUpdate = () => {
 						variant='contained'
 						component='span'
 						sx={{ fontSize: '14px' }}
-						onClick={() => dispatch(cleanExcelObj())}
+						onClick={() => dispatch(cleanExcelRewards())}
 					>
 						Очистить таблицу
 					</Button>

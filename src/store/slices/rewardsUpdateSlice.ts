@@ -16,11 +16,11 @@ const rewardsUpdateSlice = createSlice({
 		setExcelData: (state, action: PayloadAction<ExcelRow[]>) => {
 			state.excelObj = action.payload
 		},
-		cleanExcelObj: state => {
+		cleanExcelRewards: state => {
 			state.excelObj = []
 		}
 	}
 })
 
-export const { setExcelData, cleanExcelObj } = rewardsUpdateSlice.actions
+export const { setExcelData, cleanExcelRewards } = rewardsUpdateSlice.actions
 export default rewardsUpdateSlice.reducer

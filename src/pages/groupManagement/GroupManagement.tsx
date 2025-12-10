@@ -45,8 +45,8 @@ export const GroupManagement = () => {
 	const groupManagementState = useAppSelector(
 		state => state.groupManagementSlice
 	)
-	const excelData = useAppSelector(state => state.groupManagementSlice.excelObj)
 	const {
+		excelObj: excelData,
 		selectedUsers,
 		selectedAction,
 		targetGroup,
@@ -84,15 +84,27 @@ export const GroupManagement = () => {
 	useEffect(() => {
 		if (debouncedSearch.length >= 2) {
 			triggerSearch({ search: debouncedSearch })
+		} else {
+			resetPersonQuery()
 		}
 	}, [debouncedSearch, triggerSearch])
 
-	const handleInputChange = useCallback(
-		(newValue: string) => {
-			dispatch(setSearchString(newValue))
-		},
-		[dispatch]
-	)
+	useEffect(() => {
+		const refetchGroupPersons = async () => {
+			if (
+				currentGroup &&
+				selectedAction?.value !== 'addToGroup' &&
+				!personsList
+			) {
+				await fetchPerson(currentGroup).unwrap()
+			}
+		}
+		refetchGroupPersons()
+	}, [currentGroup, selectedAction?.value])
+
+	const handleInputChange = (newValue: string) => {
+		dispatch(setSearchString(newValue))
+	}
 
 	const options = useMemo(
 		() =>
@@ -104,16 +116,13 @@ export const GroupManagement = () => {
 		[searchResponse]
 	)
 
-	const handleChangeUser = useCallback(
-		(newValue: SingleValue<ICollaboratorOption>) => {
-			if (newValue) {
-				dispatch(setSelectedUser(newValue.employee))
-			} else {
-				dispatch(setSelectedUser(null))
-			}
-		},
-		[dispatch]
-	)
+	const handleChangeUser = (newValue: SingleValue<ICollaboratorOption>) => {
+		if (newValue) {
+			dispatch(setSelectedUser(newValue.employee))
+		} else {
+			dispatch(setSelectedUser(null))
+		}
+	}
 
 	const setCurrentGroupHandler = useCallback(
 		async (option: SingleValue<IUploadList>) => {
@@ -278,15 +287,12 @@ export const GroupManagement = () => {
 		}
 	}, [selectedAction?.value])
 
-	const showExcelUploader = useMemo(
-		() =>
-			selectedAction?.value === 'addToGroup' &&
-			!selectedUser &&
-			excelData.length === 0,
-		[selectedAction?.value, selectedUser, excelData]
-	)
+	const showExcelUploader =
+		selectedAction?.value === 'addToGroup' &&
+		!selectedUser &&
+		excelData.length === 0
 
-	const showUserSelect = useMemo(() => excelData.length === 0, [excelData])
+	const showUserSelect = excelData.length === 0
 
 	const showPersonsList = useMemo(
 		() =>
@@ -296,10 +302,7 @@ export const GroupManagement = () => {
 		[selectedAction?.value]
 	)
 
-	const filteredGroups = useMemo(
-		() => groups?.filter(g => g.id !== currentGroup?.id) || [],
-		[groups, currentGroup?.id]
-	)
+	const filteredGroups = groups?.filter(g => g.id !== currentGroup?.id) || []
 
 	return (
 		<div className={styles.container}>
@@ -313,6 +316,7 @@ export const GroupManagement = () => {
 					placeholder='Выберите действие'
 					onChange={selectActionHandler}
 					isClearable
+					value={selectedAction}
 				/>
 
 				{selectedAction && (
@@ -323,6 +327,7 @@ export const GroupManagement = () => {
 							getOptionValue={e => e.id}
 							onChange={setCurrentGroupHandler}
 							placeholder={'Выберите группу'}
+							value={currentGroup}
 							isLoading={personsListLoading}
 							isClearable
 							isDisabled={personsListLoading}
@@ -335,6 +340,7 @@ export const GroupManagement = () => {
 								getOptionLabel={e => e.name}
 								getOptionValue={e => e.id}
 								onChange={setTargetGroupHandler}
+								value={targetGroup}
 								placeholder={'Выберите целевую группу'}
 								isClearable
 								className={styles.groupSelect}

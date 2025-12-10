@@ -3,7 +3,7 @@ import Select from 'react-select'
 import { useGetCurrentListQuery } from '@/store/api/tutorApi'
 import { setCurrentObj } from '@/store/slices/tutorSlice'
 
-import { useAppDispatch } from '@/hooks/redux'
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 
 import styles from './UniversalSelect.module.scss'
 
@@ -13,7 +13,7 @@ interface IUniversalSelectProps {
 
 export const UniversalSelect = ({ method }: IUniversalSelectProps) => {
 	const dispatch = useAppDispatch()
-
+	const currentObj = useAppSelector(state => state.filters.currentObj)
 	const { data, isLoading } = useGetCurrentListQuery(method)
 
 	return (
@@ -29,6 +29,7 @@ export const UniversalSelect = ({ method }: IUniversalSelectProps) => {
 						dispatch(setCurrentObj(null))
 					}
 				}}
+				value={currentObj}
 				placeholder={'Выберите элемент'}
 				isLoading={isLoading}
 				isClearable
