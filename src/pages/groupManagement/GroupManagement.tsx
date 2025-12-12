@@ -271,7 +271,6 @@ export const GroupManagement = () => {
 		dispatch
 	])
 
-	// Обработка запроса на сервер
 	const getButtonText = useCallback(() => {
 		switch (selectedAction?.value) {
 			case 'addToGroup':

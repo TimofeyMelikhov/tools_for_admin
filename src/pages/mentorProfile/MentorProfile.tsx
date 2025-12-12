@@ -87,9 +87,9 @@ export const MentorProfile = () => {
 				<div className={styles.tableTitle}>
 					Превью данных файла:
 					<Button
-						variant='contained'
+						variant='text'
 						component='span'
-						sx={{ fontSize: '14px' }}
+						sx={{ fontSize: '12px' }}
 						onClick={() => dispatch(cleanExcelMentorProfile())}
 					>
 						Очистить таблицу

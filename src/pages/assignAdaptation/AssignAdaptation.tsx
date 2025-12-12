@@ -29,12 +29,8 @@ export const AssignAdaptation = () => {
 
 	const dispatch = useAppDispatch()
 
-	const excelData = useAppSelector(
-		state => state.assignAdaptationSlice.excelObj
-	)
-
-	const startDateAdapt = useAppSelector(
-		state => state.assignAdaptationSlice.startDateAdapt
+	const { excelObj, startDateAdapt } = useAppSelector(
+		state => state.assignAdaptationSlice
 	)
 
 	const [assignAdaptationHandler, { data, isLoading }] =
@@ -42,7 +38,7 @@ export const AssignAdaptation = () => {
 
 	const uploadToServer = async () => {
 		const data = {
-			excelObj: excelData,
+			excelObj,
 			startDate: startDateAdapt
 		}
 
@@ -71,7 +67,7 @@ export const AssignAdaptation = () => {
 
 			if (hasErrors) {
 				enqueueSnackbar(
-					`Обработано ${countCreateAdapt} из ${excelData.length} записей. Есть ошибки.`,
+					`Обработано ${countCreateAdapt} из ${excelObj.length} записей. Есть ошибки.`,
 					{
 						variant: 'warning',
 						style: {
@@ -135,9 +131,9 @@ export const AssignAdaptation = () => {
 			<Typography variant='h4' gutterBottom align='center'>
 				Назначение адаптации
 			</Typography>
-			{excelData.length === 0 && <ExcelUploader onSuccess={handleExcelData} />}
+			{excelObj.length === 0 && <ExcelUploader onSuccess={handleExcelData} />}
 
-			{excelData.length !== 0 && (
+			{excelObj.length !== 0 && (
 				<div className={styles.tableTitle}>
 					<CustomProvider locale={ru}>
 						<DatePicker
@@ -158,9 +154,9 @@ export const AssignAdaptation = () => {
 					</Button>
 				</div>
 			)}
-			<ExcelPreviewTable data={excelData} />
+			<ExcelPreviewTable data={excelObj} />
 
-			{!!excelData.length && (
+			{!!excelObj.length && (
 				<Box sx={{ display: 'flex' }}>
 					<Button
 						variant='contained'

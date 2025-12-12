@@ -35,18 +35,12 @@ export const TrainingManagement = memo((): ReactElement => {
 	const dispatch = useAppDispatch()
 	const [assign, { data, isLoading }] = useAssignCourseMutation()
 
-	const countFilter = useAppSelector(state => state.filters)
-	const excelLength = useAppSelector(state => state.filters.excelObj.length)
-	const excelData = useAppSelector(state => state.filters.excelObj)
-	const appTime = useAppSelector(state => state.filters.time)
-	const selectedAction = useAppSelector(
-		state => state.filters.selectedAction?.value
+	const { currentObj, excelObj, selectedAction, time } = useAppSelector(
+		state => state.filters
 	)
 
 	const shouldShowButton =
-		countFilter.excelObj.length !== 0 &&
-		selectedAction !== null &&
-		countFilter.currentObj !== null
+		excelObj.length !== 0 && selectedAction !== null && currentObj !== null
 
 	const optionsForAction: Option[] = useMemo(
 		() => [
@@ -76,7 +70,7 @@ export const TrainingManagement = memo((): ReactElement => {
 
 			if (hasErrors) {
 				enqueueSnackbar(
-					`Обработано ${counterPersons} из ${excelLength} записей. Есть ошибки.`,
+					`Обработано ${counterPersons} из ${excelObj.length} записей. Есть ошибки.`,
 					{
 						variant: 'warning',
 						style: {
@@ -132,31 +126,29 @@ export const TrainingManagement = memo((): ReactElement => {
 							dispatch(setFilters(null))
 						}
 					}}
-					value={countFilter.selectedAction}
+					value={selectedAction}
 					styles={customStyles}
 					isClearable
 				/>
-				{selectedAction && <UniversalSelect method={selectedAction} />}
-				{(selectedAction === 'getCourses' ||
-					selectedAction === 'getAssessments') && (
+				{selectedAction && <UniversalSelect method={selectedAction.value} />}
+				{(selectedAction?.value === 'getCourses' ||
+					selectedAction?.value === 'getAssessments') && (
 					<input
 						type='number'
 						className={styles.timeInput}
 						placeholder='Время назначения в днях'
 						onChange={e => dispatch(setTimeAssign(e.target.value))}
-						value={appTime}
+						value={time}
 					/>
 				)}
 
-				{excelData.length === 0 && (
-					<ExcelUploader onSuccess={handleExcelData} />
-				)}
+				{excelObj.length === 0 && <ExcelUploader onSuccess={handleExcelData} />}
 
-				{!!excelData.length && (
+				{!!excelObj.length && (
 					<Button
-						variant='contained'
+						variant='text'
 						component='span'
-						sx={{ fontSize: '14px' }}
+						sx={{ fontSize: '12px' }}
 						onClick={() => dispatch(cleanExcelTraining())}
 					>
 						Очистить таблицу
@@ -164,17 +156,19 @@ export const TrainingManagement = memo((): ReactElement => {
 				)}
 			</div>
 
-			{excelData.length !== 0 && (
+			{excelObj.length !== 0 && (
 				<div className={styles.tableTitle}>Превью данных файла:</div>
 			)}
-			<ExcelPreviewTable data={excelData} />
+			<ExcelPreviewTable data={excelObj} />
 
 			{shouldShowButton && (
 				<Box sx={{ display: 'flex' }}>
 					<Button
 						variant='contained'
 						component='span'
-						onClick={() => uploadToServer(countFilter)}
+						onClick={() =>
+							uploadToServer({ currentObj, excelObj, selectedAction, time })
+						}
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
 						disabled={isLoading}
 					>

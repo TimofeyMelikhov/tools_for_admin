@@ -2,7 +2,7 @@ declare var window: Window & {
 	_app?: { backendID: string; baseServerPath: string }
 }
 
-export const backendId = window._app?.backendID || '7172149230755118139'
+export const backendId = window._app?.backendID || '7231614131950285697'
 export const baseServerPath =
 	window?._app?.baseServerPath || 'https://webtutor.stdp.ru/'
 // https://webtutor.stdp.ru/
