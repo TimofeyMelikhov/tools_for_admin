@@ -1,0 +1,25 @@
+import { createApi } from '@reduxjs/toolkit/query/react'
+
+import { backendId } from '@/app/config'
+
+import { baseQuery } from '@/shared/api/baseQuery'
+import { stripDuplicateIds } from '@/shared/api/transform'
+import type { ServerResponse } from '@/shared/api/types'
+import type { ExcelObj } from '@/shared/lib/excel/types'
+
+export const mentorProfileApi = createApi({
+	reducerPath: 'mentorProfileApi',
+	baseQuery,
+	endpoints: build => ({
+		mentorProfile: build.mutation<ServerResponse, ExcelObj>({
+			query: body => ({
+				url: `custom_web_template.html?object_id=${backendId}&method=mentorsProfileUpdate`,
+				method: 'POST',
+				body
+			}),
+			transformResponse: stripDuplicateIds
+		})
+	})
+})
+
+export const { useMentorProfileMutation } = mentorProfileApi
