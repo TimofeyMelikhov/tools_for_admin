@@ -8,17 +8,32 @@
 	"arrowParens": "avoid",
 	"plugins": ["@trivago/prettier-plugin-sort-imports"],
 	"importOrder": [
-		"react",
+		"^react$",
+		"^react/(.*)$",
+		"^react-dom(.*)$",
+		"^react-router-dom(.*)$",
 		"<THIRD_PARTY_MODULES>",
-		"/pages/",
-		"/components/",
-		"/store/",
-		"/hooks/",
-		"/models/",
-		"/lib/",
-		"^../(.*)",
-		"^./(.*)",
-		"/module.scss/"
+
+		"^@/app/(.*)$",
+		"^@/pages/(.*)$",
+		"^@/widgets/(.*)$",
+		"^@/features/(.*)$",
+		"^@/entities/(.*)$",
+		"^@/shared/(.*)$",
+
+		"^@/store/(.*)$",
+		"^@/routing/(.*)$",
+		"^@/hooks/(.*)$",
+		"^@/models/(.*)$",
+		"^@/components/(.*)$",
+		"^@/lib/(.*)$",
+
+		"^@/(.*)$",
+
+		"^../(.*)$",
+		"^./(.*)$",
+
+		".*\\.(css|scss)$"
 	],
 	"importOrderSeparation": true,
 	"importOrderSortSpecifiers": true
