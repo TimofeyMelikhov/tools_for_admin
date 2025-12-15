@@ -1,4 +1,4 @@
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 export type TrainingAction = 'getCourses' | 'getAssessments'
 

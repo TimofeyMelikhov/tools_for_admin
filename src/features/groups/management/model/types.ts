@@ -1,4 +1,6 @@
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { Person } from '@/entities/person'
+
+import type { ExcelRow } from '@/shared/lib/excel'
 
 export type GroupAction =
 	| 'addToGroup'
@@ -18,13 +20,6 @@ export type UploadListItem = {
 	modification_date: string
 }
 
-export type Person = {
-	id?: number
-	fullname: string
-	position_name: string
-	position_parent_name: string
-}
-
 export type CollaboratorOption = {
 	value: number | undefined
 	label: string
@@ -41,7 +36,6 @@ export type GroupManagementState = {
 	currentGroup: UploadListItem | null
 	targetGroup: UploadListItem | null
 	selectedUsers: Person[]
-	searchString: string
 	selectedUser: Person | null
 }
 

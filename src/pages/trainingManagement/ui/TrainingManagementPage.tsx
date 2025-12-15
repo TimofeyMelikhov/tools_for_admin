@@ -1,5 +1,29 @@
-import { TrainingAssignWidget } from '@/features/training/assign'
+import { Outlet, useLocation } from 'react-router-dom'
 
-export const TrainingManagementPage = () => {
-	return <TrainingAssignWidget />
+import { TrainingManagementChooser } from '@/widgets/trainingManagement/ActionChooser'
+
+export function TrainingManagementPage() {
+	const location = useLocation()
+	const isRoot =
+		location.pathname === '/TrainingManagement' ||
+		location.pathname === '/TrainingManagement/'
+
+	return (
+		<div style={{ padding: 16, display: 'grid', gap: 16 }}>
+			<header style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+				<h1 style={{ margin: 0 }}>Обучение</h1>
+				<span style={{ color: '#666' }}>Назначение курсов и тестов</span>
+			</header>
+
+			{isRoot ? (
+				<TrainingManagementChooser />
+			) : (
+				<div
+					style={{ border: '1px solid #eee', borderRadius: 12, padding: 16 }}
+				>
+					<Outlet />
+				</div>
+			)}
+		</div>
+	)
 }

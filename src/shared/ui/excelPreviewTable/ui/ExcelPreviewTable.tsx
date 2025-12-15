@@ -7,7 +7,7 @@ import {
 	useReactTable
 } from '@tanstack/react-table'
 
-import type { ColumnMap } from '@/shared/lib/excel/types'
+import type { ColumnMap } from '@/shared/lib/excel'
 
 import styles from './ExcelPreviewTable.module.scss'
 

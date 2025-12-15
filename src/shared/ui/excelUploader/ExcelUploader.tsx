@@ -3,7 +3,7 @@ import React, { memo, useId, useState } from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import { useSnackbar } from 'notistack'
 
-import { parseExcelFile } from '@/shared/lib/excel/parseExcelFile'
+import { parseExcelFile } from '@/shared/lib/excel'
 
 import type { ExcelUploaderProps } from './ExcelUploader.types'
 

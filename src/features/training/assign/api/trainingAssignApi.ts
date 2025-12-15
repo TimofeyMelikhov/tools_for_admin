@@ -9,7 +9,7 @@ import type { ServerResponse } from '@/shared/api/types'
 import type { TrainingAssignRequest, UploadListItem } from '../model/types'
 
 export const trainingAssignApi = createApi({
-	reducerPath: 'trainingAssignApi',
+	reducerPath: 'trainingAssignCourseApi',
 	baseQuery,
 	endpoints: build => ({
 		getCurrentList: build.query<UploadListItem[], string>({

@@ -1,13 +1,15 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { Box, Button, Typography } from '@mui/material'
+import { enqueueSnackbar } from 'notistack'
 
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 import { ExcelUploader } from '@/shared/ui/excelUploader'
 import { Preloader } from '@/shared/ui/preloader'
 
+import { useAssignTrainingMutation } from '../api/trainingAssignApi'
 import { trainingAssignColumnMap } from '../model/excelMapping'
 import {
 	cleanExcel,
@@ -17,8 +19,7 @@ import {
 	setExcelData,
 	setTimeAssign
 } from '../model/trainingAssignSlice'
-import type { ActionOption } from '../model/types'
-import { useTrainingAssignSubmit } from '../model/useTrainingAssignSubmit'
+import type { ActionOption, TrainingAction } from '../model/types'
 
 import { ActionSelect } from './ActionSelect'
 import { CurrentItemSelect } from './CurrentItemSelect'
@@ -26,47 +27,120 @@ import { TimeInput } from './TimeInput'
 import { TrainingAssignErrors } from './TrainingAssignErrors'
 import styles from './trainingAssign.module.scss'
 
-export const TrainingAssignWidget = () => {
-	const dispatch = useAppDispatch()
+type Props = {
+	/**
+	 * Если передан — виджет работает в режиме конкретного под-роута:
+	 * course -> 'getCourses'
+	 * assessment -> 'getAssessments'
+	 */
+	forcedAction?: TrainingAction
+	title?: string
+	submitText?: string
+}
 
-	const { submit, data, isLoading } = useTrainingAssignSubmit()
+const ACTION_OPTIONS: ActionOption[] = [
+	{ value: 'getCourses', label: 'Назначить курс' },
+	{ value: 'getAssessments', label: 'Назначить тест' }
+]
+
+const optionByValue = (value: TrainingAction): ActionOption =>
+	ACTION_OPTIONS.find(o => o.value === value) ?? { value, label: value }
+
+export const TrainingAssignWidget = ({
+	forcedAction,
+	title = 'Назначение курсов и тестов',
+	submitText = 'Назначить'
+}: Props) => {
+	const dispatch = useAppDispatch()
+	const [assignTraining, { data, isLoading }] = useAssignTrainingMutation()
 
 	const { currentObj, excelObj, selectedAction, time } = useAppSelector(
-		state => state.trainingAssign
+		s => s.trainingAssign
 	)
 
-	const optionsForAction: ActionOption[] = useMemo(
-		() => [
-			{ value: 'getCourses', label: 'Назначить курс' },
-			{ value: 'getAssessments', label: 'Назначить тест' }
-		],
-		[]
-	)
+	// Если режим зафиксирован роутом — сбрасываем состояние и фиксируем action.
+	useEffect(() => {
+		if (!forcedAction) return
 
-	const shouldShowButton =
+		dispatch(reset())
+		dispatch(setAction(optionByValue(forcedAction)))
+
+		return () => {
+			dispatch(reset())
+		}
+	}, [dispatch, forcedAction])
+
+	// В обычном режиме тоже чистим состояние при уходе со страницы
+	useEffect(() => {
+		if (forcedAction) return
+		return () => {
+			dispatch(reset())
+		}
+	}, [dispatch, forcedAction])
+
+	const optionsForAction = useMemo(() => ACTION_OPTIONS, [])
+
+	const shouldShowTime =
+		selectedAction?.value === 'getCourses' ||
+		selectedAction?.value === 'getAssessments'
+
+	const shouldShowSubmit =
 		excelObj.length > 0 && selectedAction !== null && currentObj !== null
 
 	const handleExcelData = (rows: ExcelRow[]) => {
 		dispatch(setExcelData(rows))
 	}
 
-	const uploadToServer = () =>
-		submit({ currentObj, excelObj, selectedAction, time }, () =>
-			dispatch(reset())
-		)
+	const uploadToServer = async () => {
+		try {
+			const res = await assignTraining({
+				currentObj,
+				excelObj,
+				selectedAction,
+				time
+			}).unwrap()
+
+			const hasErrors =
+				res.notFoundPersons.length > 0 ||
+				res.dublicatePersons.length > 0 ||
+				(res.prevAssign?.length ?? 0) > 0
+
+			if (hasErrors) {
+				enqueueSnackbar(
+					`Обработано ${res.counterPersons} из ${excelObj.length} записей. Есть ошибки.`,
+					{ variant: 'warning', style: { fontSize: '14px' } }
+				)
+				return
+			}
+
+			enqueueSnackbar('Все записи успешно обработаны!', {
+				variant: 'success',
+				style: { fontSize: '14px' }
+			})
+		} catch (error) {
+			enqueueSnackbar('Произошла ошибка, попробуйте позже', {
+				variant: 'error',
+				style: { fontSize: '14px' }
+			})
+			console.error('Ошибка при загрузке на сервер:', error)
+		}
+	}
 
 	return (
 		<div className={styles.container}>
 			<Typography variant='h4' gutterBottom align='center'>
-				Назначение курсов и тестов
+				{title}
 			</Typography>
 
 			<div className={styles.filters}>
-				<ActionSelect
-					options={optionsForAction}
-					value={selectedAction}
-					onChange={opt => dispatch(setAction(opt))}
-				/>
+				{/* В режиме fixed (под-роут) выбор действия не показываем */}
+				{!forcedAction && (
+					<ActionSelect
+						options={optionsForAction}
+						value={selectedAction}
+						onChange={opt => dispatch(setAction(opt))}
+					/>
+				)}
 
 				{selectedAction && (
 					<CurrentItemSelect
@@ -76,8 +150,7 @@ export const TrainingAssignWidget = () => {
 					/>
 				)}
 
-				{(selectedAction?.value === 'getCourses' ||
-					selectedAction?.value === 'getAssessments') && (
+				{shouldShowTime && (
 					<TimeInput
 						className={styles.timeInput}
 						value={time}
@@ -110,7 +183,7 @@ export const TrainingAssignWidget = () => {
 
 			<ExcelPreviewTable data={excelObj} columnMap={trainingAssignColumnMap} />
 
-			{shouldShowButton && (
+			{shouldShowSubmit && (
 				<Box sx={{ display: 'flex' }}>
 					<Button
 						variant='contained'
@@ -119,7 +192,7 @@ export const TrainingAssignWidget = () => {
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
 						disabled={isLoading}
 					>
-						Назначить
+						{submitText}
 					</Button>
 				</Box>
 			)}

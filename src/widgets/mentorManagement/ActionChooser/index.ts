@@ -1,1 +1,1 @@
-export { MentorsActionChooser } from './ui/MentorsActionChooser'
+export { MentorManagementChooser } from './ui/MentorsActionChooser'

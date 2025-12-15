@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 
 import type { RewardsUpdateState } from '@/features/mentors/rewardsUpdate/model/types'
 
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 const initialState: RewardsUpdateState = {
 	excelObj: []

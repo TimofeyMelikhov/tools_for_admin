@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 interface initialState {
 	excelObj: ExcelRow[]

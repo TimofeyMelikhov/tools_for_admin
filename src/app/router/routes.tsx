@@ -9,9 +9,15 @@ import { TrainingManagement } from '@/pages/trainingManagement'
 
 import { AppLayout } from '@/widgets/layout'
 
+import { AddToGroupWidget } from '@/features/groups/addToGroup'
+import { InstallLeadWidget } from '@/features/groups/installLead'
+import { MovePersonWidget } from '@/features/groups/movePerson'
+import { RemovePersonWidget } from '@/features/groups/removePerson'
 import { CheckMentorsDataWidget } from '@/features/mentors/CheckMentorsData'
 import { MentorProfileUpdateWidget } from '@/features/mentors/MentorProfile'
 import { RewardsUpdateWidget } from '@/features/mentors/rewardsUpdate'
+import { AssignCourseWidget } from '@/features/training/assignCourse'
+import { AssignTestWidget } from '@/features/training/assignTest'
 
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -33,7 +39,12 @@ export const routesConfig: RouteConfig[] = [
 					<ProtectedRoute>
 						<TrainingManagement />
 					</ProtectedRoute>
-				)
+				),
+				children: [
+					{ path: '', element: <div /> },
+					{ path: 'course', element: <AssignCourseWidget /> },
+					{ path: 'assessment', element: <AssignTestWidget /> }
+				]
 			},
 			{
 				path: '/groupManagement',
@@ -41,7 +52,14 @@ export const routesConfig: RouteConfig[] = [
 					<ProtectedRoute>
 						<GroupManagement />
 					</ProtectedRoute>
-				)
+				),
+				children: [
+					{ path: '', element: <div /> },
+					{ path: 'add', element: <AddToGroupWidget /> },
+					{ path: 'remove', element: <RemovePersonWidget /> },
+					{ path: 'move', element: <MovePersonWidget /> },
+					{ path: 'leader', element: <InstallLeadWidget /> }
+				]
 			},
 			{
 				path: '/AssignAdapt',

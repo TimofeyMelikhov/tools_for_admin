@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 import { Box, Button, Typography } from '@mui/material'
 import Select from 'react-select'
 
@@ -8,10 +10,11 @@ import { Preloader } from '@/shared/ui/preloader'
 
 import { optionsForAction } from '../model/constants'
 import { groupManagementColumnMap } from '../model/excelMapping'
-import { clearExcel, setExcelData } from '../model/groupManagementSlice'
+import { clearExcel } from '../model/groupManagementSlice'
 import type {
 	ActionOption,
 	CollaboratorOption,
+	GroupAction,
 	UploadListItem
 } from '../model/types'
 import { useGroupManagement } from '../model/useGroupManagement'
@@ -20,12 +23,23 @@ import { EditGroupTable } from './EditGroupTable'
 import { GroupManagementErrors } from './GroupManagementErrors'
 import styles from './groupManagement.module.scss'
 
-export const GroupManagementWidget = () => {
+type Props = {
+	forcedAction?: GroupAction
+	title?: string
+	submitText?: string
+}
+
+export const GroupManagementWidget = ({
+	forcedAction,
+	title = 'Управление группами',
+	submitText
+}: Props) => {
 	const dispatch = useAppDispatch()
 
 	const {
 		state,
 		groups,
+		groupsLoading,
 		filteredGroups,
 		personsList,
 		personsListLoading,
@@ -43,57 +57,69 @@ export const GroupManagementWidget = () => {
 		submit,
 		showPersonsList,
 		showExcelUploader
-	} = useGroupManagement()
+	} = useGroupManagement(forcedAction)
 
-	const {
-		excelObj,
-		selectedAction,
-		currentGroup,
-		targetGroup,
-		searchString,
-		selectedUser
-	} = state
+	console.log(state)
+
+	const { excelObj, selectedAction, currentGroup, targetGroup, selectedUser } =
+		state
+
+	const isFixedMode = !!forcedAction
 
 	const showUserSelect = excelObj.length === 0
 	const showSubmitButton =
 		excelObj.length > 0 || showPersonsList || !!selectedUser
 
-	// чтобы react-select показывал выбранного руководителя корректно
-	const collaboratorValue: CollaboratorOption | null = selectedUser
-		? {
-				value: selectedUser.id,
-				label: `${selectedUser.fullname} (${selectedUser.position_name})`,
-				employee: selectedUser
-			}
-		: null
+	const collaboratorValue: CollaboratorOption | null = useMemo(() => {
+		if (!selectedUser) return null
+		return {
+			value: selectedUser.id,
+			label: `${selectedUser.fullname} (${selectedUser.position_name})`,
+			employee: selectedUser
+		}
+	}, [selectedUser])
+
+	const currentGroupValue: UploadListItem | null = useMemo(() => {
+		if (!currentGroup) return null
+		const id = String(currentGroup.id)
+		return groups.find(g => String(g.id) === id) ?? currentGroup
+	}, [groups, currentGroup])
+
+	const targetGroupValue: UploadListItem | null = useMemo(() => {
+		if (!targetGroup) return null
+		const id = String(targetGroup.id)
+		return filteredGroups.find(g => String(g.id) === id) ?? targetGroup
+	}, [filteredGroups, targetGroup])
 
 	return (
 		<div className={styles.container}>
 			<Typography variant='h4' gutterBottom align='center'>
-				Управление группами
+				{title}
 			</Typography>
 
 			<div className={styles.filters}>
-				<Select<ActionOption>
-					options={optionsForAction}
-					placeholder='Выберите действие'
-					onChange={opt => onActionChange(opt ?? null)}
-					isClearable
-					value={selectedAction}
-				/>
+				{!isFixedMode && (
+					<Select<ActionOption>
+						options={optionsForAction}
+						placeholder='Выберите действие'
+						onChange={opt => onActionChange(opt ?? null)}
+						isClearable
+						value={selectedAction}
+					/>
+				)}
 
 				{selectedAction && (
 					<>
 						<Select<UploadListItem>
 							options={groups}
 							getOptionLabel={e => e.name}
-							getOptionValue={e => e.id}
+							getOptionValue={e => String(e.id)}
 							onChange={opt => onCurrentGroupChange(opt ?? null)}
 							placeholder='Выберите группу'
-							value={currentGroup}
-							isLoading={personsListLoading}
+							value={currentGroupValue}
+							isLoading={groupsLoading}
 							isClearable
-							isDisabled={personsListLoading}
+							isDisabled={groupsLoading}
 							className={styles.groupSelect}
 						/>
 
@@ -101,9 +127,9 @@ export const GroupManagementWidget = () => {
 							<Select<UploadListItem>
 								options={filteredGroups}
 								getOptionLabel={e => e.name}
-								getOptionValue={e => e.id}
+								getOptionValue={e => String(e.id)}
 								onChange={opt => onTargetGroupChange(opt ?? null)}
-								value={targetGroup}
+								value={targetGroupValue}
 								placeholder='Выберите целевую группу'
 								isClearable
 								className={styles.groupSelect}
@@ -115,9 +141,8 @@ export const GroupManagementWidget = () => {
 								selectedAction.value === 'addToGroup') && (
 								<Select<CollaboratorOption>
 									options={collaboratorsOptions}
-									onInputChange={onSearchChange}
+									onInputChange={(val, meta) => onSearchChange(val, meta)}
 									onChange={opt => onSelectedUserChange(opt ?? null)}
-									inputValue={searchString}
 									value={collaboratorValue}
 									isLoading={collaboratorsLoading}
 									isClearable
@@ -144,10 +169,7 @@ export const GroupManagementWidget = () => {
 						variant='contained'
 						component='span'
 						sx={{ fontSize: '14px' }}
-						onClick={() => {
-							dispatch(setExcelData([]))
-							dispatch(clearExcel())
-						}}
+						onClick={() => dispatch(clearExcel())}
 					>
 						Очистить таблицу
 					</Button>
@@ -176,7 +198,7 @@ export const GroupManagementWidget = () => {
 						sx={{ mt: 2, mb: 2, ml: 'auto', fontSize: '14px' }}
 						disabled={isLoading}
 					>
-						{buttonText}
+						{submitText ?? buttonText}
 					</Button>
 				</Box>
 			)}

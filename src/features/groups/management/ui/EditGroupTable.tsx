@@ -8,10 +8,11 @@ import {
 } from '@mui/x-data-grid'
 import { ruRU } from '@mui/x-data-grid/locales'
 
+import type { Person } from '@/entities/person'
+
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 
 import { setUsersToSelectList } from '../model/groupManagementSlice'
-import type { Person } from '../model/types'
 
 interface EditGroupTableProps {
 	personsList: Person[] | undefined

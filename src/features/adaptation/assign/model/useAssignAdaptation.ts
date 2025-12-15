@@ -1,7 +1,7 @@
 import { useAssignAdaptationMutation } from '@/features/adaptation/assign/api/assignAdaptationApi'
 
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 import {
 	cleanExcelAdaptation,

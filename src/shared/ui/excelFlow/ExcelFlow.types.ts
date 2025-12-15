@@ -1,7 +1,6 @@
 import type React from 'react'
 
-import type { ExcelRow } from '@/shared/lib/excel/types'
-import type { ColumnMap } from '@/shared/lib/excel/types'
+import type { ColumnMap, ExcelRow } from '@/shared/lib/excel'
 
 export type ExcelFlowResult = {
 	counterPersons?: number

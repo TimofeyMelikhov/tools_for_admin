@@ -1,4 +1,4 @@
-import type { ColumnMap } from '@/shared/lib/excel/types'
+import type { ColumnMap } from '@/shared/lib/excel'
 
 export const rewardsUpdateColumnMap: ColumnMap = [
 	['Сотрудник', 'fullname'],

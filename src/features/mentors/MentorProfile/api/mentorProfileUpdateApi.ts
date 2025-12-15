@@ -5,7 +5,7 @@ import { backendId } from '@/app/config'
 import { baseQuery } from '@/shared/api/baseQuery'
 import { stripDuplicateIds } from '@/shared/api/transform'
 import type { ServerResponse } from '@/shared/api/types'
-import type { ExcelObj } from '@/shared/lib/excel/types'
+import type { ExcelObj } from '@/shared/lib/excel'
 
 export const mentorProfileApi = createApi({
 	reducerPath: 'mentorProfileApi',

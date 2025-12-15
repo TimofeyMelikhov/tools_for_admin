@@ -1,6 +1,6 @@
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { Person } from '@/entities/person'
 
-import type { Person } from '@/entities/person/model/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 export interface ServerResponse {
 	counterPersons: number

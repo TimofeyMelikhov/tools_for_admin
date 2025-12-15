@@ -2,12 +2,13 @@ import { createApi } from '@reduxjs/toolkit/query/react'
 
 import { backendId } from '@/app/config'
 
+import type { Person } from '@/entities/person'
+
 import { baseQuery } from '@/shared/api/baseQuery'
 
 import type {
 	GroupManagementState,
 	ManagementGroupResponse,
-	Person,
 	SearchRequest,
 	UploadListItem
 } from '../model/types'
@@ -22,6 +23,7 @@ export const groupManagementApi = createApi({
 				`custom_web_template.html?object_id=${backendId}&method=getGroups`,
 			providesTags: ['Groups']
 		}),
+
 		getCollaborators: build.query<Person[], SearchRequest>({
 			query: requestBody => ({
 				url: `custom_web_template.html?object_id=${backendId}&method=getCollaborators`,
@@ -30,6 +32,7 @@ export const groupManagementApi = createApi({
 			}),
 			providesTags: ['Collaborators']
 		}),
+
 		getPersonsGroup: build.query<Person[], UploadListItem>({
 			query: group => ({
 				url: `custom_web_template.html?object_id=${backendId}&method=getPersonsGroup`,
@@ -38,6 +41,7 @@ export const groupManagementApi = createApi({
 			}),
 			providesTags: ['Persons']
 		}),
+
 		manageGroup: build.mutation<
 			ManagementGroupResponse,
 			{
@@ -55,14 +59,15 @@ export const groupManagementApi = createApi({
 				method: 'POST',
 				body: targetGroupId ? { ...data, targetGroupId } : data
 			}),
-			invalidatesTags: ['Management']
+			invalidatesTags: result =>
+				result?.success ? ['Management', 'Persons'] : ['Management']
 		})
 	})
 })
 
 export const {
 	useGetGroupListQuery,
-	useLazyGetPersonsGroupQuery,
-	useLazyGetCollaboratorsQuery,
+	useGetPersonsGroupQuery,
+	useGetCollaboratorsQuery,
 	useManageGroupMutation
 } = groupManagementApi

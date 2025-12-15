@@ -1,6 +1,6 @@
-import type { MentorManagementAction } from './types'
+import type { ActionNavItem } from '@/shared/ui/actionChooser'
 
-export const mentorManagementActions: MentorManagementAction[] = [
+export const mentorManagementActions: ActionNavItem[] = [
 	{
 		title: 'Награды за наставничество',
 		description: 'Установка и обновление наград наставникам.',

@@ -1,12 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { Person } from '@/entities/person'
+
+import type { ExcelRow } from '@/shared/lib/excel'
 
 import type {
 	ActionOption,
 	GroupManagementState,
-	Person,
 	UploadListItem
 } from './types'
 
@@ -16,7 +17,6 @@ const initialState: GroupManagementState = {
 	currentGroup: null,
 	targetGroup: null,
 	selectedUsers: [],
-	searchString: '',
 	selectedUser: null
 }
 
@@ -30,7 +30,6 @@ const groupManagementSlice = createSlice({
 			state.selectedUser = null
 			state.selectedUsers = []
 			state.excelObj = []
-			state.searchString = ''
 		},
 		setExcelData: (state, action: PayloadAction<ExcelRow[]>) => {
 			state.excelObj = action.payload
@@ -45,9 +44,6 @@ const groupManagementSlice = createSlice({
 		},
 		setTargetGroup: (state, action: PayloadAction<UploadListItem | null>) => {
 			state.targetGroup = action.payload
-		},
-		setSearchString: (state, action: PayloadAction<string>) => {
-			state.searchString = action.payload
 		},
 		setSelectedUser: (state, action: PayloadAction<Person | null>) => {
 			state.selectedUser = action.payload
@@ -65,7 +61,6 @@ export const {
 	clearExcel,
 	setCurrentGroup,
 	setTargetGroup,
-	setSearchString,
 	setSelectedUser,
 	setUsersToSelectList,
 	reset

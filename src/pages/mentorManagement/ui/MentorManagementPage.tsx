@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 
-import { MentorsActionChooser } from '@/widgets/mentorManagement/ActionChooser'
+import { MentorManagementChooser } from '@/widgets/mentorManagement/ActionChooser'
 
 export function MentorManagementPage() {
 	const location = useLocation()
@@ -18,7 +18,7 @@ export function MentorManagementPage() {
 			</header>
 
 			{isRoot ? (
-				<MentorsActionChooser />
+				<MentorManagementChooser />
 			) : (
 				<div
 					style={{ border: '1px solid #eee', borderRadius: 12, padding: 16 }}

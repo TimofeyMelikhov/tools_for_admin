@@ -1,6 +1,6 @@
 import { enqueueSnackbar } from 'notistack'
 
-import type { ExcelRow } from '@/shared/lib/excel/types'
+import type { ExcelRow } from '@/shared/lib/excel'
 
 import { useAssignTrainingMutation } from '../api/trainingAssignApi'
 
