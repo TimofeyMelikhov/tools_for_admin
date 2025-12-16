@@ -513,6 +513,32 @@ function mentorsProfileUpdate(body) {
   return resultObj;
 }
 
+function checkMentorsData(body) {
+  var excelData = body.excelObj
+  var resultObj = {
+    counterPersons: 0,
+    notFoundPersons: [],
+    dublicatePersons: []
+  }
+
+  for(var i = 0; i < excelData.length; i++) {
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
+
+    if (rightPerson === null) {
+      continue;
+    }
+
+    
+
+    // col_doc=tools.open_doc(rightPerson.id)
+    // col_te=col_doc.TopElem
+    // col_te.custom_elems.ObtainChildByKey('selection_procedure').value = excelData[i].mentor
+    // col_doc.Save()
+    // resultObj.counterPersons++
+  }
+  return resultObj;
+}
+
 function assignAdaptation(body) {
   var resultObj = {
     countCreateAdapt: 0,

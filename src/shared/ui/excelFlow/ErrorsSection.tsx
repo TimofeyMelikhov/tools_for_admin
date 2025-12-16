@@ -10,19 +10,41 @@ type Props<TRes extends ExcelFlowResult> = {
 	columnMap: ColumnMap
 }
 
+type TableRow = Record<string, unknown>
+
+function toTableRows(rows: unknown[], columnMap: ColumnMap): TableRow[] {
+	const keys = columnMap.map(([, key]) => key)
+
+	return rows.map(row => {
+		const out: TableRow = {}
+
+		if (row && typeof row === 'object') {
+			const obj = row as Record<string, unknown>
+			for (const key of keys) out[key] = obj[key]
+			return out
+		}
+
+		for (const key of keys) out[key] = row
+		return out
+	})
+}
+
 export const ErrorsSection = <TRes extends ExcelFlowResult>({
 	result,
 	texts,
 	className,
 	columnMap
 }: Props<TRes>) => {
-	const duplicates = result?.dublicatePersons ?? []
-	const notFound = result?.notFoundPersons ?? []
+	const duplicatesRaw = (result?.dublicatePersons ?? []) as unknown[]
+	const notFoundRaw = (result?.notFoundPersons ?? []) as unknown[]
 
-	const hasDuplicates = duplicates.length > 0
-	const hasNotFound = notFound.length > 0
+	const hasDuplicates = duplicatesRaw.length > 0
+	const hasNotFound = notFoundRaw.length > 0
 
 	if (!hasDuplicates && !hasNotFound) return null
+
+	const duplicates = hasDuplicates ? toTableRows(duplicatesRaw, columnMap) : []
+	const notFound = hasNotFound ? toTableRows(notFoundRaw, columnMap) : []
 
 	return (
 		<div className={className}>
@@ -35,11 +57,8 @@ export const ErrorsSection = <TRes extends ExcelFlowResult>({
 
 			{hasNotFound && (
 				<>
-					{texts.notFoundTitle ?? 'Не найденные сотрудники:'}{' '}
-					{notFound
-						.map(p => p.fullname)
-						.filter(Boolean)
-						.join(', ')}
+					{texts.notFoundTitle ?? 'Не найденные сотрудники:'}
+					<ExcelPreviewTable data={notFound} columnMap={columnMap} />
 				</>
 			)}
 		</div>

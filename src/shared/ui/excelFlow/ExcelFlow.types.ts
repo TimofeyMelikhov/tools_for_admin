@@ -2,10 +2,15 @@ import type React from 'react'
 
 import type { ColumnMap, ExcelRow } from '@/shared/lib/excel'
 
-export type ExcelFlowResult = {
+// FIX: общая "строка" для вывода в таблице ошибок
+export type ExcelFlowResult<TDuplicateRow = unknown, TNotFoundRow = unknown> = {
+	success?: boolean
+	code?: number
+	message?: string
+
 	counterPersons?: number
-	notFoundPersons?: Array<{ fullname?: string } & Record<string, any>>
-	dublicatePersons?: Array<Record<string, any>>
+	dublicatePersons?: TDuplicateRow[]
+	notFoundPersons?: TNotFoundRow[]
 }
 
 export type ExcelFlowTexts = {

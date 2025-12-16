@@ -35,9 +35,9 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 		try {
 			const res = await onSubmit(excelData)
 
-			const processed = (res as any)?.counterPersons ?? 0
-			const dup = (res as any)?.dublicatePersons?.length ?? 0
-			const nf = (res as any)?.notFoundPersons?.length ?? 0
+			const processed = res?.counterPersons ?? 0
+			const dup = res?.dublicatePersons?.length ?? 0
+			const nf = res?.notFoundPersons?.length ?? 0
 			const hasErrors = dup > 0 || nf > 0
 
 			if (hasErrors) {

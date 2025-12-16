@@ -2,6 +2,7 @@ import { combineReducers } from '@reduxjs/toolkit'
 
 import assignAdaptationSlice from '@/features/adaptation/assign/model/assignAdaptationSlice'
 import { groupManagementReducer } from '@/features/groups/management'
+import mentorCheckDataSlice from '@/features/mentors/CheckMentorsData/model/mentorCheckDataSlice'
 import mentorProfileSlice from '@/features/mentors/MentorProfile/model/mentorProfileSlice'
 import rewardsUpdateSlice from '@/features/mentors/rewardsUpdate/model/rewardsUpdateSlice'
 import trainingAssignSlice from '@/features/training/assign/model/trainingAssignSlice'
@@ -20,11 +21,10 @@ const apiReducers = apiSlices.reduce(
 
 export const rootReducer = combineReducers({
 	...apiReducers,
-
 	trainingAssign: trainingAssignSlice,
 	groupManagement: groupManagementReducer,
-
 	rewardsUpdate: rewardsUpdateSlice,
 	mentorProfile: mentorProfileSlice,
+	mentorCheckData: mentorCheckDataSlice,
 	assignAdaptation: assignAdaptationSlice
 })
