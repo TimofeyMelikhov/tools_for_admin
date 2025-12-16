@@ -2,30 +2,15 @@ import type { Person } from '@/entities/person'
 
 import type { ExcelRow } from '@/shared/lib/excel'
 
-export interface ServerResponse {
-	counterPersons: number
-	notFoundPersons: ExcelRow[]
-	dublicatePersons: Person[]
-	prevAssign: ExcelRow[]
-}
+// FIX: общий базовый формат ответа "операции по Excel"
+export type ExcelOperationResponse = {
+	success?: boolean
+	code?: number
+	message?: string
 
-export interface ManagmentGroupResponse {
-	success: boolean
-	code: number
-	message: string
-	counterPersons: number
-	notProcessed?: string[]
+	counterPersons?: number
 	notFoundPersons?: ExcelRow[]
 	dublicatePersons?: Person[]
-}
-
-export interface AdaptationAssignResponse {
-	countCreateAdapt: 0
-	notFoundPersons: ExcelRow[]
-	dublicatePersons: Person[]
-	notFoundProgramm: string[]
-	haveAProgramm: string[]
-	haventPosDate: string[]
 }
 
 export interface MenuResponse {
@@ -37,17 +22,4 @@ export interface MenuResponse {
 
 export interface SearchRequest {
 	search: string
-}
-
-export interface UploadListItem {
-	id: string
-	code: string
-	name: string
-	modification_date: string
-}
-
-export interface CollaboratorOption {
-	value: number | undefined
-	label: string
-	employee: Person
 }

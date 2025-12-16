@@ -32,10 +32,7 @@ export const PreviewSection = ({
 		<>
 			{isVisibleTitle && (
 				<div className={classNameTableTitle}>
-					{/* ЛЕВАЯ часть: либо controlsSlot, либо текст превью */}
 					<div>{controlsSlot ? controlsSlot : previewTitle}</div>
-
-					{/* ПРАВАЯ часть: кнопка очистки */}
 					<div>
 						<Button
 							variant='text'

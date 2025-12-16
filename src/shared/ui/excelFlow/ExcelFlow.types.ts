@@ -2,7 +2,6 @@ import type React from 'react'
 
 import type { ColumnMap, ExcelRow } from '@/shared/lib/excel'
 
-// FIX: общая "строка" для вывода в таблице ошибок
 export type ExcelFlowResult<TDuplicateRow = unknown, TNotFoundRow = unknown> = {
 	success?: boolean
 	code?: number

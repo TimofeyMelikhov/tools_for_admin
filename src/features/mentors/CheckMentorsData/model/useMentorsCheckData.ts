@@ -8,8 +8,7 @@ import { cleanExcelMentorCheckData, setExcelData } from './mentorCheckDataSlice'
 export const useMentorsCheckData = () => {
 	const dispatch = useAppDispatch()
 
-	const [updateMentorProfile, { data, isLoading }] =
-		useMentorsCheckDataMutation()
+	const [checkMentorData, { data, isLoading }] = useMentorsCheckDataMutation()
 
 	const excelData = useAppSelector(state => state.mentorCheckData.excelObj)
 
@@ -24,8 +23,7 @@ export const useMentorsCheckData = () => {
 	}
 
 	const submit = async (excelObj: ExcelRow[]) => {
-		return await updateMentorProfile({ excelObj }).unwrap()
-		// console.log('Submitted data:', excelObj)
+		return await checkMentorData({ excelObj }).unwrap()
 	}
 
 	return {

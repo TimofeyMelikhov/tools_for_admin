@@ -59,9 +59,6 @@ export const GroupManagementWidget = ({
 		showExcelUploader
 	} = useGroupManagement(forcedAction)
 
-	// FIX: убрал лишний console.log (если надо — оберни в DEV)
-	// console.log(state)
-
 	const { excelObj, selectedAction, currentGroup, targetGroup, selectedUser } =
 		state
 
@@ -75,7 +72,7 @@ export const GroupManagementWidget = ({
 		if (!selectedUser) return null
 		return {
 			// FIX: value всегда string для react-select
-			value: String(selectedUser.id),
+			value: selectedUser.id,
 			label: `${selectedUser.fullname} (${selectedUser.position_name})`,
 			employee: selectedUser
 		}
@@ -83,13 +80,11 @@ export const GroupManagementWidget = ({
 
 	const currentGroupValue: UploadListItem | null = useMemo(() => {
 		if (!currentGroup) return null
-		// FIX: id у групп везде string → без String(...)
 		return groups.find(g => g.id === currentGroup.id) ?? currentGroup
 	}, [groups, currentGroup])
 
 	const targetGroupValue: UploadListItem | null = useMemo(() => {
 		if (!targetGroup) return null
-		// FIX: id у групп везде string → без String(...)
 		return filteredGroups.find(g => g.id === targetGroup.id) ?? targetGroup
 	}, [filteredGroups, targetGroup])
 
