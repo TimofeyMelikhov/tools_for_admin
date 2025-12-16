@@ -14,26 +14,70 @@ import styles from './ExcelPreviewTable.module.scss'
 interface ExcelPreviewTableProps<T extends Record<string, any>> {
 	data: T[]
 	columnMap?: ColumnMap
+	hideEmptyMappedColumns?: boolean
 }
 
 export function ExcelPreviewTable<T extends Record<string, any>>({
 	data,
-	columnMap
+	columnMap,
+	hideEmptyMappedColumns = true
 }: ExcelPreviewTableProps<T>) {
-	const headerMap = React.useMemo(() => buildHeaderMap(columnMap), [columnMap])
+	if (!data.length) return null
 
-	const columns = React.useMemo<ColumnDef<T>[]>(
-		() => generateColumns(data, headerMap),
-		[data, headerMap]
-	)
+	const columns = React.useMemo<ColumnDef<T>[]>(() => {
+		if (columnMap && columnMap.length) {
+			const mappedKeys = columnMap.map(([, key]) => key)
+
+			const visibleKeys = hideEmptyMappedColumns
+				? mappedKeys.filter(key =>
+						data.some(row => {
+							const val = row[key]
+							return val !== null && val !== undefined && val !== ''
+						})
+					)
+				: mappedKeys
+
+			return visibleKeys.map(key => {
+				const rusHeader = columnMap.find(([, k]) => k === key)?.[0] ?? key
+
+				return {
+					accessorKey: key as keyof T,
+					header: rusHeader,
+					cell: info => formatCellValue(info.getValue())
+				}
+			})
+		}
+
+		const autoKeys = collectKeysFromData(data)
+
+		const nonEmptyKeys = autoKeys.filter(key =>
+			data.some(row => {
+				const val = row[key]
+				return val !== null && val !== undefined && val !== ''
+			})
+		)
+
+		return nonEmptyKeys.map(key => ({
+			accessorKey: key as keyof T,
+			header: key,
+			cell: info => formatCellValue(info.getValue())
+		}))
+	}, [columnMap, data, hideEmptyMappedColumns])
+
+	if (!columns.length) return null
 
 	const table = useReactTable({
 		data,
 		columns,
-		getCoreRowModel: getCoreRowModel()
+		getCoreRowModel: getCoreRowModel(),
+		getRowId: (originalRow, index) => {
+			const maybeId = (originalRow as Record<string, unknown>).id
+			if (typeof maybeId === 'string' || typeof maybeId === 'number') {
+				return String(maybeId)
+			}
+			return String(index)
+		}
 	})
-
-	if (!data.length) return null
 
 	return (
 		<div className={styles.container}>
@@ -53,6 +97,7 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 							</tr>
 						))}
 					</thead>
+
 					<tbody>
 						{table.getRowModel().rows.map(row => (
 							<tr key={row.id}>
@@ -66,44 +111,44 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 					</tbody>
 				</table>
 			</div>
+
 			<div className={styles.footer}>Всего строк: {data.length}</div>
 		</div>
 	)
 }
 
-function buildHeaderMap(columnMap?: ColumnMap): Record<string, string> {
-	if (!columnMap) return {}
-	const map: Record<string, string> = {}
-	for (const [rus, key] of columnMap) {
-		// key -> rus
-		map[key] = rus
+function collectKeysFromData<T extends Record<string, any>>(
+	data: T[]
+): string[] {
+	const keys = new Set<string>()
+	for (const row of data) {
+		for (const key of Object.keys(row)) {
+			keys.add(key)
+		}
 	}
-	return map
+	return Array.from(keys)
 }
 
-function generateColumns<T extends Record<string, any>>(
-	data: T[],
-	headerMap: Record<string, string>
-): ColumnDef<T>[] {
-	if (!data.length) return []
+function formatCellValue(value: unknown) {
+	if (value === null || value === undefined || value === '') return '-'
 
-	const allKeys = Object.keys(
-		data.reduce((acc, row) => ({ ...acc, ...row }), {})
-	)
+	if (typeof value === 'boolean') return value ? 'Да' : 'Нет'
+	if (typeof value === 'number') return String(value)
+	if (typeof value === 'string') return value
 
-	const filteredKeys = allKeys.filter(key =>
-		data.some(row => {
-			const val = row[key]
-			return val !== null && val !== undefined && val !== ''
-		})
-	)
+	if (Array.isArray(value)) {
+		return value
+			.map(v => (v === null || v === undefined || v === '' ? '-' : String(v)))
+			.join(', ')
+	}
 
-	return filteredKeys.map(key => ({
-		accessorKey: key as keyof T,
-		header: headerMap[key] || key,
-		cell: info => {
-			const value = info.getValue()
-			return value !== null && value !== undefined && value !== '' ? value : '-'
+	if (typeof value === 'object') {
+		try {
+			return JSON.stringify(value)
+		} catch {
+			return String(value)
 		}
-	}))
+	}
+
+	return String(value)
 }

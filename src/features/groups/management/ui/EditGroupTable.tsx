@@ -23,11 +23,14 @@ export const EditGroupTable = ({
 	personsList,
 	mode = 'select'
 }: EditGroupTableProps) => {
-	const columns: GridColDef[] = [
-		{ field: 'fullname', headerName: 'Сотрудник', width: 350 },
-		{ field: 'position_name', headerName: 'Должность', width: 250 },
-		{ field: 'position_parent_name', headerName: 'Подразделение', width: 350 }
-	]
+	const columns: GridColDef[] = useMemo(
+		() => [
+			{ field: 'fullname', headerName: 'Сотрудник', width: 350 },
+			{ field: 'position_name', headerName: 'Должность', width: 250 },
+			{ field: 'position_parent_name', headerName: 'Подразделение', width: 350 }
+		],
+		[]
+	)
 
 	const checkboxSelection = mode === 'select'
 	const paginationModel = { page: 0, pageSize: 5 }
@@ -36,19 +39,17 @@ export const EditGroupTable = ({
 	const selectedUsers = useAppSelector(s => s.groupManagement.selectedUsers)
 
 	const rowSelectionModel: GridRowSelectionModel = useMemo(() => {
-		const ids = new Set(selectedUsers.map(u => u.id!).filter(Boolean))
+		const ids = new Set(selectedUsers.map(u => u.id))
 		return { type: 'include', ids }
 	}, [selectedUsers])
 
 	const handleSelectionChange = (selectionModel: GridRowSelectionModel) => {
 		if (!checkboxSelection) return
 
-		const selectedIds = Array.from(selectionModel.ids)
+		const selectedIds = selectionModel.ids
 
 		if (personsList) {
-			const nextSelected = personsList.filter(
-				p => p.id !== undefined && selectedIds.includes(p.id)
-			)
+			const nextSelected = personsList.filter(p => selectedIds.has(p.id))
 			dispatch(setUsersToSelectList(nextSelected))
 		}
 	}
@@ -58,7 +59,7 @@ export const EditGroupTable = ({
 			<DataGrid
 				rows={personsList ?? []}
 				columns={columns}
-				getRowId={row => row.id ?? `${row.fullname}-${row.position_name}`}
+				getRowId={row => row.id}
 				initialState={{ pagination: { paginationModel } }}
 				pageSizeOptions={[5, 10, 20]}
 				checkboxSelection={checkboxSelection}

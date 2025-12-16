@@ -14,6 +14,7 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 ) => {
 	const {
 		columnMap,
+		errorsColumnMap,
 		excelData,
 		excelLength,
 		isLoading,
@@ -105,7 +106,6 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 
 			{isLoading ? <Preloader /> : null}
 
-			{/* ✅ кастомные ошибки или дефолтные */}
 			{renderErrors ? (
 				renderErrors(result)
 			) : (
@@ -113,6 +113,7 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 					result={result}
 					texts={texts}
 					className={classes?.errorsBlock}
+					columnMap={errorsColumnMap ?? columnMap}
 				/>
 			)}
 		</div>

@@ -1,3 +1,4 @@
+import type { ColumnMap } from '@/shared/lib/excel'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable/ui/ExcelPreviewTable'
 
 import type { ExcelFlowResult, ExcelFlowTexts } from './ExcelFlow.types'
@@ -6,12 +7,14 @@ type Props<TRes extends ExcelFlowResult> = {
 	result?: TRes
 	texts: ExcelFlowTexts
 	className?: string
+	columnMap: ColumnMap
 }
 
 export const ErrorsSection = <TRes extends ExcelFlowResult>({
 	result,
 	texts,
-	className
+	className,
+	columnMap
 }: Props<TRes>) => {
 	const duplicates = result?.dublicatePersons ?? []
 	const notFound = result?.notFoundPersons ?? []
@@ -26,7 +29,7 @@ export const ErrorsSection = <TRes extends ExcelFlowResult>({
 			{hasDuplicates && (
 				<>
 					{texts.duplicatesTitle ?? 'Дубликаты в системе:'}
-					<ExcelPreviewTable data={duplicates} />
+					<ExcelPreviewTable data={duplicates} columnMap={columnMap} />
 				</>
 			)}
 

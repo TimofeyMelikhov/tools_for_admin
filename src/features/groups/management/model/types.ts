@@ -21,7 +21,7 @@ export type UploadListItem = {
 }
 
 export type CollaboratorOption = {
-	value: number | undefined
+	value: string
 	label: string
 	employee: Person
 }

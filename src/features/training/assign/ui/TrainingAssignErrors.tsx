@@ -1,6 +1,8 @@
 import type { ServerResponse } from '@/shared/api/types'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 
+import { trainingAssignColumnMap } from '../model/excelMapping'
+
 type Props = {
 	data?: ServerResponse
 	className?: string
@@ -14,7 +16,10 @@ export const TrainingAssignErrors = ({ data, className }: Props) => {
 			{!!data.dublicatePersons?.length && (
 				<div>
 					Дубликаты в системе:
-					<ExcelPreviewTable data={data.dublicatePersons} />
+					<ExcelPreviewTable
+						data={data.dublicatePersons}
+						columnMap={trainingAssignColumnMap}
+					/>
 				</div>
 			)}
 

@@ -59,7 +59,8 @@ export const GroupManagementWidget = ({
 		showExcelUploader
 	} = useGroupManagement(forcedAction)
 
-	console.log(state)
+	// FIX: убрал лишний console.log (если надо — оберни в DEV)
+	// console.log(state)
 
 	const { excelObj, selectedAction, currentGroup, targetGroup, selectedUser } =
 		state
@@ -73,7 +74,8 @@ export const GroupManagementWidget = ({
 	const collaboratorValue: CollaboratorOption | null = useMemo(() => {
 		if (!selectedUser) return null
 		return {
-			value: selectedUser.id,
+			// FIX: value всегда string для react-select
+			value: String(selectedUser.id),
 			label: `${selectedUser.fullname} (${selectedUser.position_name})`,
 			employee: selectedUser
 		}
@@ -81,14 +83,14 @@ export const GroupManagementWidget = ({
 
 	const currentGroupValue: UploadListItem | null = useMemo(() => {
 		if (!currentGroup) return null
-		const id = String(currentGroup.id)
-		return groups.find(g => String(g.id) === id) ?? currentGroup
+		// FIX: id у групп везде string → без String(...)
+		return groups.find(g => g.id === currentGroup.id) ?? currentGroup
 	}, [groups, currentGroup])
 
 	const targetGroupValue: UploadListItem | null = useMemo(() => {
 		if (!targetGroup) return null
-		const id = String(targetGroup.id)
-		return filteredGroups.find(g => String(g.id) === id) ?? targetGroup
+		// FIX: id у групп везде string → без String(...)
+		return filteredGroups.find(g => g.id === targetGroup.id) ?? targetGroup
 	}, [filteredGroups, targetGroup])
 
 	return (
@@ -113,7 +115,7 @@ export const GroupManagementWidget = ({
 						<Select<UploadListItem>
 							options={groups}
 							getOptionLabel={e => e.name}
-							getOptionValue={e => String(e.id)}
+							getOptionValue={e => e.id}
 							onChange={opt => onCurrentGroupChange(opt ?? null)}
 							placeholder='Выберите группу'
 							value={currentGroupValue}
@@ -127,7 +129,7 @@ export const GroupManagementWidget = ({
 							<Select<UploadListItem>
 								options={filteredGroups}
 								getOptionLabel={e => e.name}
-								getOptionValue={e => String(e.id)}
+								getOptionValue={e => e.id}
 								onChange={opt => onTargetGroupChange(opt ?? null)}
 								value={targetGroupValue}
 								placeholder='Выберите целевую группу'

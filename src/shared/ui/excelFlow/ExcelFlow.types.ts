@@ -33,6 +33,7 @@ export type ExcelFlowClasses = {
 
 export type ExcelFlowProps<TRes extends ExcelFlowResult = ExcelFlowResult> = {
 	columnMap: ColumnMap
+	errorsColumnMap?: ColumnMap
 	excelData: ExcelRow[]
 	excelLength: number
 

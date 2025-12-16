@@ -54,7 +54,6 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 	const actionValue: GroupAction | undefined =
 		forcedAction ?? selectedAction?.value
 
-	// ✅ forced-mode — безопасная инициализация без зависимостей от reset* RTKQ
 	useEffect(() => {
 		if (!forcedAction) return
 		dispatch(reset())
@@ -66,11 +65,11 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 	const { data: groups = [], isLoading: groupsLoading } = useGetGroupListQuery()
 
 	const filteredGroups = useMemo(() => {
-		const curId = currentGroup ? String(currentGroup.id) : null
-		return groups.filter(g => String(g.id) !== curId)
+		const curId = currentGroup ? currentGroup.id : null
+		return groups.filter(g => g.id !== curId)
 	}, [groups, currentGroup])
 
-	// ===== persons in group (автоматически, когда нужно) =====
+	// persons in group
 	const showPersonsList =
 		actionValue === 'deleteFromGroup' ||
 		actionValue === 'moveToGroup' ||
@@ -83,7 +82,7 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 	const personsList = needPersons ? personsQuery.data : undefined
 	const personsListLoading = needPersons ? personsQuery.isFetching : false
 
-	// ===== collaborators search (автоматически, когда нужно) =====
+	// collaborators search
 	const debouncedSearch = useDebounce(searchInput, 500).trim().toLowerCase()
 	const canSearch =
 		actionValue === 'addToGroup' || actionValue === 'installLeader'
@@ -100,6 +99,7 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 
 	const collaboratorsOptions: CollaboratorOption[] = useMemo(() => {
 		if (!shouldSearch) return []
+
 		return (collaboratorsQuery.data ?? []).map(employee => ({
 			value: employee.id,
 			label: `${employee.fullname} (${employee.position_name})`,
@@ -121,7 +121,6 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 		(option: ActionOption | null) => {
 			if (forcedAction) return
 
-			// ✅ сбрасываем только “результат операции”, а не форму
 			resetManage()
 			setSearchInput('')
 			dispatch(setAction(option))
@@ -204,8 +203,12 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 			return
 		}
 
-		if (actionValue === 'moveToGroup' && !selectedUsers.length) {
-			enqueueSnackbar('Выберите сотрудников для перемещения', {
+		if (
+			(actionValue === 'moveToGroup' || actionValue === 'deleteFromGroup') &&
+			!selectedUsers.length
+		) {
+			// FIX: добавил проверку для deleteFromGroup (чтобы не отправлять пустую операцию)
+			enqueueSnackbar('Выберите сотрудников', {
 				variant: 'warning',
 				style: { fontSize: '14px' }
 			})

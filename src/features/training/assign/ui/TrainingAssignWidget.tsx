@@ -28,11 +28,6 @@ import { TrainingAssignErrors } from './TrainingAssignErrors'
 import styles from './trainingAssign.module.scss'
 
 type Props = {
-	/**
-	 * Если передан — виджет работает в режиме конкретного под-роута:
-	 * course -> 'getCourses'
-	 * assessment -> 'getAssessments'
-	 */
 	forcedAction?: TrainingAction
 	title?: string
 	submitText?: string
@@ -58,7 +53,6 @@ export const TrainingAssignWidget = ({
 		s => s.trainingAssign
 	)
 
-	// Если режим зафиксирован роутом — сбрасываем состояние и фиксируем action.
 	useEffect(() => {
 		if (!forcedAction) return
 
@@ -70,7 +64,6 @@ export const TrainingAssignWidget = ({
 		}
 	}, [dispatch, forcedAction])
 
-	// В обычном режиме тоже чистим состояние при уходе со страницы
 	useEffect(() => {
 		if (forcedAction) return
 		return () => {
@@ -133,7 +126,6 @@ export const TrainingAssignWidget = ({
 			</Typography>
 
 			<div className={styles.filters}>
-				{/* В режиме fixed (под-роут) выбор действия не показываем */}
 				{!forcedAction && (
 					<ActionSelect
 						options={optionsForAction}
