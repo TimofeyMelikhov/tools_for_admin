@@ -235,7 +235,7 @@ function assignCourses(body) {
     dublicatePersons: [],
     prevAssign: []
   }
-
+  
   for(var i = 0; i < excelData.length; i++) {
     rightPerson = findRightPerson(excelData[i], resultObj, false);
 
@@ -517,14 +517,10 @@ function checkMentorsData(body) {
     dublicatePersons: [],
     rows: []
   }
-  log(excelData.length, 'кол-во пришедших элементов')
   var mentorsNamesArr = []
   var mentorsPositionsNamesArr = []
 
   for(oMentor in excelData) {
-    log(oMentor, 'oMentor (ключ for..in)')
-    log(oMentor.mentor, 'oMentor.mentor (ДОЛЖНО БЫТЬ ФИО, но почти наверняка undefined)')
-    
     mentorsNamesArr.push(oMentor.mentor)
     mentorsPositionsNamesArr.push(oMentor.mentor_position_name)
   }
@@ -556,9 +552,6 @@ function checkMentorsData(body) {
         "')\
     "
     var mentorsData = selectAll(sqlStr)
-
-    log(mentorsData.length, 'Кол-во найденных сотрудников')
-
   } catch (error) {
     log(error.message, 'Ошибка запроса')
   }
@@ -579,8 +572,8 @@ function checkMentorsData(body) {
       
       if (!foundMap.HasProperty(frontMentorKey)) {
         resultObj.notFoundPersons.push({
-          name: excelMentor.mentor,
-          position: excelMentor.mentor_position_name,
+          mentor: excelMentor.mentor,
+          mentor_position_name: excelMentor.mentor_position_name,
         });
       }
     }
@@ -589,48 +582,7 @@ function checkMentorsData(body) {
     log(error.message, "Ошибка в поиске не найденных сотрудников")
   }
 
-  try {
-    // var mentorsMap = new Object();
-    // var i, mentorsItem, mentorProps
-    // for (i = 0; i < mentorsData.length; i++) {
-    //   mentorsItem = mentorsData[i]
-
-    //   mentorProps = new Object();
-    //   mentorProps.AddProperty('mentor_award_chick', String(mentorsItem.mentor_award_chick));
-    //   mentorProps.AddProperty('mentor_award_owl', String(mentorsItem.mentor_award_owl));
-    //   mentorProps.AddProperty('selection_procedure', String(mentorsItem.selection_procedure));
-
-    //   mentorsMap.AddProperty(String(mentorsItem.fullname), mentorProps);
-    // }
-
-    // var newItem, mentorInfo, item, chick, owl, procedure
-    // for (j = 0; j < excelData.length; j++) {
-    //   item = excelData[j]
-    //   mentorInfo = mentorsMap.GetOptProperty(String(item.mentor));
-
-    //   log(mentorInfo, 'mentorInfo')
-
-      // chick = mentorInfo ? String(mentorInfo.GetOptProperty('mentor_award_chick', '')) : '';
-      // owl = mentorInfo ? String(mentorInfo.GetOptProperty('mentor_award_owl', '')) : '';
-      // procedure = mentorInfo ? String(mentorInfo.GetOptProperty('selection_procedure', '')) : '';
-
-      // newItem = {
-      //   "fullname": String(item.fullname),
-      //   "mentor": String(item.mentor),
-      //   "mentor_award_chick": chick,
-      //   "mentor_award_owl": owl,
-      //   "selection_procedure": procedure,
-      //   "date_modified": String(item.date_modified),
-      //   "position_name": String(item.position_name),
-      //   "mentor_position_name": String(item.mentor_position_name),
-      //   "state": String(item.state),
-      //   "type_of_mentoring": String(item.type_of_mentoring),
-      // };      
-      resultObj.rows = mentorsData;
-    // }
-  } catch (error) {
-    log(error.message, 'Ошибка в преобразовании данных')
-  }
+  resultObj.rows = mentorsData;
 
   resultObj.counterPersons = resultObj.rows.length;
 

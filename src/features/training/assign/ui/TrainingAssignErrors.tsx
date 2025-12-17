@@ -1,10 +1,10 @@
-import type { ServerResponse } from '@/shared/api/types'
+import type { ExcelOperationResponse } from '@/shared/api/types'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 
 import { trainingAssignColumnMap } from '../model/excelMapping'
 
 type Props = {
-	data?: ServerResponse
+	data?: ExcelOperationResponse
 	className?: string
 }
 
@@ -25,15 +25,21 @@ export const TrainingAssignErrors = ({ data, className }: Props) => {
 
 			{!!data.notFoundPersons?.length && (
 				<div>
-					Не найденные сотрудники:{' '}
-					{data.notFoundPersons.map(p => p.fullname).join(', ')}
+					Не найденные сотрудники:
+					<ExcelPreviewTable
+						data={data?.notFoundPersons ?? []}
+						columnMap={trainingAssignColumnMap}
+					/>
 				</div>
 			)}
 
 			{!!data.prevAssign?.length && (
 				<div>
-					Были назначены ранее:{' '}
-					{data.prevAssign.map(p => p.fullname).join(', ')}
+					Были назначены ранее:
+					<ExcelPreviewTable
+						data={data?.prevAssign ?? []}
+						columnMap={trainingAssignColumnMap}
+					/>
 				</div>
 			)}
 		</div>

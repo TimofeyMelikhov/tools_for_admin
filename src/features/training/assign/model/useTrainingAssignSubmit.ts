@@ -1,21 +1,14 @@
 import { enqueueSnackbar } from 'notistack'
 
-import type { ExcelRow } from '@/shared/lib/excel'
-
 import { useAssignTrainingMutation } from '../api/trainingAssignApi'
 
-import type { ActionOption, UploadListItem } from './types'
+import type { TrainingAssignState } from './types'
 
 export const useTrainingAssignSubmit = () => {
 	const [assignTraining, state] = useAssignTrainingMutation()
 
 	const submit = async (
-		params: {
-			currentObj: UploadListItem | null
-			excelObj: ExcelRow[]
-			selectedAction: ActionOption | null
-			time: string
-		},
+		params: TrainingAssignState,
 		onSuccess?: () => void
 	) => {
 		const { currentObj, excelObj, selectedAction, time } = params
@@ -29,8 +22,8 @@ export const useTrainingAssignSubmit = () => {
 			}).unwrap()
 
 			const hasErrors =
-				res.notFoundPersons.length > 0 ||
-				res.dublicatePersons.length > 0 ||
+				(res.notFoundPersons?.length ?? 0) > 0 ||
+				(res.dublicatePersons?.length ?? 0) > 0 ||
 				(res.prevAssign?.length ?? 0) > 0
 
 			if (hasErrors) {

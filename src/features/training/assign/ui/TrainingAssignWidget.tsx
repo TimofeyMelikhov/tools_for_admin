@@ -94,8 +94,8 @@ export const TrainingAssignWidget = ({
 			}).unwrap()
 
 			const hasErrors =
-				res.notFoundPersons.length > 0 ||
-				res.dublicatePersons.length > 0 ||
+				(res.notFoundPersons?.length ?? 0) > 0 ||
+				(res.dublicatePersons?.length ?? 0) > 0 ||
 				(res.prevAssign?.length ?? 0) > 0
 
 			if (hasErrors) {

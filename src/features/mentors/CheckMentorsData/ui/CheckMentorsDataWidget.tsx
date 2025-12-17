@@ -38,11 +38,12 @@ export const CheckMentorsDataWidget = () => {
 				onSubmit={submit}
 				texts={{
 					title: 'Проверка данных наставников из Excel файла',
-					previewTitle: 'Превью данных файла:',
+					previewTitle: 'Исходный файл:',
 					clearButton: 'Очистить таблицу',
 					submitButton: 'Получить данные',
 					successToast: 'Все записи успешно обработаны!',
-					errorToast: 'Произошла ошибка, попробуйте позже'
+					errorToast: 'Произошла ошибка, попробуйте позже',
+					notFoundTitle: 'Не найденные наставники:'
 				}}
 				classes={{
 					container: styles.container,

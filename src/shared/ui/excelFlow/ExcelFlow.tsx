@@ -97,12 +97,14 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 				columnMap={columnMap}
 			/>
 
-			<SubmitSection
-				isVisible={excelLength > 0}
-				isLoading={isLoading || !!submitDisabled}
-				buttonText={texts.submitButton}
-				onClick={handleSubmit}
-			/>
+			{!result?.success && (
+				<SubmitSection
+					isVisible={excelLength > 0}
+					isLoading={isLoading || !!submitDisabled}
+					buttonText={texts.submitButton}
+					onClick={handleSubmit}
+				/>
+			)}
 
 			{isLoading ? <Preloader /> : null}
 

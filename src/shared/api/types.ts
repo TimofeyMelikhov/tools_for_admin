@@ -2,7 +2,6 @@ import type { Person } from '@/entities/person'
 
 import type { ExcelRow } from '@/shared/lib/excel'
 
-// FIX: общий базовый формат ответа "операции по Excel"
 export type ExcelOperationResponse = {
 	success?: boolean
 	code?: number
@@ -11,6 +10,7 @@ export type ExcelOperationResponse = {
 	counterPersons?: number
 	notFoundPersons?: ExcelRow[]
 	dublicatePersons?: Person[]
+	prevAssign?: ExcelRow[]
 }
 
 export interface MenuResponse {
