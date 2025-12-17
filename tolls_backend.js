@@ -88,24 +88,17 @@ function checkUserRole() {
       },
       {
         id: 3,
-        title: 'Обновление наград',
-        route: '/RewardsUpdate',
-        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847762593038646',
-        groupId: getParam("acessRewardsUpdateId")
-      },
-      {
-        id: 4,
-        title: 'Обновление профилей наставников',
-        route: '/MentorProfile',
-        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062',
-        groupId: getParam("accessMentorProfileId")
-      },
-      {
-        id: 5,
         title: 'Назначение адаптации',
         route: '/AssignAdapt',
         image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847826781758933',
         groupId: getParam("adaptationGroup")
+      },
+      {
+        id: 4,
+        title: 'Управление наставниками',
+        route: '/mentorManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062',
+        groupId: getParam("mentorManagementGroup")
       }
     ];
     var groupId
@@ -516,26 +509,131 @@ function mentorsProfileUpdate(body) {
 function checkMentorsData(body) {
   var excelData = body.excelObj
   var resultObj = {
+    success: true,
+    code: 200,
+    message: "Проверка выполнена",
     counterPersons: 0,
     notFoundPersons: [],
-    dublicatePersons: []
+    dublicatePersons: [],
+    rows: []
+  }
+  log(excelData.length, 'кол-во пришедших элементов')
+  var mentorsNamesArr = []
+  var mentorsPositionsNamesArr = []
+
+  for(oMentor in excelData) {
+    log(oMentor, 'oMentor (ключ for..in)')
+    log(oMentor.mentor, 'oMentor.mentor (ДОЛЖНО БЫТЬ ФИО, но почти наверняка undefined)')
+    
+    mentorsNamesArr.push(oMentor.mentor)
+    mentorsPositionsNamesArr.push(oMentor.mentor_position_name)
   }
 
-  for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj, false);
+  var mentorsNamesStr = mentorsNamesArr.join("', '");
+  var mentorsPositionsNamesStr = mentorsPositionsNamesArr.join("', '")
 
-    if (rightPerson === null) {
-      continue;
+  try {
+    var sqlStr = "\
+      SELECT\
+        c.fullname,\
+        c.position_name,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"mentor_award_chick\"])[1]/value', 'varchar(100)'), 10) AS mentor_award_chick,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"mentor_award_owl\"])[1]/value', 'varchar(100)'), 10) AS mentor_award_owl,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"selection_procedure\"])[1]/value', 'varchar(100)'), 10) AS selection_procedure\
+      FROM\
+        collaborators c\
+      LEFT JOIN\
+        collaborator cc\
+      ON\
+        c.id = cc.id\
+      WHERE\
+        c.fullname IN ('" +
+          mentorsNamesStr +
+        "')\
+      AND\
+        c.position_name IN ('" +
+          mentorsPositionsNamesStr +
+        "')\
+    "
+    var mentorsData = selectAll(sqlStr)
+
+    log(mentorsData.length, 'Кол-во найденных сотрудников')
+
+  } catch (error) {
+    log(error.message, 'Ошибка запроса')
+  }
+
+  try {
+    var foundMentors = mentorsData;
+    var foundMap = new Object();
+    var mentorKey
+    var frontMentorKey
+    
+    for (foundMentorsItem in foundMentors) {
+      mentorKey = foundMentorsItem.fullname + '|' + foundMentorsItem.position_name;
+      foundMap[mentorKey] = foundMentorsItem;
     }
 
-    
+    for (excelMentor in excelData) {
+      frontMentorKey = excelMentor.mentor + '|' + excelMentor.mentor_position_name;
+      
+      if (!foundMap.HasProperty(frontMentorKey)) {
+        resultObj.notFoundPersons.push({
+          name: excelMentor.mentor,
+          position: excelMentor.mentor_position_name,
+        });
+      }
+    }
 
-    // col_doc=tools.open_doc(rightPerson.id)
-    // col_te=col_doc.TopElem
-    // col_te.custom_elems.ObtainChildByKey('selection_procedure').value = excelData[i].mentor
-    // col_doc.Save()
-    // resultObj.counterPersons++
+  } catch (error) {
+    log(error.message, "Ошибка в поиске не найденных сотрудников")
   }
+
+  try {
+    // var mentorsMap = new Object();
+    // var i, mentorsItem, mentorProps
+    // for (i = 0; i < mentorsData.length; i++) {
+    //   mentorsItem = mentorsData[i]
+
+    //   mentorProps = new Object();
+    //   mentorProps.AddProperty('mentor_award_chick', String(mentorsItem.mentor_award_chick));
+    //   mentorProps.AddProperty('mentor_award_owl', String(mentorsItem.mentor_award_owl));
+    //   mentorProps.AddProperty('selection_procedure', String(mentorsItem.selection_procedure));
+
+    //   mentorsMap.AddProperty(String(mentorsItem.fullname), mentorProps);
+    // }
+
+    // var newItem, mentorInfo, item, chick, owl, procedure
+    // for (j = 0; j < excelData.length; j++) {
+    //   item = excelData[j]
+    //   mentorInfo = mentorsMap.GetOptProperty(String(item.mentor));
+
+    //   log(mentorInfo, 'mentorInfo')
+
+      // chick = mentorInfo ? String(mentorInfo.GetOptProperty('mentor_award_chick', '')) : '';
+      // owl = mentorInfo ? String(mentorInfo.GetOptProperty('mentor_award_owl', '')) : '';
+      // procedure = mentorInfo ? String(mentorInfo.GetOptProperty('selection_procedure', '')) : '';
+
+      // newItem = {
+      //   "fullname": String(item.fullname),
+      //   "mentor": String(item.mentor),
+      //   "mentor_award_chick": chick,
+      //   "mentor_award_owl": owl,
+      //   "selection_procedure": procedure,
+      //   "date_modified": String(item.date_modified),
+      //   "position_name": String(item.position_name),
+      //   "mentor_position_name": String(item.mentor_position_name),
+      //   "state": String(item.state),
+      //   "type_of_mentoring": String(item.type_of_mentoring),
+      // };      
+      resultObj.rows = mentorsData;
+    // }
+  } catch (error) {
+    log(error.message, 'Ошибка в преобразовании данных')
+  }
+
+  resultObj.counterPersons = resultObj.rows.length;
+
   return resultObj;
 }
 
@@ -1219,6 +1317,7 @@ function handler(body, method) {
       case 'checkUserRole': return checkUserRole(); break;
       case 'rewardsUpdate': return rewardsUpdate(body); break;
       case 'mentorsProfileUpdate': return mentorsProfileUpdate(body); break;
+      case 'checkMentorsData': return checkMentorsData(body); break;
       case 'assignAdaptation': return assignAdaptation(body); break;
       default:
         Response.SetRespStatus(400, '');

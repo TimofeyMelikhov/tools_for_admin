@@ -1,3 +1,5 @@
+import { currentDate } from '@/shared/lib/dateFormatter'
+import { DownloadExcelButton } from '@/shared/ui/downloadExcelButton'
 import { ExcelFlow } from '@/shared/ui/excelFlow'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 
@@ -15,10 +17,13 @@ export const CheckMentorsDataWidget = () => {
 		excelLength,
 		isLoading,
 		onExcelParsed,
+		mergeMentoringRows,
 		submit
 	} = useMentorsCheckData()
 
-	const rows = data?.rows ?? []
+	const rows = data?.rows?.length
+		? mergeMentoringRows(excelData, data.rows)
+		: []
 
 	return (
 		<div className={styles.container}>
@@ -53,6 +58,18 @@ export const CheckMentorsDataWidget = () => {
 						data={rows}
 						columnMap={mentorCheckResultColumnMap}
 					/>
+					<div className={styles.excelButton}>
+						<DownloadExcelButton
+							buttonText='Скачать Excel'
+							fileName={`Результат проверки наставников ${currentDate()}`}
+							data={rows}
+							columnMap={mentorCheckResultColumnMap}
+							sheetName='Результат'
+							variant='contained'
+							size='small'
+							disabled={isLoading || rows.length === 0}
+						/>
+					</div>
 				</div>
 			)}
 		</div>
