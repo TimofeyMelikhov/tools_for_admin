@@ -1,2 +1,2 @@
-export { ActionCard } from './ActionCard'
-export type { ActionCardProps } from './ActionCard.types'
+export { ActionCard } from './ui/ActionCard'
+export type { ActionCardProps } from './model/ActionCard.types'

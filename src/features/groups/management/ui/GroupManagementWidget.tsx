@@ -8,11 +8,9 @@ import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 import { ExcelUploader } from '@/shared/ui/excelUploader'
 import { Preloader } from '@/shared/ui/preloader'
 
-import { optionsForAction } from '../model/constants'
 import { groupManagementColumnMap } from '../model/excelMapping'
 import { clearExcel } from '../model/groupManagementSlice'
 import type {
-	ActionOption,
 	CollaboratorOption,
 	GroupAction,
 	UploadListItem
@@ -48,7 +46,6 @@ export const GroupManagementWidget = ({
 		manageData,
 		isLoading,
 		onExcelParsed,
-		onActionChange,
 		onCurrentGroupChange,
 		onTargetGroupChange,
 		onSearchChange,
@@ -62,16 +59,13 @@ export const GroupManagementWidget = ({
 	const { excelObj, selectedAction, currentGroup, targetGroup, selectedUser } =
 		state
 
-	const isFixedMode = !!forcedAction
-
 	const showUserSelect = excelObj.length === 0
 	const showSubmitButton =
-		excelObj.length > 0 || showPersonsList || !!selectedUser
+		!!currentGroup && (excelObj.length > 0 || showPersonsList || !!selectedUser)
 
 	const collaboratorValue: CollaboratorOption | null = useMemo(() => {
 		if (!selectedUser) return null
 		return {
-			// FIX: value всегда string для react-select
 			value: selectedUser.id,
 			label: `${selectedUser.fullname} (${selectedUser.position_name})`,
 			employee: selectedUser
@@ -95,16 +89,6 @@ export const GroupManagementWidget = ({
 			</Typography>
 
 			<div className={styles.filters}>
-				{!isFixedMode && (
-					<Select<ActionOption>
-						options={optionsForAction}
-						placeholder='Выберите действие'
-						onChange={opt => onActionChange(opt ?? null)}
-						isClearable
-						value={selectedAction}
-					/>
-				)}
-
 				{selectedAction && (
 					<>
 						<Select<UploadListItem>

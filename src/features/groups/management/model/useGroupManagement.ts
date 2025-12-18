@@ -117,25 +117,6 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 		[dispatch]
 	)
 
-	const onActionChange = useCallback(
-		(option: ActionOption | null) => {
-			if (forcedAction) return
-
-			resetManage()
-			setSearchInput('')
-			dispatch(setAction(option))
-
-			if (!option) {
-				dispatch(setCurrentGroup(null))
-				dispatch(setTargetGroup(null))
-				dispatch(setUsersToSelectList([]))
-				dispatch(setSelectedUser(null))
-				dispatch(clearExcel())
-			}
-		},
-		[dispatch, forcedAction, resetManage]
-	)
-
 	const onCurrentGroupChange = useCallback(
 		(option: UploadListItem | null) => {
 			resetManage()
@@ -207,7 +188,6 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 			(actionValue === 'moveToGroup' || actionValue === 'deleteFromGroup') &&
 			!selectedUsers.length
 		) {
-			// FIX: добавил проверку для deleteFromGroup (чтобы не отправлять пустую операцию)
 			enqueueSnackbar('Выберите сотрудников', {
 				variant: 'warning',
 				style: { fontSize: '14px' }
@@ -301,7 +281,6 @@ export const useGroupManagement = (forcedAction?: GroupAction) => {
 		isLoading,
 
 		onExcelParsed,
-		onActionChange,
 		onCurrentGroupChange,
 		onTargetGroupChange,
 		onSearchChange,

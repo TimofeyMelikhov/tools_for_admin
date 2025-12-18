@@ -10,10 +10,10 @@ export function TrainingManagementPage() {
 
 	return (
 		<div style={{ padding: 16, display: 'grid', gap: 16 }}>
-			<header style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+			<div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
 				<h1 style={{ margin: 0 }}>Обучение</h1>
 				<span style={{ color: '#666' }}>Назначение курсов и тестов</span>
-			</header>
+			</div>
 
 			{isRoot ? (
 				<TrainingManagementChooser />

@@ -1,4 +1,4 @@
-import Select from 'react-select'
+import Select, { type StylesConfig } from 'react-select'
 
 import { useGetCurrentListQuery } from '../api/trainingAssignApi'
 import type { UploadListItem } from '../model/types'
@@ -12,6 +12,19 @@ type Props = {
 export const CurrentItemSelect = ({ method, value, onChange }: Props) => {
 	const { data, isLoading } = useGetCurrentListQuery(method)
 
+	const selectStyles: StylesConfig<UploadListItem, false> = {
+		container: base => ({
+			...base,
+			minWidth: '250px'
+		}),
+		control: base => ({
+			...base
+		}),
+		menu: base => ({
+			...base
+		})
+	}
+
 	return (
 		<Select
 			options={data ?? []}
@@ -23,6 +36,7 @@ export const CurrentItemSelect = ({ method, value, onChange }: Props) => {
 			isLoading={isLoading}
 			isClearable
 			isDisabled={isLoading}
+			styles={selectStyles}
 		/>
 	)
 }

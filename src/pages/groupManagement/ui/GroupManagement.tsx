@@ -10,13 +10,13 @@ export function GroupManagementPage() {
 
 	return (
 		<div style={{ padding: 16, display: 'grid', gap: 16 }}>
-			<header style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+			<div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
 				<h1 style={{ margin: 0 }}>Группы</h1>
 				<span style={{ color: '#666' }}>
 					Добавление, удаление и перемещение пользователей между группами,
 					установка руководителя группы
 				</span>
-			</header>
+			</div>
 
 			{isRoot ? (
 				<GroupManagementChooser />

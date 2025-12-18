@@ -27,3 +27,9 @@ export type TrainingAssignRequest = {
 	excelObj: ExcelRow[]
 	time: string
 }
+
+export type Props = {
+	forcedAction?: TrainingAction
+	title?: string
+	submitText?: string
+}

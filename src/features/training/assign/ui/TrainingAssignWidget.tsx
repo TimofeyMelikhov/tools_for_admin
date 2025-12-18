@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 
 import { Box, Button, Typography } from '@mui/material'
 import { enqueueSnackbar } from 'notistack'
@@ -19,19 +19,12 @@ import {
 	setExcelData,
 	setTimeAssign
 } from '../model/trainingAssignSlice'
-import type { ActionOption, TrainingAction } from '../model/types'
+import type { ActionOption, Props, TrainingAction } from '../model/types'
 
-import { ActionSelect } from './ActionSelect'
 import { CurrentItemSelect } from './CurrentItemSelect'
 import { TimeInput } from './TimeInput'
 import { TrainingAssignErrors } from './TrainingAssignErrors'
 import styles from './trainingAssign.module.scss'
-
-type Props = {
-	forcedAction?: TrainingAction
-	title?: string
-	submitText?: string
-}
 
 const ACTION_OPTIONS: ActionOption[] = [
 	{ value: 'getCourses', label: 'Назначить курс' },
@@ -70,8 +63,6 @@ export const TrainingAssignWidget = ({
 			dispatch(reset())
 		}
 	}, [dispatch, forcedAction])
-
-	const optionsForAction = useMemo(() => ACTION_OPTIONS, [])
 
 	const shouldShowTime =
 		selectedAction?.value === 'getCourses' ||
@@ -126,14 +117,6 @@ export const TrainingAssignWidget = ({
 			</Typography>
 
 			<div className={styles.filters}>
-				{!forcedAction && (
-					<ActionSelect
-						options={optionsForAction}
-						value={selectedAction}
-						onChange={opt => dispatch(setAction(opt))}
-					/>
-				)}
-
 				{selectedAction && (
 					<CurrentItemSelect
 						method={selectedAction.value}
