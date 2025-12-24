@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import { baseQuery } from '@/shared/api/baseQuery'
-import type { ExcelOperationResponse } from '@/shared/api/types'
+import { ApiMethods, type ExcelOperationResponse } from '@/shared/api/types'
 import type { ExcelObj } from '@/shared/lib/excel'
 
 export const mentorProfileApi = createApi({
@@ -12,7 +12,11 @@ export const mentorProfileApi = createApi({
 	endpoints: build => ({
 		mentorProfile: build.mutation<ExcelOperationResponse, ExcelObj>({
 			query: body => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=mentorsProfileUpdate`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.MENTORS_PROFILE_UPDATE
+				},
 				method: 'POST',
 				body
 			})

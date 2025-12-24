@@ -1,10 +1,11 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import type { Person } from '@/entities/person'
 
 import { baseQuery } from '@/shared/api/baseQuery'
+import { ApiMethods } from '@/shared/api/types'
 
 import type {
 	GroupManagementState,
@@ -19,14 +20,23 @@ export const groupManagementApi = createApi({
 	tagTypes: ['Groups', 'Collaborators', 'Persons', 'Management'],
 	endpoints: build => ({
 		getGroupList: build.query<UploadListItem[], void>({
-			query: () =>
-				`custom_web_template.html?object_id=${backendId}&method=getGroups`,
+			query: () => ({
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.GET_GROUPS
+				}
+			}),
 			providesTags: ['Groups']
 		}),
 
 		getCollaborators: build.query<Person[], SearchRequest>({
 			query: requestBody => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=getCollaborators`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.GET_COLLABORATORS
+				},
 				method: 'POST',
 				body: requestBody
 			}),
@@ -35,7 +45,11 @@ export const groupManagementApi = createApi({
 
 		getPersonsGroup: build.query<Person[], UploadListItem>({
 			query: group => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=getPersonsGroup`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.GET_PERSONS_GROUP
+				},
 				method: 'POST',
 				body: group
 			}),
@@ -55,7 +69,11 @@ export const groupManagementApi = createApi({
 			}
 		>({
 			query: ({ method, data, targetGroupId }) => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=${method}`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method
+				},
 				method: 'POST',
 				body: targetGroupId ? { ...data, targetGroupId } : data
 			}),

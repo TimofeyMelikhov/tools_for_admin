@@ -1,8 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import { baseQuery } from '@/shared/api/baseQuery'
+import { ApiMethods } from '@/shared/api/types'
 
 import type {
 	AssignAdaptationRequest,
@@ -18,7 +19,11 @@ export const assignAdaptationApi = createApi({
 			AssignAdaptationRequest
 		>({
 			query: body => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=assignAdaptation`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.ASSIGN_ADAPTATION
+				},
 				method: 'POST',
 				body
 			})

@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import { baseQuery } from '@/shared/api/baseQuery'
-import type { ExcelOperationResponse } from '@/shared/api/types'
+import { ApiMethods, type ExcelOperationResponse } from '@/shared/api/types'
 
 import type { TrainingAssignRequest, UploadListItem } from '../model/types'
 
@@ -12,15 +12,24 @@ export const trainingAssignApi = createApi({
 	baseQuery,
 	endpoints: build => ({
 		getCurrentList: build.query<UploadListItem[], string>({
-			query: method =>
-				`custom_web_template.html?object_id=${backendId}&method=${method}`
+			query: method => ({
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method
+				}
+			})
 		}),
 		assignTraining: build.mutation<
 			ExcelOperationResponse,
 			TrainingAssignRequest
 		>({
 			query: body => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=dataReducer`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.DATA_REDUCER
+				},
 				method: 'POST',
 				body
 			})

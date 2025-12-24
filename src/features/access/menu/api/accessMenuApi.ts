@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import { baseQuery } from '@/shared/api/baseQuery'
-import type { MenuResponse } from '@/shared/api/types'
+import { ApiMethods, type MenuResponse } from '@/shared/api/types'
 
 export const accessMenuApi = createApi({
 	reducerPath: 'accessMenuApi',
@@ -11,8 +11,13 @@ export const accessMenuApi = createApi({
 	tagTypes: ['AccessMenu'],
 	endpoints: build => ({
 		getAccessMenu: build.query<MenuResponse[], void>({
-			query: () =>
-				`custom_web_template.html?object_id=${backendId}&method=checkUserRole`,
+			query: () => ({
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.CHECK_USER_ROLE
+				}
+			}),
 			providesTags: ['AccessMenu']
 		})
 	})

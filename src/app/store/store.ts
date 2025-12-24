@@ -1,4 +1,3 @@
-// src/app/store/store.ts
 import { configureStore } from '@reduxjs/toolkit'
 
 import { apiSlices } from './apiSlices'

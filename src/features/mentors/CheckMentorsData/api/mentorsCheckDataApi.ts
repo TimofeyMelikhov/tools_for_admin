@@ -1,8 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { backendId } from '@/app/config'
+import { BASE_URL_OBJECT_ID } from '@/app/config'
 
 import { baseQuery } from '@/shared/api/baseQuery'
+import { ApiMethods } from '@/shared/api/types'
 import type { ExcelObj } from '@/shared/lib/excel'
 
 import type { MentorsCheckDataResponse } from '../model/mentorCheckData.types'
@@ -13,7 +14,11 @@ export const mentorsCheckDataApi = createApi({
 	endpoints: build => ({
 		mentorsCheckData: build.mutation<MentorsCheckDataResponse, ExcelObj>({
 			query: body => ({
-				url: `custom_web_template.html?object_id=${backendId}&method=checkMentorsData`,
+				url: '',
+				params: {
+					object_id: BASE_URL_OBJECT_ID,
+					method: ApiMethods.CHECK_MENTORS_DATA
+				},
 				method: 'POST',
 				body
 			})

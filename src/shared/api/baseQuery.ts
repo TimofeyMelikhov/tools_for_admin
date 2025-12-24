@@ -1,9 +1,9 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { baseServerPath } from '@/app/config'
+import { BASE_SERVER_PATH } from '@/app/config'
 
 export const baseQuery = fetchBaseQuery({
-	baseUrl: baseServerPath,
+	baseUrl: BASE_SERVER_PATH,
 	prepareHeaders(headers) {
 		headers.set('Content-Type', 'application/json')
 		return headers
