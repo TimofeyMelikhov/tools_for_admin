@@ -517,16 +517,16 @@ function checkMentorsData(body) {
     dublicatePersons: [],
     rows: []
   }
-  var mentorsNamesArr = []
-  var mentorsPositionsNamesArr = []
+  var conditions = [];
 
   for(oMentor in excelData) {
-    mentorsNamesArr.push(oMentor.mentor)
-    mentorsPositionsNamesArr.push(oMentor.mentor_position_name)
+    conditions.push(
+      "(c.fullname = '" + oMentor.mentor + 
+      "' AND c.position_name = '" + oMentor.mentor_position_name + "')"
+    );
   }
 
-  var mentorsNamesStr = mentorsNamesArr.join("', '");
-  var mentorsPositionsNamesStr = mentorsPositionsNamesArr.join("', '")
+  var whereClause = conditions.join(" OR ");    
 
   try {
     var sqlStr = "\
@@ -542,16 +542,9 @@ function checkMentorsData(body) {
         collaborator cc\
       ON\
         c.id = cc.id\
-      WHERE\
-        c.fullname IN ('" +
-          mentorsNamesStr +
-        "')\
-      AND\
-        c.position_name IN ('" +
-          mentorsPositionsNamesStr +
-        "')\
-    "
+      WHERE " + whereClause
     var mentorsData = selectAll(sqlStr)
+
   } catch (error) {
     log(error.message, 'Ошибка запроса')
   }
@@ -569,7 +562,6 @@ function checkMentorsData(body) {
 
     for (excelMentor in excelData) {
       frontMentorKey = excelMentor.mentor + '|' + excelMentor.mentor_position_name;
-      
       if (!foundMap.HasProperty(frontMentorKey)) {
         resultObj.notFoundPersons.push({
           mentor: excelMentor.mentor,
@@ -584,7 +576,7 @@ function checkMentorsData(body) {
 
   resultObj.rows = mentorsData;
 
-  resultObj.counterPersons = resultObj.rows.length;
+  resultObj.counterPersons = excelData.length - resultObj.notFoundPersons.length
 
   return resultObj;
 }

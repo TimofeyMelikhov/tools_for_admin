@@ -2,15 +2,23 @@ import * as XLSX from 'xlsx'
 
 import type { ColumnMap, ExcelRow } from './types'
 
-function normalizeKey(str: string): string {
-	return str
-		.toLowerCase()
-		.replace(/[_\s]+/g, ' ')
-		.trim()
-}
+// Покрываем самые частые "странные пробелы" из Excel/HTML-экспорта.
+// Можно расширять при необходимости.
+const WEIRD_SPACES_RE =
+	/[\s\u00A0\u1680\u2000-\u200A\u2007\u202F\u205F\u3000\uFEFF]+/g
 
 function normalizeSpaces(value: string): string {
-	return value.replace(/[\s\u00A0]+/g, ' ').trim()
+	return value.replace(WEIRD_SPACES_RE, ' ').trim()
+}
+
+function normalizeKey(str: string): string {
+	// Сначала чистим "странные пробелы", потом приводим к единому виду
+	const cleaned = normalizeSpaces(String(str))
+	return cleaned
+		.toLowerCase()
+		.replace(/_+/g, ' ')
+		.replace(WEIRD_SPACES_RE, ' ')
+		.trim()
 }
 
 function formatExcelDate(serial: number): string {
@@ -35,7 +43,7 @@ export async function parseExcelFile(
 				const sheetName = workbook.SheetNames[0]
 				const worksheet = workbook.Sheets[sheetName]
 
-				const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+				const rows: unknown[][] = XLSX.utils.sheet_to_json(worksheet, {
 					header: 1,
 					raw: true
 				})
@@ -45,7 +53,11 @@ export async function parseExcelFile(
 					return
 				}
 
-				const headerRow: string[] = rows[0].map(String)
+				// Нормализуем заголовки тоже (там часто живут NBSP)
+				const headerRow: string[] = (rows[0] ?? []).map(v =>
+					normalizeSpaces(String(v ?? ''))
+				)
+
 				const dataRows = rows.slice(1)
 
 				const mapping = new Map<number, string>()
@@ -73,24 +85,25 @@ export async function parseExcelFile(
 						const key = mapping.get(col)
 						if (!key) continue
 
-						const cellValue = row[col]
-						let v: string | number | null | undefined
+						const cellValue = (row as unknown[])[col]
+						let v: string | number | null
 
-						if (typeof cellValue === 'number') v = formatExcelDate(cellValue)
-						else if (
+						if (typeof cellValue === 'number') {
+							// Внимание: у тебя любой number превращается в дату.
+							// Это оставляю как есть, но имей в виду, что ID/табельный номер тоже может стать "датой".
+							v = formatExcelDate(cellValue)
+						} else if (
 							cellValue !== null &&
 							cellValue !== undefined &&
 							cellValue !== ''
-						)
-							v = cellValue
-						else v = null
-
-						if (
-							typeof v === 'string' &&
-							['fullname', 'position_name', 'position_parent_name'].includes(
-								key
-							)
 						) {
+							v = String(cellValue)
+						} else {
+							v = null
+						}
+
+						// Ключевой фикс: нормализуем пробелы для ЛЮБОГО string
+						if (typeof v === 'string') {
 							v = normalizeSpaces(v)
 						}
 
