@@ -1,6 +1,6 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { BASE_SERVER_PATH } from '@/app/config'
+import { BASE_SERVER_PATH } from '@/shared/config'
 
 export const baseQuery = fetchBaseQuery({
 	baseUrl: BASE_SERVER_PATH,

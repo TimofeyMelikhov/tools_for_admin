@@ -10,7 +10,7 @@ function normalizeKey(str: string): string {
 }
 
 function normalizeSpaces(value: string): string {
-	return value.replace(/\s+/g, ' ').trim()
+	return value.replace(/[\s\u00A0]+/g, ' ').trim()
 }
 
 function formatExcelDate(serial: number): string {

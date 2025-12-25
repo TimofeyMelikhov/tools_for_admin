@@ -1,9 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 
-import { BASE_URL_OBJECT_ID } from '@/app/config'
-
 import { baseQuery } from '@/shared/api/baseQuery'
 import { ApiMethods, type ExcelOperationResponse } from '@/shared/api/types'
+import { BASE_URL_OBJECT_ID } from '@/shared/config'
 import type { ExcelObj } from '@/shared/lib/excel'
 
 export const mentorProfileApi = createApi({
