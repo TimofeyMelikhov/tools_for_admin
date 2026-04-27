@@ -9,6 +9,7 @@ export const mentorCheckResultColumnMap: ColumnMap = [
 	['Дата изменения', 'date_modified'],
 	['Должность специалиста', 'position_name'],
 	['Должность наставника', 'mentor_position_name'],
+	['Подразделение наставника', 'mentor_subdivision'],
 	['Состояние', 'state'],
 	['Вид наставничества', 'type_of_mentoring']
 ]

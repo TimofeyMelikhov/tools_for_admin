@@ -37,7 +37,6 @@ export const useMentorsCheckData = () => {
 			if (fullnameKey) {
 				byFullname.set(fullnameKey, m)
 
-				// более точный ключ: ФИО + должность
 				byFullnameAndPosition.set(`${fullnameKey}__${positionKey}`, m)
 			}
 		}
@@ -52,11 +51,13 @@ export const useMentorsCheckData = () => {
 				byFullname.get(mentorName) ||
 				null
 
+			console.log(mentorInfo)
+			console.log(row)
+
 			const mentor_award_chick = mentorInfo?.mentor_award_chick ?? ''
 			const mentor_award_owl = mentorInfo?.mentor_award_owl ?? ''
 			const selection_procedure = mentorInfo?.selection_procedure ?? ''
 
-			// Собираем объект в желаемом порядке полей
 			return {
 				fullname: row.fullname,
 				mentor: row.mentor,
@@ -66,6 +67,7 @@ export const useMentorsCheckData = () => {
 				date_modified: row.date_modified,
 				position_name: row.position_name,
 				mentor_position_name: row.mentor_position_name,
+				mentor_subdivision: row.mentor_subdivision,
 				state: row.state,
 				type_of_mentoring: row.type_of_mentoring
 			}

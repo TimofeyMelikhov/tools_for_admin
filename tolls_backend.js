@@ -472,8 +472,12 @@ function rewardsUpdate(body) {
 
     col_doc=tools.open_doc(rightPerson.id)
     col_te=col_doc.TopElem
-    col_te.custom_elems.ObtainChildByKey('mentor_award_chick').value = excelData[i].chick
-    col_te.custom_elems.ObtainChildByKey('mentor_award_owl').value = excelData[i].owl
+    if(!IsEmptyValue(excelData[i].chick)) {
+      col_te.custom_elems.ObtainChildByKey('mentor_award_chick').value = excelData[i].chick
+    }
+    if(!IsEmptyValue(excelData[i].owl)) {
+      col_te.custom_elems.ObtainChildByKey('mentor_award_owl').value = excelData[i].owl
+    }
     col_doc.Save()
 
     resultObj.counterPersons++
@@ -925,7 +929,7 @@ function assignAdaptation(body) {
 				docAdaptation.Save();
 
 				iCountCreated++;
-        resultObj.countCreateAdapt++
+        resultObj.countCreateAdapt = iCountCreated;
 				iAdaptationID = docAdaptation.DocID;
 
         arrBossSendNotification = new Array();
