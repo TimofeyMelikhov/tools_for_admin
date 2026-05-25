@@ -74,7 +74,7 @@ function checkUserRole() {
     var menuConfig = [
       {
         id: 1,
-        title: 'Назначение курсов и тестов',
+        title: 'Управление обучением',
         route: '/TrainingManagement',
         image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847675551799640',
         groupId: getParam("accessTrainingManagementId")

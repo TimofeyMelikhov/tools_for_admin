@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactElement } from 'react'
+import { type ReactElement, Suspense, lazy } from 'react'
 
 import { AppLayout } from '@/widgets/layout'
 
@@ -22,6 +22,12 @@ const AssignCourseWidget = lazy(() =>
 const AssignTestWidget = lazy(() =>
 	import('@/features/training/assignTest').then(module => ({
 		default: module.AssignTestWidget
+	}))
+)
+
+const UploadingQuestionsWidget = lazy(() =>
+	import('@/features/training/uploadingQuestions').then(module => ({
+		default: module.UploadingQuestionsWidget
 	}))
 )
 const GroupManagement = lazy(() =>
@@ -107,6 +113,10 @@ export const routesConfig: RouteConfig[] = [
 					{
 						path: 'assessment',
 						element: withSuspense(<AssignTestWidget />)
+					},
+					{
+						path: 'questions',
+						element: withSuspense(<UploadingQuestionsWidget />)
 					}
 				]
 			},

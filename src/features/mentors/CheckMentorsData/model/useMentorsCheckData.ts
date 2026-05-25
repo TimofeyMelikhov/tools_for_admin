@@ -51,9 +51,6 @@ export const useMentorsCheckData = () => {
 				byFullname.get(mentorName) ||
 				null
 
-			console.log(mentorInfo)
-			console.log(row)
-
 			const mentor_award_chick = mentorInfo?.mentor_award_chick ?? ''
 			const mentor_award_owl = mentorInfo?.mentor_award_owl ?? ''
 			const selection_procedure = mentorInfo?.selection_procedure ?? ''

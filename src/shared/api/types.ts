@@ -39,5 +39,6 @@ export const ApiMethods = {
 	REWARDS_UPDATE: 'rewardsUpdate',
 	MENTORS_PROFILE_UPDATE: 'mentorsProfileUpdate',
 	CHECK_MENTORS_DATA: 'checkMentorsData',
-	ASSIGN_ADAPTATION: 'assignAdaptation'
+	ASSIGN_ADAPTATION: 'assignAdaptation',
+	UPLOADING_QUESTIONS: 'uploadingQuestions'
 } as const

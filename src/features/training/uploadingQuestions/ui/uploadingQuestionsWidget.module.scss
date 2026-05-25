@@ -1,0 +1,13 @@
+.container {
+	.tableTitle {
+		display: flex;
+		justify-content: space-between;
+	}
+	.errorsBlock {
+		margin-bottom: 15px;
+	}
+}
+.excelButton {
+	display: flex;
+	justify-content: flex-end;
+}
