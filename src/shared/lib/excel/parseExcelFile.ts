@@ -29,6 +29,10 @@ function formatExcelDate(serial: number): string {
 	return `${day}.${month}.${year}`
 }
 
+function isDateFormattedCell(format?: string): boolean {
+	return !!format && XLSX.SSF.is_date(format)
+}
+
 export async function parseExcelFile(
 	file: File,
 	columnMap: ColumnMap
@@ -77,7 +81,7 @@ export async function parseExcelFile(
 
 				const allKeys = Array.from(new Set(columnMap.map(([, key]) => key)))
 
-				const result: ExcelRow[] = dataRows.map(row => {
+				const result: ExcelRow[] = dataRows.map((row, rowIndex) => {
 					const newRow: ExcelRow = {}
 					for (const key of allKeys) newRow[key] = null
 
@@ -85,13 +89,22 @@ export async function parseExcelFile(
 						const key = mapping.get(col)
 						if (!key) continue
 
+						const cellAddress = XLSX.utils.encode_cell({
+							r: rowIndex + 1,
+							c: col
+						})
+						const cell = worksheet[cellAddress]
 						const cellValue = (row as unknown[])[col]
 						let v: string | number | null
 
-						if (typeof cellValue === 'number') {
-							// Внимание: у тебя любой number превращается в дату.
-							// Это оставляю как есть, но имей в виду, что ID/табельный номер тоже может стать "датой".
-							v = formatExcelDate(cellValue)
+						if (cell && typeof cell.v === 'number') {
+							if (isDateFormattedCell(cell.z)) {
+								v = formatExcelDate(cell.v)
+							} else {
+								v = cell.v
+							}
+						} else if (typeof cellValue === 'number') {
+							v = cellValue
 						} else if (
 							cellValue !== null &&
 							cellValue !== undefined &&
