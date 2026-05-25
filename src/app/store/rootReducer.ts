@@ -6,6 +6,7 @@ import mentorCheckDataSlice from '@/features/mentors/CheckMentorsData/model/ment
 import mentorProfileSlice from '@/features/mentors/MentorProfile/model/mentorProfileSlice'
 import rewardsUpdateSlice from '@/features/mentors/rewardsUpdate/model/rewardsUpdateSlice'
 import trainingAssignSlice from '@/features/training/assign/model/trainingAssignSlice'
+import uploadingQuestionsSlice from '@/features/training/uploadingQuestions/model/uploadingQuestionsSlice'
 
 import { apiSlices } from './apiSlices'
 
@@ -26,5 +27,6 @@ export const rootReducer = combineReducers({
 	rewardsUpdate: rewardsUpdateSlice,
 	mentorProfile: mentorProfileSlice,
 	mentorCheckData: mentorCheckDataSlice,
-	assignAdaptation: assignAdaptationSlice
+	assignAdaptation: assignAdaptationSlice,
+	uploadingQuestionsData: uploadingQuestionsSlice
 })

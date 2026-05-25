@@ -14,7 +14,7 @@ export const useUploadingQuestions = () => {
 	const [uploadingQuestions, { data, isLoading }] =
 		useUploadingQuestionsMutation()
 
-	const excelData = useAppSelector(state => state.mentorCheckData.excelObj)
+	const excelData = useAppSelector(state => state.uploadingQuestionsData.excelObj)
 
 	const excelLength = excelData.length
 
