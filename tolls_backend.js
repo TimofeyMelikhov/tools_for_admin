@@ -40,33 +40,33 @@ function HttpError(errorObject) {
   throw new Error(EncodeJson(errorObject));
 }
 
-function parseHttpError(error) {
-  var rawError = error;
-  var errorObject = {
-    code: 500,
-    message: String(error)
-  };
+// function parseHttpError(error) {
+//   var rawError = error;
+//   var errorObject = {
+//     code: 500,
+//     message: String(error.message)
+//   };
 
-  try {
-    if (error && error.message) {
-      rawError = error.message;
-    }
+//   try {
+//     if (error && error.message) {
+//       rawError = error.message;
+//     }
 
-    var parsedError = tools.read_object(rawError);
-    if (parsedError && parsedError.code !== undefined) {
-      errorObject.code = parsedError.code;
-    }
-    if (parsedError && parsedError.message !== undefined) {
-      errorObject.message = parsedError.message;
-    }
-  } catch (parseError) {
-    if (error && error.message) {
-      errorObject.message = error.message;
-    }
-  }
+//     var parsedError = tools.read_object(rawError);
+//     if (parsedError && parsedError.code !== undefined) {
+//       errorObject.code = parsedError.code;
+//     }
+//     if (parsedError && parsedError.message !== undefined) {
+//       errorObject.message = parsedError.message;
+//     }
+//   } catch (parseError) {
+//     if (error && error.message) {
+//       errorObject.message = error.message;
+//     }
+//   }
 
-  return errorObject;
-}
+//   return errorObject;
+// }
 
 // function SendError(errorObject) {
 //   Request.RespContentType = "application/json";
@@ -1409,7 +1409,7 @@ function handler(body, method) {
 }
 function main(req, res) {
   try {
-    if (String(req.Method).toUpperCase() === "OPTIONS") {
+    if (String(req.Method) === "OPTIONS") {
       res.SetRespStatus(200, "");
       res.Write("");
       return;
@@ -1428,7 +1428,8 @@ function main(req, res) {
     res.Write(tools.object_to_text(payload, "json"));
   }
   catch (error) {
-    var errorObject = parseHttpError(error);
+    var errorObject = tools.read_object(error);
+    log(errorObject)
     res.SetRespStatus(errorObject.code || 500, "");
     res.Write(tools.object_to_text({
       success: false,
