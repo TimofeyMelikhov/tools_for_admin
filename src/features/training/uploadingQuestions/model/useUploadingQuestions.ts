@@ -11,10 +11,12 @@ import {
 export const useUploadingQuestions = () => {
 	const dispatch = useAppDispatch()
 
-	const [uploadingQuestions, { data, isLoading }] =
+	const [uploadingQuestions, { data, isLoading, error }] =
 		useUploadingQuestionsMutation()
 
-	const excelData = useAppSelector(state => state.uploadingQuestionsData.excelObj)
+	const excelData = useAppSelector(
+		state => state.uploadingQuestionsData.excelObj
+	)
 
 	const excelLength = excelData.length
 
@@ -35,6 +37,7 @@ export const useUploadingQuestions = () => {
 		excelLength,
 		isLoading,
 		data,
+		error,
 		onExcelParsed,
 		clearExcel,
 		submit

@@ -38,6 +38,13 @@ function selectOne(query, defaultObj) {
 function HttpError(errorObject) {
   throw new Error(EncodeJson(errorObject));
 }
+
+// function SendError(errorObject) {
+//   Request.RespContentType = "application/json";
+//   Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
+//   Response.Write(errorObject.GetOptProperty("message", error));
+// }
+
 /* --- global --- */
 var curUserId = DEV_MODE
   ? OptInt("7079554317075315721") // id пользователя
@@ -283,6 +290,99 @@ function assignAssessments(body) {
   }
   return resultObj;
 }
+
+function uploadingQuestions(body) {
+  var responseObj = {
+    success: true,
+    code: 201,
+    message: "Все вопросы успешно загружены",
+    counterPersons: 0,
+  }
+
+  throw HttpError({
+    code: 500,
+    messaage: 'Моя тестовая ошибка'
+  })
+
+  var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId
+  var existingMap = {};
+
+  var questionsArray = body.GetOptProperty("excelObj", [])
+
+  var codesArr = ArrayExtractKeys(questionsArray, 'code')
+
+  try {
+    var sqlStr = "SELECT i.id, i.code FROM items i WHERE i.code IN ('" + codesArr.join("', '") + "')"
+    var existingTestsArr = selectAll(sqlStr)
+
+    for (existTest in existingTestsArr) {
+      existingMap[existTest.code] = existTest.id.Value;
+    }
+    
+  } catch (error) {
+    log("Ошибка при поиске вопросов: " + error.message)
+    responseObj.success = false;
+    responseObj.code = 500;
+    responseObj.message = "Ошибка при поиске существующих вопросов";
+    return responseObj;
+  }
+
+  for(question in questionsArray) {
+    answerOptions = question.question_text.split('#')
+    correctAnswerNum = String(question.numbers_correct_answers).split('#')
+    existingId = existingMap.GetOptProperty(question.code, null);
+    
+    try {
+      if(existingId) {
+        questionDoc =  tools.open_doc(existingId)
+        questionDocTE=questionDoc.TopElem
+      } else {
+        questionDoc=OpenNewDoc('x-local://qti/qti_item.xmd')
+        questionDoc.BindToDb()
+        questionDocTE=questionDoc.TopElem
+      }
+
+      questionDocTE.answers.DeleteChildren("This.text !== ''")
+
+      questionDocTE.code = question.code
+      questionDocTE.title = question.title
+      questionDocTE.type_id = question.question_type
+      questionDocTE.question_text = question.question
+      questionDocTE.question_points = question.score
+      questionDocTE.order = question.sequence_responses ? question.sequence_responses : 'Sequential'
+      questionDocTE.duration = question.duration ? question.duration : null
+      questionDocTE.display_correct_answer = question.show_correct_answer ? question.show_correct_answer : 0
+      questionDocTE.comment = question.comment_question ? question.comment_question : ''
+      questionDocTE.feedback_wrong = question.message_incorrect_answer ? question.message_incorrect_answer : ''
+      questionDocTE.feedback_correct = question.message_correct_answer ? question.message_correct_answer : ''
+      questionDocTE.max_attempts_num = question.number_attempts ? question.number_attempts : 1
+      
+      if(question.instruction_question) {
+        questionDocTE.objectives.candidate = question.instruction_question
+      }
+
+      for(ans in answerOptions) {
+        _child = questionDocTE.answers.AddChild();
+        _child.text = ans;
+      }
+
+      if (question.numbers_correct_answers != '') {
+        for (_condition in correctAnswerNum) {
+          questionDocTE.answers[Int(_condition) - 1].is_correct_answer = true;
+        }
+      }
+
+      questionDoc.Save()
+      responseObj.counterPersons++
+    } catch (err) {
+      log("Ошибка при создании вопроса: " + err.message);
+      continue;
+    }
+  }
+
+  return responseObj
+}
+
 function addToGroup(body) {
   var selectedGroup = OptInt(body.currentGroup.id)
   var selectedUser = body.selectedUser
@@ -1267,19 +1367,22 @@ function handler(body, method) {
       case 'mentorsProfileUpdate': return mentorsProfileUpdate(body); break;
       case 'checkMentorsData': return checkMentorsData(body); break;
       case 'assignAdaptation': return assignAdaptation(body); break;
+      case 'uploadingQuestions': return uploadingQuestions(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');
     }
   }
   catch (err) {
-    log(err.message);
+    log("Ошибка в обработчике actions: " + err.message);
+    throw err
   }
 }
 function main(req, res) {
   try {
     var body = tools.read_object(req.Body);
     var method = req.Query.GetOptProperty("method", "");
+
     if (method === undefined) {
       throw HttpError({
         code: 400,
@@ -1291,7 +1394,6 @@ function main(req, res) {
   }
   catch (error) {
     var errorObject = tools.read_object(error);
-    Request.RespContentType = "application/json";
     Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
     Response.Write(errorObject.GetOptProperty("message", error));
   }
