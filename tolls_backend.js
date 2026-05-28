@@ -5,6 +5,7 @@ if (DEV_MODE) {
   Request.AddRespHeader("Access-Control-Allow-Origin", "*", false);
   Request.AddRespHeader("Access-Control-Expose-Headers", "Error-Message");
   Request.AddRespHeader("Access-Control-Allow-Headers", "origin, content-type, accept");
+  Request.AddRespHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   Request.AddRespHeader("Access-Control-Allow-Credentials", "true");
 }
 Request.RespContentType = "application/json";
@@ -37,6 +38,34 @@ function selectOne(query, defaultObj) {
 */
 function HttpError(errorObject) {
   throw new Error(EncodeJson(errorObject));
+}
+
+function parseHttpError(error) {
+  var rawError = error;
+  var errorObject = {
+    code: 500,
+    message: String(error)
+  };
+
+  try {
+    if (error && error.message) {
+      rawError = error.message;
+    }
+
+    var parsedError = tools.read_object(rawError);
+    if (parsedError && parsedError.code !== undefined) {
+      errorObject.code = parsedError.code;
+    }
+    if (parsedError && parsedError.message !== undefined) {
+      errorObject.message = parsedError.message;
+    }
+  } catch (parseError) {
+    if (error && error.message) {
+      errorObject.message = error.message;
+    }
+  }
+
+  return errorObject;
 }
 
 // function SendError(errorObject) {
@@ -301,7 +330,7 @@ function uploadingQuestions(body) {
 
   throw HttpError({
     code: 500,
-    messaage: 'Моя тестовая ошибка'
+    message: 'Моя тестовая ошибка'
   })
 
   var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId
@@ -1380,6 +1409,12 @@ function handler(body, method) {
 }
 function main(req, res) {
   try {
+    if (String(req.Method).toUpperCase() === "OPTIONS") {
+      res.SetRespStatus(200, "");
+      res.Write("");
+      return;
+    }
+
     var body = tools.read_object(req.Body);
     var method = req.Query.GetOptProperty("method", "");
 
@@ -1393,9 +1428,13 @@ function main(req, res) {
     res.Write(tools.object_to_text(payload, "json"));
   }
   catch (error) {
-    var errorObject = tools.read_object(error);
-    Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
-    Response.Write(errorObject.GetOptProperty("message", error));
+    var errorObject = parseHttpError(error);
+    res.SetRespStatus(errorObject.code || 500, "");
+    res.Write(tools.object_to_text({
+      success: false,
+      code: errorObject.code || 500,
+      message: errorObject.message
+    }, "json"));
   }
 }
 main(Request, Response);
