@@ -24,6 +24,25 @@ export interface SearchRequest {
 	search: string
 }
 
+export interface ApiErrorResponse {
+	success: false
+	code: number
+	message: string
+}
+
+export function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		'success' in value &&
+		(value as { success?: unknown }).success === false &&
+		'code' in value &&
+		typeof (value as { code?: unknown }).code === 'number' &&
+		'message' in value &&
+		typeof (value as { message?: unknown }).message === 'string'
+	)
+}
+
 export const ApiMethods = {
 	GET_COURSES: 'getCourses',
 	GET_ASSESSMENTS: 'getAssessments',

@@ -40,40 +40,6 @@ function HttpError(errorObject) {
   throw new Error(EncodeJson(errorObject));
 }
 
-// function parseHttpError(error) {
-//   var rawError = error;
-//   var errorObject = {
-//     code: 500,
-//     message: String(error.message)
-//   };
-
-//   try {
-//     if (error && error.message) {
-//       rawError = error.message;
-//     }
-
-//     var parsedError = tools.read_object(rawError);
-//     if (parsedError && parsedError.code !== undefined) {
-//       errorObject.code = parsedError.code;
-//     }
-//     if (parsedError && parsedError.message !== undefined) {
-//       errorObject.message = parsedError.message;
-//     }
-//   } catch (parseError) {
-//     if (error && error.message) {
-//       errorObject.message = error.message;
-//     }
-//   }
-
-//   return errorObject;
-// }
-
-// function SendError(errorObject) {
-//   Request.RespContentType = "application/json";
-//   Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
-//   Response.Write(errorObject.GetOptProperty("message", error));
-// }
-
 /* --- global --- */
 var curUserId = DEV_MODE
   ? OptInt("7079554317075315721") // id пользователя
@@ -328,11 +294,6 @@ function uploadingQuestions(body) {
     counterPersons: 0,
   }
 
-  throw HttpError({
-    code: 500,
-    message: 'Моя тестовая ошибка'
-  })
-
   var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId
   var existingMap = {};
 
@@ -405,6 +366,7 @@ function uploadingQuestions(body) {
       responseObj.counterPersons++
     } catch (err) {
       log("Ошибка при создании вопроса: " + err.message);
+      throw err
       continue;
     }
   }
@@ -1408,13 +1370,14 @@ function handler(body, method) {
   }
 }
 function main(req, res) {
-  try {
-    if (String(req.Method) === "OPTIONS") {
-      res.SetRespStatus(200, "");
-      res.Write("");
-      return;
-    }
 
+  if(req.Method === 'OPTIONS') {
+    req.SetRespStatus(204, '')
+    res.Write('')
+    return
+  }
+
+  try {
     var body = tools.read_object(req.Body);
     var method = req.Query.GetOptProperty("method", "");
 
@@ -1429,13 +1392,13 @@ function main(req, res) {
   }
   catch (error) {
     var errorObject = tools.read_object(error);
-    log(errorObject)
-    res.SetRespStatus(errorObject.code || 500, "");
-    res.Write(tools.object_to_text({
+    Request.RespContentType = "application/json";
+    Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
+    Response.Write(tools.object_to_text({
       success: false,
-      code: errorObject.code || 500,
-      message: errorObject.message
-    }, "json"));
+      code: errorObject.GetOptProperty("code", 500),
+      message: String(errorObject.message)
+    }, 'json'));
   }
 }
 main(Request, Response);

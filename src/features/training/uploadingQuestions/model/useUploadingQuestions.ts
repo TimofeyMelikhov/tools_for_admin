@@ -1,3 +1,4 @@
+import { isApiErrorResponse } from '@/shared/api/types'
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 import type { ExcelRow } from '@/shared/lib/excel'
 
@@ -18,6 +19,13 @@ export const useUploadingQuestions = () => {
 		state => state.uploadingQuestionsData.excelObj
 	)
 
+	let errorMessage = ''
+	if (error && 'data' in error && isApiErrorResponse(error.data)) {
+		errorMessage = error.data.message
+	} else if (error && isApiErrorResponse(error)) {
+		errorMessage = error.message
+	}
+
 	const excelLength = excelData.length
 
 	const onExcelParsed = (rows: ExcelRow[]) => {
@@ -37,7 +45,7 @@ export const useUploadingQuestions = () => {
 		excelLength,
 		isLoading,
 		data,
-		error,
+		errorMessage,
 		onExcelParsed,
 		clearExcel,
 		submit

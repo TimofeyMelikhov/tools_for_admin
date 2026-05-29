@@ -12,12 +12,14 @@ export const UploadingQuestionsWidget = () => {
 		excelData,
 		excelLength,
 		isLoading,
-		error,
+		errorMessage,
 		onExcelParsed,
 		submit
 	} = useUploadingQuestions()
 
-	console.log(error)
+	if (errorMessage) {
+		console.error(errorMessage)
+	}
 
 	return (
 		<div className={styles.container}>
@@ -36,7 +38,7 @@ export const UploadingQuestionsWidget = () => {
 					clearButton: 'Очистить таблицу',
 					submitButton: 'Загрузить вопросы',
 					successToast: 'Все вопросы успешно обработаны!',
-					errorToast: 'Произошла ошибка, попробуйте позже'
+					errorToast: 'Произошла ошибка'
 				}}
 				classes={{
 					container: styles.container,
