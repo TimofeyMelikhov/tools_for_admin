@@ -4,6 +4,7 @@ import { enqueueSnackbar } from 'notistack'
 import { Preloader } from '@/shared/ui/preloader'
 
 import { ErrorsSection } from './ErrorsSection'
+import styles from './ExcelFlow.module.scss'
 import type { ExcelFlowProps, ExcelFlowResult } from './ExcelFlow.types'
 import { PreviewSection } from './PreviewSection'
 import { SubmitSection } from './SubmitSection'
@@ -65,7 +66,7 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 	}
 
 	return (
-		<div className={classes?.container}>
+		<div className={`${styles.container} ${classes?.container ?? ''}`.trim()}>
 			<Typography variant='h4' gutterBottom align='center'>
 				{texts.title}
 			</Typography>

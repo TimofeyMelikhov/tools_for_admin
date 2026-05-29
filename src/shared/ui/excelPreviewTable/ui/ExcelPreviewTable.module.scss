@@ -1,5 +1,7 @@
 .container {
 	margin-top: 5px;
+	min-width: 0;
+	width: 100%;
 }
 
 .title {
@@ -9,14 +11,19 @@
 
 .tableWrapper {
 	font-size: 14px;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
 	max-height: 310px;
-	overflow: auto;
+	overflow-x: auto;
+	overflow-y: auto;
 	border: 1px solid #ddd;
 	border-radius: 4px;
 }
 
 .table {
 	width: 100%;
+	table-layout: fixed;
 	border-collapse: collapse;
 }
 
@@ -28,11 +35,17 @@
 	padding: 8px;
 	text-align: left;
 	z-index: 1;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .td {
 	border-bottom: 1px solid #eee;
 	padding: 6px 8px;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .footer {
