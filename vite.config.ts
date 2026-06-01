@@ -20,17 +20,6 @@ export default ({ command }: ConfigEnv) => {
 						if (id.includes('rsuite')) return 'rsuite'
 						if (id.includes('@tanstack/react-table')) return 'react-table'
 						if (
-							id.includes('@mui/') ||
-							id.includes('@emotion/') ||
-							id.includes('@popperjs/core') ||
-							id.includes('@floating-ui/') ||
-							id.includes('react-transition-group') ||
-							id.includes('clsx') ||
-							id.includes('@babel/runtime')
-						) {
-							return 'mui'
-						}
-						if (
 							id.includes('@reduxjs/toolkit') ||
 							id.includes('react-redux') ||
 							id.includes('redux') ||
