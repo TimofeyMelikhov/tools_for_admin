@@ -43,7 +43,11 @@ export async function parseExcelFile(
 		reader.onload = (event: ProgressEvent<FileReader>) => {
 			try {
 				const data = new Uint8Array(event.target!.result as ArrayBuffer)
-				const workbook = XLSX.read(data, { type: 'array', cellDates: false })
+				const workbook = XLSX.read(data, {
+					type: 'array',
+					cellDates: false,
+					cellNF: true
+				})
 				const sheetName = workbook.SheetNames[0]
 				const worksheet = workbook.Sheets[sheetName]
 
@@ -98,6 +102,10 @@ export async function parseExcelFile(
 						let v: string | number | null
 
 						if (cell && typeof cell.v === 'number') {
+							const format = cell.z
+							const isDate =
+								typeof format === 'string' && XLSX.SSF.is_date(format)
+							console.log('Cell format:', format, 'is date?', isDate)
 							if (isDateFormattedCell(cell.z)) {
 								v = formatExcelDate(cell.v)
 							} else {
