@@ -3,13 +3,11 @@ import { useMemo } from 'react'
 import { Box, Button, Typography } from '@mui/material'
 import Select from 'react-select'
 
-import { useAppDispatch } from '@/shared/hooks/redux'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 import { ExcelUploader } from '@/shared/ui/excelUploader'
 import { Preloader } from '@/shared/ui/preloader'
 
 import { groupManagementColumnMap } from '../model/excelMapping'
-import { clearExcel } from '../model/groupManagementSlice'
 import type {
 	CollaboratorOption,
 	GroupAction,
@@ -32,8 +30,6 @@ export const GroupManagementWidget = ({
 	title = 'Управление группами',
 	submitText
 }: Props) => {
-	const dispatch = useAppDispatch()
-
 	const {
 		state,
 		groups,
@@ -50,6 +46,8 @@ export const GroupManagementWidget = ({
 		onTargetGroupChange,
 		onSearchChange,
 		onSelectedUserChange,
+		onSelectedUsersChange,
+		clearExcel,
 		buttonText,
 		submit,
 		showPersonsList,
@@ -150,7 +148,7 @@ export const GroupManagementWidget = ({
 						variant='contained'
 						component='span'
 						sx={{ fontSize: '14px' }}
-						onClick={() => dispatch(clearExcel())}
+						onClick={clearExcel}
 					>
 						Очистить таблицу
 					</Button>
@@ -166,8 +164,10 @@ export const GroupManagementWidget = ({
 
 			{showPersonsList && personsList && (
 				<EditGroupTable
-					personsList={personsList}
-					mode={selectedAction?.value === 'installLeader' ? 'view' : 'select'}
+							personsList={personsList}
+							mode={selectedAction?.value === 'installLeader' ? 'view' : 'select'}
+							selectedUsers={state.selectedUsers}
+							onSelectedUsersChange={onSelectedUsersChange}
 				/>
 			)}
 

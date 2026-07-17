@@ -11,19 +11,17 @@ import type { ColumnMap } from '@/shared/lib/excel'
 
 import styles from './ExcelPreviewTable.module.scss'
 
-interface ExcelPreviewTableProps<T extends Record<string, any>> {
+interface ExcelPreviewTableProps<T extends object> {
 	data: T[]
 	columnMap?: ColumnMap
 	hideEmptyMappedColumns?: boolean
 }
 
-export function ExcelPreviewTable<T extends Record<string, any>>({
+export function ExcelPreviewTable<T extends object>({
 	data,
 	columnMap,
 	hideEmptyMappedColumns = true
 }: ExcelPreviewTableProps<T>) {
-	if (!data.length) return null
-
 	const columns = React.useMemo<ColumnDef<T>[]>(() => {
 		if (columnMap && columnMap.length) {
 			const mappedKeys = columnMap.map(([, key]) => key)
@@ -31,7 +29,7 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 			const visibleKeys = hideEmptyMappedColumns
 				? mappedKeys.filter(key =>
 						data.some(row => {
-							const val = row[key]
+						const val = (row as Record<string, unknown>)[key]
 							return val !== null && val !== undefined && val !== ''
 						})
 					)
@@ -52,7 +50,7 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 
 		const nonEmptyKeys = autoKeys.filter(key =>
 			data.some(row => {
-				const val = row[key]
+				const val = (row as Record<string, unknown>)[key]
 				return val !== null && val !== undefined && val !== ''
 			})
 		)
@@ -63,8 +61,6 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 			cell: info => formatCellValue(info.getValue())
 		}))
 	}, [columnMap, data, hideEmptyMappedColumns])
-
-	if (!columns.length) return null
 
 	const table = useReactTable({
 		data,
@@ -78,6 +74,8 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 			return String(index)
 		}
 	})
+
+	if (!data.length || !columns.length) return null
 
 	return (
 		<div className={styles.container}>
@@ -117,7 +115,7 @@ export function ExcelPreviewTable<T extends Record<string, any>>({
 	)
 }
 
-function collectKeysFromData<T extends Record<string, any>>(
+function collectKeysFromData<T extends object>(
 	data: T[]
 ): string[] {
 	const keys = new Set<string>()

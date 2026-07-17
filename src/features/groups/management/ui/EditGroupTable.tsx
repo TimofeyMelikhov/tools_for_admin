@@ -10,18 +10,18 @@ import { ruRU } from '@mui/x-data-grid/locales'
 
 import type { Person } from '@/entities/person'
 
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
-
-import { setUsersToSelectList } from '../model/groupManagementSlice'
-
 interface EditGroupTableProps {
 	personsList: Person[] | undefined
 	mode?: 'view' | 'select'
+	selectedUsers: Person[]
+	onSelectedUsersChange: (users: Person[]) => void
 }
 
 export const EditGroupTable = ({
 	personsList,
-	mode = 'select'
+	mode = 'select',
+	selectedUsers,
+	onSelectedUsersChange
 }: EditGroupTableProps) => {
 	const columns: GridColDef[] = useMemo(
 		() => [
@@ -35,9 +35,6 @@ export const EditGroupTable = ({
 	const checkboxSelection = mode === 'select'
 	const paginationModel = { page: 0, pageSize: 5 }
 
-	const dispatch = useAppDispatch()
-	const selectedUsers = useAppSelector(s => s.groupManagement.selectedUsers)
-
 	const rowSelectionModel: GridRowSelectionModel = useMemo(() => {
 		const ids = new Set(selectedUsers.map(u => u.id))
 		return { type: 'include', ids }
@@ -50,7 +47,7 @@ export const EditGroupTable = ({
 
 		if (personsList) {
 			const nextSelected = personsList.filter(p => selectedIds.has(p.id))
-			dispatch(setUsersToSelectList(nextSelected))
+			onSelectedUsersChange(nextSelected)
 		}
 	}
 

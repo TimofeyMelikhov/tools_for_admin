@@ -1,10 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react'
-
 import type { Person } from '@/entities/person'
 
-import { baseQuery } from '@/shared/api/baseQuery'
+import { apiRequest } from '@/shared/api/client'
 import { ApiMethods } from '@/shared/api/types'
-import { BASE_URL_OBJECT_ID } from '@/shared/config'
 
 import type {
 	GroupManagementState,
@@ -13,78 +10,35 @@ import type {
 	UploadListItem
 } from '../model/types'
 
-export const groupManagementApi = createApi({
-	reducerPath: 'groupManagementApi',
-	baseQuery,
-	tagTypes: ['Groups', 'Collaborators', 'Persons', 'Management'],
-	endpoints: build => ({
-		getGroupList: build.query<UploadListItem[], void>({
-			query: () => ({
-				url: '',
-				params: {
-					object_id: BASE_URL_OBJECT_ID,
-					method: ApiMethods.GET_GROUPS
-				}
-			}),
-			providesTags: ['Groups']
-		}),
+export type ManageGroupRequest = {
+	method: Extract<
+		(typeof ApiMethods)[keyof typeof ApiMethods],
+		'addToGroup' | 'deletePersonFromGroup' | 'moveToGroup' | 'installLeader'
+	>
+	data: GroupManagementState
+	targetGroupId?: string
+}
 
-		getCollaborators: build.query<Person[], SearchRequest>({
-			query: requestBody => ({
-				url: '',
-				params: {
-					object_id: BASE_URL_OBJECT_ID,
-					method: ApiMethods.GET_COLLABORATORS
-				},
-				method: 'POST',
-				body: requestBody
-			}),
-			providesTags: ['Collaborators']
-		}),
+export const getGroupList = () =>
+	apiRequest<UploadListItem[]>({ apiMethod: ApiMethods.GET_GROUPS })
 
-		getPersonsGroup: build.query<Person[], UploadListItem>({
-			query: group => ({
-				url: '',
-				params: {
-					object_id: BASE_URL_OBJECT_ID,
-					method: ApiMethods.GET_PERSONS_GROUP
-				},
-				method: 'POST',
-				body: group
-			}),
-			providesTags: ['Persons']
-		}),
-
-		manageGroup: build.mutation<
-			ManagementGroupResponse,
-			{
-				method:
-					| 'addToGroup'
-					| 'deletePersonFromGroup'
-					| 'moveToGroup'
-					| 'installLeader'
-				data: GroupManagementState
-				targetGroupId?: string
-			}
-		>({
-			query: ({ method, data, targetGroupId }) => ({
-				url: '',
-				params: {
-					object_id: BASE_URL_OBJECT_ID,
-					method
-				},
-				method: 'POST',
-				body: targetGroupId ? { ...data, targetGroupId } : data
-			}),
-			invalidatesTags: result =>
-				result?.success ? ['Management', 'Persons'] : ['Management']
-		})
+export const getCollaborators = (body: SearchRequest) =>
+	apiRequest<Person[], SearchRequest>({
+		apiMethod: ApiMethods.GET_COLLABORATORS,
+		body,
+		httpMethod: 'post'
 	})
-})
 
-export const {
-	useGetGroupListQuery,
-	useGetPersonsGroupQuery,
-	useGetCollaboratorsQuery,
-	useManageGroupMutation
-} = groupManagementApi
+export const getPersonsGroup = (body: UploadListItem) =>
+	apiRequest<Person[], UploadListItem>({
+		apiMethod: ApiMethods.GET_PERSONS_GROUP,
+		body,
+		httpMethod: 'post'
+	})
+
+export const manageGroup = ({ method, data, targetGroupId }: ManageGroupRequest) =>
+	apiRequest<ManagementGroupResponse, GroupManagementState & { targetGroupId?: string }>({
+		apiMethod: method,
+		body: targetGroupId ? { ...data, targetGroupId } : data,
+		httpMethod: 'post'
+	})

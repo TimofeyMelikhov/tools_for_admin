@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { type ConfigEnv, defineConfig } from 'vite'
+import type { ConfigEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default ({ command }: ConfigEnv) => {
@@ -19,14 +20,14 @@ export default ({ command }: ConfigEnv) => {
 						if (id.includes('@mui/x-data-grid')) return 'mui-data-grid'
 						if (id.includes('rsuite')) return 'rsuite'
 						if (id.includes('@tanstack/react-table')) return 'react-table'
+						if (id.includes('@tanstack/react-query')) return 'tanstack-query'
+						if (id.includes('@mui/') || id.includes('@emotion/')) return 'mui'
 						if (
-							id.includes('@reduxjs/toolkit') ||
-							id.includes('react-redux') ||
-							id.includes('redux') ||
-							id.includes('immer')
-						) {
-							return 'state'
-						}
+							id.includes('node_modules/react/') ||
+							id.includes('node_modules/react-dom/') ||
+							id.includes('node_modules/scheduler/')
+						)
+							return 'react'
 						if (id.includes('notistack')) return 'notistack'
 						if (id.includes('dayjs')) return 'dayjs'
 						if (id.includes('react-icons')) return 'icons'
@@ -40,6 +41,11 @@ export default ({ command }: ConfigEnv) => {
 			alias: {
 				'@': path.resolve(__dirname, './src')
 			}
+		},
+		test: {
+			environment: 'jsdom',
+			setupFiles: './src/test/setup.ts',
+			css: false
 		}
 	})
 }

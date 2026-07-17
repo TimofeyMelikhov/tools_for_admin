@@ -1,32 +1,16 @@
-import { useMentorProfileMutation } from '@/features/mentors/MentorProfile/api/mentorProfileUpdateApi'
-import {
-	cleanExcelMentorProfile,
-	setExcelData
-} from '@/features/mentors/MentorProfile/model/mentorProfileSlice'
+import { useExcelData } from '@/shared/lib/excel'
 
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
-import type { ExcelRow } from '@/shared/lib/excel'
+import { useMentorProfileMutation } from './queries'
 
 export function useMentorProfileUpdate() {
-	const dispatch = useAppDispatch()
-
-	const [updateMentorProfile, { data, isLoading }] = useMentorProfileMutation()
-
-	const excelData = useAppSelector(state => state.mentorProfile.excelObj)
-	const excelLength = useAppSelector(
-		state => state.mentorProfile.excelObj.length
-	)
-
-	const onExcelParsed = (rows: ExcelRow[]) => {
-		dispatch(setExcelData(rows))
-	}
-
-	const clearExcel = () => {
-		dispatch(cleanExcelMentorProfile())
-	}
-
-	const submit = async (excelObj: ExcelRow[]) => {
-		return await updateMentorProfile({ excelObj }).unwrap()
+	const { excelData, excelLength, onExcelParsed, clearExcel } = useExcelData()
+	const {
+		mutateAsync: updateMentorProfile,
+		data,
+		isPending: isLoading
+	} = useMentorProfileMutation()
+	const submit = async (excelObj: typeof excelData) => {
+		return updateMentorProfile({ excelObj })
 	}
 
 	return {

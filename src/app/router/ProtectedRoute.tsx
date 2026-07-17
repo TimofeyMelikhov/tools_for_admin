@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useSnackbar } from 'notistack'
 
-import { useGetAccessMenuQuery } from '@/features/access/menu'
+import { useAccessMenu } from '@/features/access/menu'
 
 import { Preloader } from '@/shared/ui/preloader'
 
@@ -24,7 +24,7 @@ export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 	const { enqueueSnackbar } = useSnackbar()
 	const location = useLocation()
 	const navigate = useNavigate()
-	const { data: menuItems, isLoading, isError } = useGetAccessMenuQuery()
+	const { data: menuItems, isLoading, isError } = useAccessMenu()
 
 	const hasAccess = useMemo(() => {
 		if (!menuItems) return false

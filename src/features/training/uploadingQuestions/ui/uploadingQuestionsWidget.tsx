@@ -5,6 +5,23 @@ import { useUploadingQuestions } from '../model/useUploadingQuestions'
 
 import styles from './uploadingQuestionsWidget.module.scss'
 
+const uploadingQuestionsFlowConfig = {
+	columnMap: uploadingQuestionsColumnMap,
+	texts: {
+		title: 'Загрузка вопросов теста из шаблона excel',
+		previewTitle: 'Исходный файл:',
+		clearButton: 'Очистить таблицу',
+		submitButton: 'Загрузить вопросы',
+		successToast: 'Все вопросы успешно обработаны!',
+		errorToast: 'Произошла ошибка'
+	},
+	classes: {
+		container: styles.container,
+		tableTitle: styles.tableTitle,
+		errorsBlock: styles.errorsBlock
+	}
+}
+
 export const UploadingQuestionsWidget = () => {
 	const {
 		data,
@@ -24,7 +41,7 @@ export const UploadingQuestionsWidget = () => {
 	return (
 		<div className={styles.container}>
 			<ExcelFlow
-				columnMap={uploadingQuestionsColumnMap}
+				{...uploadingQuestionsFlowConfig}
 				excelData={excelData}
 				excelLength={excelLength}
 				isLoading={isLoading}
@@ -32,19 +49,6 @@ export const UploadingQuestionsWidget = () => {
 				onExcelParsed={onExcelParsed}
 				onClear={clearExcel}
 				onSubmit={submit}
-				texts={{
-					title: 'Загрузка вопросов теста из шаблона excel',
-					previewTitle: 'Исходный файл:',
-					clearButton: 'Очистить таблицу',
-					submitButton: 'Загрузить вопросы',
-					successToast: 'Все вопросы успешно обработаны!',
-					errorToast: 'Произошла ошибка'
-				}}
-				classes={{
-					container: styles.container,
-					tableTitle: styles.tableTitle,
-					errorsBlock: styles.errorsBlock
-				}}
 			/>
 		</div>
 	)

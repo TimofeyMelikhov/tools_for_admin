@@ -68,7 +68,7 @@ export const DownloadExcelButton: React.FC<
 			}
 			return { wch: clamp(maxLen + 2, 10, 60) }
 		})
-		;(ws as any)['!cols'] = colsWidth
+		;(ws as XLSX.WorkSheet & { '!cols'?: typeof colsWidth })['!cols'] = colsWidth
 
 		const wb = XLSX.utils.book_new()
 		XLSX.utils.book_append_sheet(wb, ws, sheetName)

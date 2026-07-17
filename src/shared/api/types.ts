@@ -2,16 +2,18 @@ import type { Person } from '@/entities/person'
 
 import type { ExcelRow } from '@/shared/lib/excel'
 
-export type ExcelOperationResponse = {
+export type ApiResult<TData extends object = object> = {
 	success?: boolean
 	code?: number
 	message?: string
+} & TData
 
+export type ExcelOperationResponse = ApiResult<{
 	counterPersons?: number
 	notFoundPersons?: ExcelRow[]
 	dublicatePersons?: Person[]
 	prevAssign?: ExcelRow[]
-}
+}>
 
 export interface MenuResponse {
 	id: number
@@ -41,6 +43,20 @@ export function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
 		'message' in value &&
 		typeof (value as { message?: unknown }).message === 'string'
 	)
+}
+
+export function getApiErrorMessage(error: unknown): string {
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'response' in error &&
+		isApiErrorResponse((error as { response?: { data?: unknown } }).response?.data)
+	) {
+		return (error as { response: { data: ApiErrorResponse } }).response.data
+			.message
+	}
+
+	return isApiErrorResponse(error) ? error.message : ''
 }
 
 export const ApiMethods = {

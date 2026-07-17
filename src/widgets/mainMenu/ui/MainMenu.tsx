@@ -1,4 +1,4 @@
-import { useGetAccessMenuQuery } from '@/features/access/menu'
+import { useAccessMenu } from '@/features/access/menu'
 
 import { Preloader } from '@/shared/ui/preloader'
 
@@ -6,7 +6,7 @@ import styles from './MainMenu.module.scss'
 import { MenuItem } from './MenuItem'
 
 export const MainMenu = () => {
-	const { data: menuItems, isLoading, isError } = useGetAccessMenuQuery()
+	const { data: menuItems, isLoading, isError } = useAccessMenu()
 
 	if (isLoading) return <Preloader />
 	if (isError) return <div>Ошибка загрузки меню</div>

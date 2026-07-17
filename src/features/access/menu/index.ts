@@ -1,5 +1,1 @@
-export {
-	useGetAccessMenuQuery,
-	selectMenuItems,
-	accessMenuApi
-} from './api/accessMenuApi'
+export { useAccessMenu } from './model/queries'

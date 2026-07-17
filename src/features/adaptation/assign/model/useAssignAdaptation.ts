@@ -1,32 +1,30 @@
-import { useAssignAdaptationMutation } from '@/features/adaptation/assign/api/assignAdaptationApi'
+import { useState } from 'react'
 
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
+import { useExcelData } from '@/shared/lib/excel'
 import type { ExcelRow } from '@/shared/lib/excel'
 
-import {
-	cleanExcelAdaptation,
-	setExcelData,
-	setStartDate
-} from './assignAdaptationSlice'
+import { useAssignAdaptationMutation } from './queries'
 
 export function useAssignAdaptation() {
-	const dispatch = useAppDispatch()
-	const [assignAdaptation, { data, isLoading }] = useAssignAdaptationMutation()
+	const {
+		excelData: excelObj,
+		onExcelParsed,
+		clearExcel
+	} = useExcelData()
+	const [startDateAdapt, setStartDateAdapt] = useState<string | null>(null)
+	const {
+		mutateAsync: assignAdaptation,
+		data,
+		isPending: isLoading
+	} = useAssignAdaptationMutation()
 
-	const { excelObj, startDateAdapt } = useAppSelector(
-		state => state.assignAdaptation
-	)
-
-	const onExcelParsed = (rows: ExcelRow[]) => dispatch(setExcelData(rows))
-	const clearExcel = () => dispatch(cleanExcelAdaptation())
-	const setStartDateValue = (value: string | null) =>
-		dispatch(setStartDate(value))
+	const setStartDateValue = (value: string | null) => setStartDateAdapt(value)
 
 	const submit = async (excelObj: ExcelRow[]) => {
-		return await assignAdaptation({
+		return assignAdaptation({
 			excelObj,
 			startDate: startDateAdapt
-		}).unwrap()
+		})
 	}
 
 	return {

@@ -1,26 +1,10 @@
-import { createApi } from '@reduxjs/toolkit/query/react'
-
-import { baseQuery } from '@/shared/api/baseQuery'
+import { apiRequest } from '@/shared/api/client'
 import { ApiMethods, type ExcelOperationResponse } from '@/shared/api/types'
-import { BASE_URL_OBJECT_ID } from '@/shared/config'
 import type { ExcelObj } from '@/shared/lib/excel'
 
-export const rewardsUpdateApi = createApi({
-	reducerPath: 'rewardsUpdateApi',
-	baseQuery,
-	endpoints: build => ({
-		updateRewards: build.mutation<ExcelOperationResponse, ExcelObj>({
-			query: body => ({
-				url: '',
-				params: {
-					object_id: BASE_URL_OBJECT_ID,
-					method: ApiMethods.REWARDS_UPDATE
-				},
-				method: 'POST',
-				body
-			})
-		})
+export const updateRewards = (body: ExcelObj) =>
+	apiRequest<ExcelOperationResponse, ExcelObj>({
+		apiMethod: ApiMethods.REWARDS_UPDATE,
+		body,
+		httpMethod: 'post'
 	})
-})
-
-export const { useUpdateRewardsMutation } = rewardsUpdateApi

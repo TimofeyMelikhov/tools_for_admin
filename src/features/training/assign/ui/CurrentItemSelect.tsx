@@ -1,7 +1,7 @@
 import Select, { type StylesConfig } from 'react-select'
 
-import { useGetCurrentListQuery } from '../api/trainingAssignApi'
 import type { UploadListItem } from '../model/types'
+import { useCurrentList } from '../model/queries'
 
 type Props = {
 	method: string
@@ -10,7 +10,7 @@ type Props = {
 }
 
 export const CurrentItemSelect = ({ method, value, onChange }: Props) => {
-	const { data, isLoading } = useGetCurrentListQuery(method)
+	const { data, isLoading } = useCurrentList(method)
 
 	const selectStyles: StylesConfig<UploadListItem, false> = {
 		container: base => ({

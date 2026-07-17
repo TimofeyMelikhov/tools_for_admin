@@ -1,11 +1,11 @@
 import { enqueueSnackbar } from 'notistack'
 
-import { useAssignTrainingMutation } from '../api/trainingAssignApi'
+import { useAssignTraining } from './queries'
 
 import type { TrainingAssignState } from './types'
 
 export const useTrainingAssignSubmit = () => {
-	const [assignTraining, state] = useAssignTrainingMutation()
+	const { mutateAsync: assignTraining, ...state } = useAssignTraining()
 
 	const submit = async (
 		params: TrainingAssignState,
@@ -19,7 +19,7 @@ export const useTrainingAssignSubmit = () => {
 				excelObj,
 				selectedAction,
 				time
-			}).unwrap()
+			})
 
 			const hasErrors =
 				(res.notFoundPersons?.length ?? 0) > 0 ||

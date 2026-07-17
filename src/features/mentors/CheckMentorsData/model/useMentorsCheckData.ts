@@ -1,28 +1,15 @@
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
+import { useExcelData } from '@/shared/lib/excel'
 import type { ExcelRow } from '@/shared/lib/excel'
 
-import { useMentorsCheckDataMutation } from '../api/mentorsCheckDataApi'
-
 import type { MentorCheckResultRow } from './mentorCheckData.types'
-import { cleanExcelMentorCheckData, setExcelData } from './mentorCheckDataSlice'
-
+import { useMentorsCheckDataMutation } from './queries'
 export const useMentorsCheckData = () => {
-	const dispatch = useAppDispatch()
-
-	const [checkMentorData, { data, isLoading }] = useMentorsCheckDataMutation()
-
-	const excelData = useAppSelector(state => state.mentorCheckData.excelObj)
-
-	const excelLength = excelData.length
-
-	const onExcelParsed = (rows: ExcelRow[]) => {
-		dispatch(setExcelData(rows))
-	}
-
-	const clearExcel = () => {
-		dispatch(cleanExcelMentorCheckData())
-	}
-
+	const { excelData, excelLength, onExcelParsed, clearExcel } = useExcelData()
+	const {
+		mutateAsync: checkMentorData,
+		data,
+		isPending: isLoading
+	} = useMentorsCheckDataMutation()
 	function mergeMentoringRows(
 		sourceRows: ExcelRow[],
 		mentorsRows: MentorCheckResultRow[]
@@ -72,7 +59,7 @@ export const useMentorsCheckData = () => {
 	}
 
 	const submit = async (excelObj: ExcelRow[]) => {
-		return await checkMentorData({ excelObj }).unwrap()
+		return checkMentorData({ excelObj })
 	}
 
 	return {

@@ -1,5 +1,6 @@
 import type { AssignAdaptationResponse } from '@/features/adaptation/assign/model/types'
 
+import type { ExcelRow } from '@/shared/lib/excel'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 
 import styles from './assignAdaptation.module.scss'
@@ -22,7 +23,7 @@ export const AssignAdaptationErrors = ({
 			{!!data.notFoundPersons.length && (
 				<div className={styles.errorsBlock}>
 					Не найденные сотрудники:{' '}
-					{data.notFoundPersons.map(p => (p as any).fullname).join(', ')}
+					{data.notFoundPersons.map((person: ExcelRow) => person.fullname).join(', ')}
 				</div>
 			)}
 			{!!data.notFoundProgramm.length && (

@@ -5,6 +5,23 @@ import { ExcelFlow } from '@/shared/ui/excelFlow'
 
 import styles from './mentorProfile.module.scss'
 
+const mentorProfileFlowConfig = {
+	columnMap: mentorProfileColumnMap,
+	texts: {
+		title: 'Установка дат процедуры отбора',
+		previewTitle: 'Превью данных файла:',
+		clearButton: 'Очистить таблицу',
+		submitButton: 'Установить дату',
+		successToast: 'Все записи успешно обработаны!',
+		errorToast: 'Произошла ошибка, попробуйте позже'
+	},
+	classes: {
+		container: styles.container,
+		tableTitle: styles.tableTitle,
+		errorsBlock: styles.errorsBlock
+	}
+}
+
 export const MentorProfileUpdateWidget = () => {
 	const {
 		excelData,
@@ -18,7 +35,7 @@ export const MentorProfileUpdateWidget = () => {
 
 	return (
 		<ExcelFlow
-			columnMap={mentorProfileColumnMap}
+			{...mentorProfileFlowConfig}
 			excelData={excelData}
 			excelLength={excelLength}
 			isLoading={isLoading}
@@ -26,19 +43,6 @@ export const MentorProfileUpdateWidget = () => {
 			onExcelParsed={onExcelParsed}
 			onClear={clearExcel}
 			onSubmit={submit}
-			texts={{
-				title: 'Установка дат процедуры отбора',
-				previewTitle: 'Превью данных файла:',
-				clearButton: 'Очистить таблицу',
-				submitButton: 'Установить дату',
-				successToast: 'Все записи успешно обработаны!',
-				errorToast: 'Произошла ошибка, попробуйте позже'
-			}}
-			classes={{
-				container: styles.container,
-				tableTitle: styles.tableTitle,
-				errorsBlock: styles.errorsBlock
-			}}
 		/>
 	)
 }

@@ -9,6 +9,25 @@ import { AssignAdaptationErrors } from './AssignAdaptationErrors'
 import { DateControl } from './DateControl'
 import styles from './assignAdaptation.module.scss'
 
+const assignAdaptationFlowConfig = {
+	columnMap: assignAdaptationColumnMap,
+	texts: {
+		title: 'Назначение адаптации',
+		previewTitle: '',
+		clearButton: 'Очистить таблицу',
+		submitButton: 'Назначить адаптацию',
+		successToast: 'Все записи успешно обработаны!',
+		errorToast: 'Произошла ошибка, попробуйте позже',
+		warningToast: ({ processed, total }: { processed: number; total: number }) =>
+			`Обработано ${processed} из ${total} записей. Есть ошибки.`
+	},
+	classes: {
+		container: styles.container,
+		tableTitle: styles.tableTitle,
+		errorsBlock: styles.errorsBlock
+	}
+}
+
 export const AssignAdaptationWidget = () => {
 	const [isFuture, setIsFuture] = useState(false)
 
@@ -27,7 +46,7 @@ export const AssignAdaptationWidget = () => {
 
 	return (
 		<ExcelFlow
-			columnMap={assignAdaptationColumnMap}
+			{...assignAdaptationFlowConfig}
 			excelData={excelObj}
 			excelLength={excelObj.length}
 			isLoading={isLoading}
@@ -35,21 +54,6 @@ export const AssignAdaptationWidget = () => {
 			onExcelParsed={onExcelParsed}
 			onClear={clearExcel}
 			onSubmit={submit}
-			texts={{
-				title: 'Назначение адаптации',
-				previewTitle: '',
-				clearButton: 'Очистить таблицу',
-				submitButton: 'Назначить адаптацию',
-				successToast: 'Все записи успешно обработаны!',
-				errorToast: 'Произошла ошибка, попробуйте позже',
-				warningToast: ({ processed, total }) =>
-					`Обработано ${processed} из ${total} записей. Есть ошибки.`
-			}}
-			classes={{
-				container: styles.container,
-				tableTitle: styles.tableTitle,
-				errorsBlock: styles.errorsBlock
-			}}
 			controlsSlot={
 				<DateControl
 					value={startDateAdapt}

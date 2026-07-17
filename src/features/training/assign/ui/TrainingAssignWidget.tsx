@@ -1,25 +1,21 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Box, Button, Typography } from '@mui/material'
 import { enqueueSnackbar } from 'notistack'
 
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 import type { ExcelRow } from '@/shared/lib/excel'
 import { ExcelPreviewTable } from '@/shared/ui/excelPreviewTable'
 import { ExcelUploader } from '@/shared/ui/excelUploader'
 import { Preloader } from '@/shared/ui/preloader'
 
-import { useAssignTrainingMutation } from '../api/trainingAssignApi'
 import { trainingAssignColumnMap } from '../model/excelMapping'
-import {
-	cleanExcel,
-	reset,
-	setAction,
-	setCurrentObj,
-	setExcelData,
-	setTimeAssign
-} from '../model/trainingAssignSlice'
-import type { ActionOption, Props, TrainingAction } from '../model/types'
+import { useAssignTraining } from '../model/queries'
+import type {
+	ActionOption,
+	Props,
+	TrainingAction,
+	TrainingAssignState
+} from '../model/types'
 
 import { CurrentItemSelect } from './CurrentItemSelect'
 import { TimeInput } from './TimeInput'
@@ -34,35 +30,31 @@ const ACTION_OPTIONS: ActionOption[] = [
 const optionByValue = (value: TrainingAction): ActionOption =>
 	ACTION_OPTIONS.find(o => o.value === value) ?? { value, label: value }
 
+const initialState: TrainingAssignState = {
+	selectedAction: null,
+	excelObj: [],
+	currentObj: null,
+	time: ''
+}
+
 export const TrainingAssignWidget = ({
 	forcedAction,
 	title = 'Назначение курсов и тестов',
 	submitText = 'Назначить'
 }: Props) => {
-	const dispatch = useAppDispatch()
-	const [assignTraining, { data, isLoading }] = useAssignTrainingMutation()
-
-	const { currentObj, excelObj, selectedAction, time } = useAppSelector(
-		s => s.trainingAssign
-	)
+	const [state, setState] = useState<TrainingAssignState>(initialState)
+	const {
+		mutateAsync: assignTraining,
+		data,
+		isPending: isLoading
+	} = useAssignTraining()
+	const { currentObj, excelObj, selectedAction, time } = state
 
 	useEffect(() => {
 		if (!forcedAction) return
 
-		dispatch(reset())
-		dispatch(setAction(optionByValue(forcedAction)))
-
-		return () => {
-			dispatch(reset())
-		}
-	}, [dispatch, forcedAction])
-
-	useEffect(() => {
-		if (forcedAction) return
-		return () => {
-			dispatch(reset())
-		}
-	}, [dispatch, forcedAction])
+		setState({ ...initialState, selectedAction: optionByValue(forcedAction) })
+	}, [forcedAction])
 
 	const shouldShowTime =
 		selectedAction?.value === 'getCourses' ||
@@ -72,7 +64,7 @@ export const TrainingAssignWidget = ({
 		excelObj.length > 0 && selectedAction !== null && currentObj !== null
 
 	const handleExcelData = (rows: ExcelRow[]) => {
-		dispatch(setExcelData(rows))
+		setState(previous => ({ ...previous, excelObj: rows }))
 	}
 
 	const uploadToServer = async () => {
@@ -82,7 +74,7 @@ export const TrainingAssignWidget = ({
 				excelObj,
 				selectedAction,
 				time
-			}).unwrap()
+			})
 
 			const hasErrors =
 				(res.notFoundPersons?.length ?? 0) > 0 ||
@@ -121,7 +113,9 @@ export const TrainingAssignWidget = ({
 					<CurrentItemSelect
 						method={selectedAction.value}
 						value={currentObj}
-						onChange={opt => dispatch(setCurrentObj(opt))}
+						onChange={opt =>
+							setState(previous => ({ ...previous, currentObj: opt }))
+						}
 					/>
 				)}
 
@@ -129,7 +123,7 @@ export const TrainingAssignWidget = ({
 					<TimeInput
 						className={styles.timeInput}
 						value={time}
-						onChange={v => dispatch(setTimeAssign(v))}
+						onChange={v => setState(previous => ({ ...previous, time: v }))}
 					/>
 				)}
 
@@ -145,7 +139,9 @@ export const TrainingAssignWidget = ({
 						variant='text'
 						component='span'
 						sx={{ fontSize: '12px' }}
-						onClick={() => dispatch(cleanExcel())}
+						onClick={() =>
+							setState(previous => ({ ...previous, excelObj: [] }))
+						}
 					>
 						Очистить таблицу
 					</Button>

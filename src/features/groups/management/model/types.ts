@@ -1,5 +1,6 @@
 import type { Person } from '@/entities/person'
 
+import type { ApiResult } from '@/shared/api/types'
 import type { ExcelRow } from '@/shared/lib/excel'
 
 export type GroupAction =
@@ -39,7 +40,7 @@ export type GroupManagementState = {
 	selectedUser: Person | null
 }
 
-export type ManagementGroupResponse = {
+export type ManagementGroupResponse = ApiResult<{
 	success: boolean
 	code: number
 	message: string
@@ -47,4 +48,4 @@ export type ManagementGroupResponse = {
 	notProcessed?: string[]
 	notFoundPersons?: ExcelRow[]
 	dublicatePersons?: Person[]
-}
+}>

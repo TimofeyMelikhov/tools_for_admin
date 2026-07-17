@@ -1,24 +1,16 @@
-import { useUpdateRewardsMutation } from '@/features/mentors/rewardsUpdate/api/rewardsUpdateApi'
+import { useExcelData } from '@/shared/lib/excel'
 
-import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
-import type { ExcelRow } from '@/shared/lib/excel'
-
-import { cleanExcelRewards, setExcelData } from './rewardsUpdateSlice'
+import { useUpdateRewardsMutation } from './queries'
 
 export function useRewardsUpdate() {
-	const dispatch = useAppDispatch()
-	const [updateRewards, { data, isLoading }] = useUpdateRewardsMutation()
-
-	const excelData = useAppSelector(state => state.rewardsUpdate.excelObj)
-	const excelLength = useAppSelector(
-		state => state.rewardsUpdate.excelObj.length
-	)
-
-	const onExcelParsed = (rows: ExcelRow[]) => dispatch(setExcelData(rows))
-	const clearExcel = () => dispatch(cleanExcelRewards())
-
-	const submit = async (excelObj: ExcelRow[]) => {
-		return await updateRewards({ excelObj }).unwrap()
+	const { excelData, excelLength, onExcelParsed, clearExcel } = useExcelData()
+	const {
+		mutateAsync: updateRewards,
+		data,
+		isPending: isLoading
+	} = useUpdateRewardsMutation()
+	const submit = async (excelObj: typeof excelData) => {
+		return updateRewards({ excelObj })
 	}
 
 	return {

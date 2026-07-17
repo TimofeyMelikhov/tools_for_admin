@@ -9,6 +9,24 @@ import { useMentorsCheckData } from '../model/useMentorsCheckData'
 
 import styles from './checkMentorsData.module.scss'
 
+const mentorsCheckFlowConfig = {
+	columnMap: mentorProfileColumnMap,
+	texts: {
+		title: 'Проверка данных наставников из Excel файла',
+		previewTitle: 'Исходный файл:',
+		clearButton: 'Очистить таблицу',
+		submitButton: 'Получить данные',
+		successToast: 'Все записи успешно обработаны!',
+		errorToast: 'Произошла ошибка, попробуйте позже',
+		notFoundTitle: 'Не найденные наставники:'
+	},
+	classes: {
+		container: styles.container,
+		tableTitle: styles.tableTitle,
+		errorsBlock: styles.errorsBlock
+	}
+}
+
 export const CheckMentorsDataWidget = () => {
 	const {
 		data,
@@ -28,7 +46,7 @@ export const CheckMentorsDataWidget = () => {
 	return (
 		<div className={styles.container}>
 			<ExcelFlow
-				columnMap={mentorProfileColumnMap}
+				{...mentorsCheckFlowConfig}
 				excelData={excelData}
 				excelLength={excelLength}
 				isLoading={isLoading}
@@ -36,20 +54,6 @@ export const CheckMentorsDataWidget = () => {
 				onExcelParsed={onExcelParsed}
 				onClear={clearExcel}
 				onSubmit={submit}
-				texts={{
-					title: 'Проверка данных наставников из Excel файла',
-					previewTitle: 'Исходный файл:',
-					clearButton: 'Очистить таблицу',
-					submitButton: 'Получить данные',
-					successToast: 'Все записи успешно обработаны!',
-					errorToast: 'Произошла ошибка, попробуйте позже',
-					notFoundTitle: 'Не найденные наставники:'
-				}}
-				classes={{
-					container: styles.container,
-					tableTitle: styles.tableTitle,
-					errorsBlock: styles.errorsBlock
-				}}
 			/>
 
 			{!!rows.length && (
