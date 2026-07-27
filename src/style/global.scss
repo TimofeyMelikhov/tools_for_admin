@@ -27,6 +27,41 @@ body,
 	position: relative;
 }
 
+html {
+	font-size: 10px;
+}
+
+// Notistack выводит уведомления через портал вне ScopedCssBaseline.
+// Портал WebSoft меняет у них унаследованный размер, поэтому фиксируем его явно.
+.notistack-MuiContent {
+	font-size: 14px !important;
+}
+
+// WebSoft задаёт стили для input[type] и button, которые перекрывают MUI.
+// Ограничиваем компенсацию контейнером приложения, чтобы не менять портал.
+#root .admin-tool-root {
+	.MuiOutlinedInput-input {
+		font-family: inherit;
+		font-size: inherit;
+		line-height: inherit;
+		border: 0;
+		border-radius: 0;
+		padding: 16.5px 14px;
+		box-shadow: none;
+	}
+
+	.MuiAccordionSummary-root {
+		font-family: $default-font;
+		font-size: 13.3333px;
+
+		&:hover {
+			background-color: transparent;
+			border-color: transparent;
+			color: inherit;
+		}
+	}
+}
+
 body {
 	font-size: $default-font-size;
 	color: $default-font-color;

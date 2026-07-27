@@ -5,12 +5,18 @@ if (DEV_MODE) {
   Request.AddRespHeader("Access-Control-Allow-Origin", "*", false);
   Request.AddRespHeader("Access-Control-Expose-Headers", "Error-Message");
   Request.AddRespHeader("Access-Control-Allow-Headers", "origin, content-type, accept");
+  Request.AddRespHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   Request.AddRespHeader("Access-Control-Allow-Credentials", "true");
 }
 Request.RespContentType = "application/json";
 Request.AddRespHeader("Content-Security-Policy", "frame-ancestors 'self'");
 Request.AddRespHeader("X-XSS-Protection", "1");
 Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
+
+var CONFIG = {
+  ASSESSMENT_CATEGORY_ID: '7196223977071540682'
+};
+
 /* --- utils --- */
 function getParam(name) {
   return tools_web.get_web_param(curParams, name, undefined, 0);
@@ -38,6 +44,7 @@ function selectOne(query, defaultObj) {
 function HttpError(errorObject) {
   throw new Error(EncodeJson(errorObject));
 }
+
 /* --- global --- */
 var curUserId = DEV_MODE
   ? OptInt("7079554317075315721") // id пользователя
@@ -54,7 +61,7 @@ var logConfig = {
 function log(message, type) {
   type = IsEmptyValue(type) ? "INFO" : StrUpperCase(type);
 
-  if (ObjectType(message) === "JsObject" || ObjectType(message) === "JsArray" || ObjectType(message) === "XmLdsSeq") {
+  if (ObjectType(message) === "JsObject" || ObjectType(message) === "JsArray" || ObjectType(message) === "XmLdsSeq" || ObjectType(message) === "XmElem") {
     message = tools.object_to_text(message, "json")
   }
 
@@ -70,67 +77,86 @@ function log(message, type) {
 }
 
 function checkUserRole() {
-  var menuItems = []
-
-  var accessTrainingManagement = getParam("accessTrainingManagementId");
-  var acessRewardsUpdate = getParam("acessRewardsUpdateId");
-  var accessMentorProfile = getParam("accessMentorProfileId");
-  var groupManagement = getParam("groupManagement")
-  var assignAdapt = getParam("adaptationGroup")
-
-  var isAccessTrainingManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessTrainingManagement + " AND collaborator_id = " + curUserId);
-  
-  if (isAccessTrainingManagement !== undefined) {
-    menuItems.push(
+  try {
+    var menuConfig = [
       {
         id: 1,
-        title: 'Назначение курсов и тестов',
-        route: '/TrainingManagement'
-      }
-    )
-  }
-
-  var isGroupManagement = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + groupManagement + " AND collaborator_id = " + curUserId);
-
-  if(isGroupManagement !== undefined) {
-    menuItems.push(
+        title: 'Управление обучением',
+        route: '/TrainingManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847675551799640',
+        groupId: getParam("accessTrainingManagementId")
+      },
       {
         id: 2,
         title: 'Управление группами',
-        route: '/groupManagement'
+        route: '/groupManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847730371951683',
+        groupId: getParam("groupManagement")
+      },
+      {
+        id: 3,
+        title: 'Назначение адаптации',
+        route: '/AssignAdapt',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847826781758933',
+        groupId: getParam("adaptationGroup")
+      },
+      {
+        id: 4,
+        title: 'Управление наставниками',
+        route: '/mentorManagement',
+        image: 'https://webtutor.stdp.ru/download_file.html?file_id=7211847794811690062',
+        groupId: getParam("mentorManagementGroup")
       }
-    )
+    ];
+    var groupId
+    var allGroupIds = [];
+    for (menuConfigItem in menuConfig) {
+      groupId = menuConfigItem.groupId;
+      if (groupId) {
+        allGroupIds.push(groupId);
+      }
+    }
+  
+    var userGroupsMap = {};
+    
+    if (allGroupIds.length > 0) {
+      var result = selectAll(
+        "SELECT group_id FROM group_collaborators " +
+        "WHERE group_id IN (" + allGroupIds.join(",") + ") " +
+        "AND collaborator_id = " + curUserId
+      );
+      
+      for (group in result) {
+        groupId = group.group_id;
+        userGroupsMap[groupId] = true;
+      }
+    }
+    var menuItems = []
+    for (menuItem in menuConfig) {
+      if (GetOptObjectProperty(userGroupsMap, menuItem.groupId)) {
+        menuItems.push({
+          id: menuItem.id,
+          title: menuItem.title,
+          route: menuItem.route,
+          image: menuItem.image
+        });
+      }
+    }
+
+    return menuItems;
+  } catch (error) {
+    alert("Ошибка при формировании пунктов меню: " + error.message)
   }
-
-  var isAcessRewardsUpdate = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + acessRewardsUpdate + " AND collaborator_id = " + curUserId);  
-
-  if (isAcessRewardsUpdate !== undefined) {
-    menuItems.push(
-      { id: 3, title: 'Обновление наград', route: '/RewardsUpdate' }
-    )
-  }
-
-  var isAccessMentorProfile = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + accessMentorProfile + " AND collaborator_id = " + curUserId);  
-
-  if (isAccessMentorProfile !== undefined) {
-    menuItems.push(
-      { id: 4, title: 'Обновление профилей наставников', route: '/MentorProfile' }
-    )
-  }
-
-  var isAccessAssignAdapt = selectOne("SELECT * FROM group_collaborators gc WHERE gc.group_id = " + assignAdapt + " AND collaborator_id = " + curUserId);
-  if (isAccessAssignAdapt !== undefined) {
-    menuItems.push(
-      { id: 5, title: 'Назначение адаптации', route: '/AssignAdapt' }
-    )
-  }
-
-  return menuItems;
 }
 
-function findRightPerson(personData, resultObj) {
-  var _query_str = "SELECT * FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
-
+function findRightPerson(personData, resultObj, adaptMode) {
+  var _query_str
+  if(adaptMode === true) {
+    _query_str = "SELECT * FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
+  } else {
+    _query_str = "SELECT id, fullname, position_name, position_parent_name FROM collaborators WHERE fullname = " + XQueryLiteral(personData.fullname);
+  }
+  
   if (personData.position_name !== null) {
     _query_str += " AND position_name = " + XQueryLiteral(personData.position_name);
   }
@@ -172,7 +198,12 @@ function getAssessments() {
   return selectAll("SELECT id, code, title AS name, modification_date FROM assessments a CROSS APPLY a.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryAssessmentsId + "'");
 }
 function getGroups() {
-  return selectAll("SELECT id, code, name, modification_date FROM groups");
+  var categoryGroupId = getParam("categoryGroupId")
+  return selectAll("SELECT g.id, g.code, g.name, g.modification_date FROM groups g CROSS APPLY g.role_id.nodes('/role_id') AS R(x) WHERE R.x.value('.', 'varchar(50)') = '" + categoryGroupId + "'");
+}
+function getCollaborators(body) {
+  var strQuery = body.search
+  return selectAll("SELECT c.id, c.fullname, c.position_name, c.position_parent_name FROM collaborators c WHERE c.is_dismiss = '0' AND c.fullname LIKE '%" + strQuery + "%'")
 }
 
 function getPersonsGroup(body) {
@@ -211,9 +242,9 @@ function assignCourses(body) {
     dublicatePersons: [],
     prevAssign: []
   }
-
+  
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -243,7 +274,7 @@ function assignAssessments(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -259,30 +290,632 @@ function assignAssessments(body) {
   }
   return resultObj;
 }
-function addToGroup(body) {
-  var selectedGroup = body.GetOptProperty("currentObj").id
-  var excelData = body.excelObj
 
-  var resultObj = {
-    counterPersons: 0,
-    notFoundPersons: [],
-    dublicatePersons: [],
-    prevAssign: []
+function saveAnswerImagesByPosition(answerList) {
+  var savedImages = [];
+  var answer;
+  var savedImage;
+
+  for (answer in answerList) {
+    savedImage = null;
+    if (answer.image.data.HasValue) {
+      savedImage = {
+        name: answer.image.name,
+        data: answer.image.data,
+        location: answer.image.location
+      };
+    }
+    savedImages.push(savedImage);
   }
 
-  for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+  return savedImages;
+}
 
-    if (rightPerson === null) {
-      continue;
+function uploadingQuestions(body) {
+  var responseObj = {
+    success: true,
+    code: 201,
+    message: "Все вопросы успешно загружены",
+    counterPersons: 0,
+  }
+
+  var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId, savedAnswerImages, answerImage, answerIndex
+  var question, existTest, answerChild
+  var existingMap = {};
+
+  var questionsArray = body.GetOptProperty("excelObj", [])
+
+  var codesArr = ArrayExtractKeys(questionsArray, 'code')
+
+  try {
+    var sqlStr = "SELECT i.id, i.code FROM items i WHERE i.code IN ('" + codesArr.join("', '") + "')"
+    var existingTestsArr = selectAll(sqlStr)
+
+    for (existTest in existingTestsArr) {
+      existingMap[existTest.code] = existTest.id.Value;
+    }
+    
+  } catch (error) {
+    log("Ошибка при поиске вопросов: " + error.message)
+    responseObj.success = false;
+    responseObj.code = 500;
+    responseObj.message = "Ошибка при поиске существующих вопросов";
+    return responseObj;
+  }
+
+  for(question in questionsArray) {
+    answerOptions = question.question_text.split('#')
+    existingId = existingMap.GetOptProperty(question.code, null);
+    
+    try {
+      if(existingId) {
+        questionDoc =  tools.open_doc(existingId)
+        questionDocTE=questionDoc.TopElem
+        savedAnswerImages = saveAnswerImagesByPosition(questionDocTE.answers);
+        questionDocTE.answers.DeleteChildren("This.text !== ''")
+      } else {
+        questionDoc=OpenNewDoc('x-local://qti/qti_item.xmd')
+        questionDoc.BindToDb(DefaultDb)
+        questionDocTE=questionDoc.TopElem
+        savedAnswerImages = [];
+      }
+      questionDocTE.code = question.code
+      questionDocTE.title = question.title
+      questionDocTE.type_id = question.question_type
+      questionDocTE.question_text = question.question
+      questionDocTE.question_points = question.score
+      questionDocTE.order = question.sequence_responses ? question.sequence_responses : 'Sequential'
+      questionDocTE.duration = question.duration ? question.duration : null
+      questionDocTE.display_correct_answer = question.show_correct_answer ? question.show_correct_answer : 0
+      questionDocTE.comment = question.comment_question ? question.comment_question : ''
+      questionDocTE.feedback_wrong = question.message_incorrect_answer ? question.message_incorrect_answer : ''
+      questionDocTE.feedback_correct = question.message_correct_answer ? question.message_correct_answer : ''
+      questionDocTE.max_attempts_num = question.number_attempts ? question.number_attempts : 1
+      
+      if(question.instruction_question) {
+        questionDocTE.objectives.candidate = question.instruction_question
+      }
+      for(answerIndex = 0; answerIndex < answerOptions.length; answerIndex++) {
+        answerChild = questionDocTE.answers.AddChild();
+        answerChild.text = answerOptions[answerIndex];
+        answerImage = null;
+        if (answerIndex < savedAnswerImages.length) {
+          answerImage = savedAnswerImages[answerIndex];
+        }
+        if (answerImage !== null && answerImage !== undefined) {
+          answerChild.image.name = answerImage.name;
+          answerChild.image.data = answerImage.data;
+          answerChild.image.location = answerImage.location;
+        }
+        if (StrContains('#' + String(question.numbers_correct_answers) + '#', '#' + String(answerIndex + 1) + '#', false)) {
+          answerChild.is_correct_answer = true;
+        }
+      }
+
+      questionDoc.Save()
+      responseObj.counterPersons++
+    } catch (err) {
+      throw err
+    }
+  }
+
+  return responseObj
+}
+
+/**
+ * Возвращает только вопросы, впервые созданные в системе за последние сутки.
+ * modification_date намеренно не используется: обновление существующего вопроса
+ * не должно повторно делать его доступным для добавления в новый тест.
+ */
+function getRecentQuestions() {
+  return selectAll(
+    "SELECT i.id, i.code, i.title, i.type_id, i.question_points, " +
+    "CONVERT(varchar(10), d.created, 104) AS creation_date " +
+    "FROM items i " +
+    "INNER JOIN item d ON d.id = i.id " +
+    "WHERE d.created >= DATEADD(hour, -24, GETDATE()) " +
+    "ORDER BY d.created DESC, i.id DESC"
+  );
+}
+
+/**
+ * Настраивает тип QTI-плеера и связанные с ним системные визуальные параметры.
+ * Соответствует обработчику поля «Тип QTI-плеера» штатной карточки теста.
+ */
+function setAssessmentPlayerType(assessmentTopElem, playerType) {
+  assessmentTopElem.player.type = playerType;
+  assessmentTopElem.view_templates.css.wvars.Clear();
+
+  if (playerType === 'v3') {
+    assessmentTopElem.view_templates.css.custom_web_template_id = 6408782421228602543;
+    tools_web.set_web_params(
+      assessmentTopElem.view_templates.css.wvars,
+      OpenDoc(UrlFromDocID(6408782421228602543)).TopElem.wvars,
+      false
+    );
+  } else if (playerType === 'v4') {
+    assessmentTopElem.view_templates.css.custom_web_template_id = 7164787964348148432;
+    tools_web.set_web_params(
+      assessmentTopElem.view_templates.css.wvars,
+      OpenDoc(UrlFromDocID(7164787964348148432)).TopElem.wvars,
+      false
+    );
+  }
+}
+
+/**
+ * Помещает опубликованный тест в указанную категорию.
+ */
+function setAssessmentCategory(assessmentDoc, categoryId) {
+  assessmentDoc.TopElem.role_id.Clear();
+  assessmentDoc.TopElem.role_id.ObtainByValue(categoryId);
+  assessmentDoc.Save();
+}
+
+/**
+ * Создаёт тест с разделами, назначает вопросы и публикует его штатным способом.
+ */
+function createAssessment(body) {
+  var code = Trim('' + body.GetOptProperty('code', ''));
+  var title = Trim('' + body.GetOptProperty('title', ''));
+  var playerType = '' + body.GetOptProperty('playerType', 'v3');
+  var duration = OptInt(body.GetOptProperty('duration', 0), 0);
+  var durationDays = OptInt(body.GetOptProperty('durationDays', 0), 0);
+  var attemptsNum = OptInt(body.GetOptProperty('attemptsNum', 1), 1);
+  var passingScore = OptInt(body.GetOptProperty('passingScore', 0), 0);
+  var isOpen = body.GetOptProperty('isOpen', false) === true;
+  var displayResultReport = body.GetOptProperty('displayResultReport', false) === true;
+  var displayResult = body.GetOptProperty('displayResult', false) === true;
+  var showFeedback = body.GetOptProperty('showFeedback', true) !== false;
+  var showUnfinishedScore = body.GetOptProperty('showUnfinishedScore', false) === true;
+  var rawSections = body.GetOptProperty('sections', []);
+  var sectionDefinitions = [];
+  var questionIds = [];
+  var questions;
+  var assessmentDoc;
+  var assessmentTopElem;
+  var section;
+  var sectionItem;
+  var rawSection;
+  var rawQuestionIds;
+  var sectionQuestionIds;
+  var sectionDefinition;
+  var sectionCode;
+  var sectionTitle;
+  var sectionDuration;
+  var sectionPassingScore;
+  var sectionOrder;
+  var sectionSelectionType;
+  var sectionSelectionNum;
+  var questionId;
+  var isDuplicate;
+  var isQuestionFound;
+  var publishResult;
+  var publishErrorText;
+  var duplicateAssessments;
+  var i;
+  var j;
+  var k;
+  var m;
+
+  if (code === '') {
+    throw HttpError({ code: 400, message: 'Укажите код теста.' });
+  }
+
+  if (title === '') {
+    throw HttpError({ code: 400, message: 'Укажите название теста.' });
+  }
+
+  duplicateAssessments = selectAll(
+    "SELECT id FROM assessments WHERE code = " + XQueryLiteral(code)
+  );
+
+  if (duplicateAssessments.length > 0) {
+    throw HttpError({ code: 400, message: 'Тест с таким кодом уже существует.' });
+  }
+
+  if (duration <= 0 || duration > 1440) {
+    throw HttpError({
+      code: 400,
+      message: 'Продолжительность теста должна быть от 1 до 1440 минут.'
+    });
+  }
+
+  if (durationDays < 0 || attemptsNum < 1 || attemptsNum > 99 || passingScore < 0) {
+    throw HttpError({ code: 400, message: 'Проверьте настройки прохождения теста.' });
+  }
+
+  if (playerType !== 'v3' && playerType !== 'v4') {
+    playerType = 'v3';
+  }
+
+  if (rawSections.length === 0) {
+    throw HttpError({ code: 400, message: 'Добавьте хотя бы один раздел теста.' });
+  }
+
+  for (i = 0; i < rawSections.length; i++) {
+    rawSection = rawSections[i];
+    sectionCode = Trim('' + rawSection.GetOptProperty('code', ''));
+    sectionTitle = Trim('' + rawSection.GetOptProperty('title', ''));
+    sectionDuration = OptInt(rawSection.GetOptProperty('duration', 0), 0);
+    sectionPassingScore = OptInt(rawSection.GetOptProperty('passingScore', 0), 0);
+    sectionOrder = '' + rawSection.GetOptProperty('order', 'Sequential');
+    sectionSelectionType = '' + rawSection.GetOptProperty('selectionType', 'all');
+    sectionSelectionNum = OptInt(rawSection.GetOptProperty('selectionNum', 0), 0);
+    rawQuestionIds = rawSection.GetOptProperty('questionIds', []);
+    sectionQuestionIds = [];
+
+    if (sectionCode === '') {
+      sectionCode = '' + (i + 1);
     }
 
-    gr = tools.open_doc(selectedGroup)
-    gr.TopElem.collaborators.ObtainChildByKey(rightPerson.id);
-    gr.Save();
-    resultObj.counterPersons++
+    if (sectionTitle === '') {
+      throw HttpError({ code: 400, message: 'Укажите название каждого раздела.' });
+    }
+
+    if (sectionDuration < 0 || sectionDuration > 1440 || sectionPassingScore < 0) {
+      throw HttpError({ code: 400, message: 'Проверьте настройки разделов теста.' });
+    }
+
+    if (sectionOrder !== 'Sequential' && sectionOrder !== 'Random') {
+      sectionOrder = 'Sequential';
+    }
+
+    if (sectionSelectionType !== 'all' && sectionSelectionType !== 'num_generate') {
+      sectionSelectionType = 'all';
+    }
+
+    for (j = 0; j < sectionDefinitions.length; j++) {
+      if (sectionDefinitions[j].code === sectionCode) {
+        throw HttpError({ code: 400, message: 'Коды разделов не должны повторяться.' });
+      }
+    }
+
+    for (j = 0; j < rawQuestionIds.length; j++) {
+      questionId = OptInt(rawQuestionIds[j], 0);
+      isDuplicate = false;
+
+      if (questionId === 0) {
+        continue;
+      }
+
+      for (k = 0; k < sectionQuestionIds.length; k++) {
+        if (sectionQuestionIds[k] == questionId) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      for (k = 0; k < questionIds.length; k++) {
+        if (questionIds[k] == questionId) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      if (isDuplicate) {
+        throw HttpError({
+          code: 400,
+          message: 'Один вопрос нельзя добавить в несколько разделов.'
+        });
+      }
+
+      sectionQuestionIds.push(questionId);
+      questionIds.push(questionId);
+    }
+
+    if (sectionQuestionIds.length === 0) {
+      throw HttpError({
+        code: 400,
+        message: 'Добавьте хотя бы один вопрос в каждый раздел.'
+      });
+    }
+
+    if (
+      sectionSelectionType === 'num_generate' &&
+      (sectionSelectionNum < 1 || sectionSelectionNum > sectionQuestionIds.length)
+    ) {
+      throw HttpError({
+        code: 400,
+        message: 'Проверьте число случайно выбираемых вопросов в разделах.'
+      });
+    }
+
+    sectionDefinitions.push({
+      code: sectionCode,
+      title: sectionTitle,
+      duration: sectionDuration,
+      passingScore: sectionPassingScore,
+      order: sectionOrder,
+      selectionType: sectionSelectionType,
+      selectionNum: sectionSelectionNum,
+      questionIds: sectionQuestionIds
+    });
   }
-  return resultObj;
+
+  questions = selectAll(
+    "SELECT i.id, i.title, i.question_points " +
+    "FROM items i " +
+    "INNER JOIN item d ON d.id = i.id " +
+    "WHERE i.id IN (" + questionIds.join(',') + ") " +
+    "AND d.created >= DATEADD(hour, -24, GETDATE()) " +
+    "ORDER BY i.id DESC"
+  );
+
+  if (questions.length !== questionIds.length) {
+    throw HttpError({
+      code: 400,
+      message: 'Часть вопросов недоступна: обновите список и выберите их заново.'
+    });
+  }
+
+  assessmentDoc = OpenNewDoc('x-local://qti/qti_assessment.xmd');
+  assessmentDoc.BindToDb(DefaultDb);
+  assessmentTopElem = assessmentDoc.TopElem;
+  assessmentTopElem.code = code;
+  assessmentTopElem.title = title;
+  assessmentTopElem.status = 'publish';
+  assessmentTopElem.duration = duration;
+  assessmentTopElem.attempts_num = attemptsNum;
+  assessmentTopElem.passing_score = passingScore;
+  assessmentTopElem.is_open = isOpen;
+  assessmentTopElem.display_result_report = displayResultReport;
+  assessmentTopElem.display_result = displayResult;
+  assessmentTopElem.not_display_feedback = !showFeedback;
+  assessmentTopElem.not_display_unfinished_score = !showUnfinishedScore;
+
+  if (durationDays > 0) {
+    assessmentTopElem.duration_days = durationDays;
+  }
+
+  setAssessmentPlayerType(assessmentTopElem, playerType);
+
+  for (i = 0; i < sectionDefinitions.length; i++) {
+    sectionDefinition = sectionDefinitions[i];
+    section = assessmentTopElem.sections.AddChild();
+    section.code = sectionDefinition.code;
+    section.title = sectionDefinition.title;
+    section.duration = sectionDefinition.duration;
+    section.passing_score = sectionDefinition.passingScore;
+    section.selection_ordering.order = sectionDefinition.order;
+    section.selection_ordering.select_id = sectionDefinition.selectionType;
+
+    if (sectionDefinition.selectionType === 'num_generate') {
+      section.selection_ordering.select_num = sectionDefinition.selectionNum;
+    }
+
+    for (j = 0; j < sectionDefinition.questionIds.length; j++) {
+      questionId = sectionDefinition.questionIds[j];
+      isQuestionFound = false;
+
+      for (k = 0; k < questions.length; k++) {
+        if (questions[k].id == questionId) {
+          sectionItem = section.items.AddChild();
+          sectionItem.id = questions[k].id;
+          sectionItem.title = questions[k].title;
+          sectionItem.question_points = questions[k].question_points;
+          isQuestionFound = true;
+          break;
+        }
+      }
+
+      if (!isQuestionFound) {
+        throw HttpError({
+          code: 400,
+          message: 'Не удалось найти вопрос для добавления в раздел.'
+        });
+      }
+    }
+  }
+
+  assessmentDoc.Save();
+  publishResult = qti_tools.pulish_assessment(assessmentDoc.DocID);
+
+  if (publishResult === undefined || OptInt(publishResult.error, 1) !== 0) {
+    publishErrorText = 'Неизвестная ошибка публикации.';
+    try {
+      if (publishResult.error_text !== undefined && publishResult.error_text !== '') {
+        publishErrorText = '' + publishResult.error_text;
+      }
+    } catch (publishError) {}
+
+    throw HttpError({
+      code: 500,
+      message:
+        'Тест создан, но не опубликован. ID ' + assessmentDoc.DocID + '. ' + publishErrorText
+    });
+  }
+
+  try {
+    setAssessmentCategory(assessmentDoc, CONFIG.ASSESSMENT_CATEGORY_ID);
+  } catch (categoryError) {
+    throw HttpError({
+      code: 500,
+      message: 'Тест создан и опубликован, но не удалось поместить его в целевую категорию. ' + categoryError.message
+    });
+  }
+
+  return {
+    success: true,
+    code: 201,
+    message: 'Тест успешно создан и опубликован.',
+    assessmentId: '' + assessmentDoc.DocID,
+    assessmentCode: '' + assessmentTopElem.code,
+    questionCount: questions.length,
+    published: true
+  };
+}
+
+function addToGroup(body) {
+  var selectedGroup = OptInt(body.currentGroup.id)
+  var selectedUser = body.selectedUser
+  var excelData = body.excelObj
+
+  var responseObj = {
+    success: true,
+    code: 201,
+    message: "Все сотрудники успешно добавлены",
+    counterPersons: 0,
+    notFoundPersons: [],
+    dublicatePersons: []
+  }
+
+  gr = tools.open_doc(selectedGroup)
+
+  if(excelData.length > 0) {
+    for(var i = 0; i < excelData.length; i++) {
+      rightPerson = findRightPerson(excelData[i], responseObj, false);
+  
+      if (rightPerson === null) {
+        continue;
+      }
+  
+      gr.TopElem.collaborators.ObtainChildByKey(rightPerson.id);
+      responseObj.counterPersons++
+    }
+  } else {
+      gr.TopElem.collaborators.ObtainChildByKey(OptInt(selectedUser.id));
+      responseObj.counterPersons++
+  }
+
+  gr.Save();
+
+  if(responseObj.notFoundPersons.length > 0 || responseObj.dublicatePersons.length > 0) {
+    responseObj.success = false
+    responseObj.code = 101
+    responseObj.message = "Добавлено " + responseObj.counterPersons + " сотрудников, есть ошибки"
+  }
+
+  return responseObj;
+}
+function deletePersonFromGroup(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Все сотрудники успешно удалены",
+    counterPersons: 0,
+    notProcessed: []
+  }
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var personsArray = body.selectedUsers
+
+    var groupDoc = tools.open_doc(selectedGroup)
+
+    for(person in personsArray) {
+      try {
+        groupDoc.TopElem.collaborators.DeleteOptChildByKey(OptInt(person.id))
+        responseObj.counterPersons++
+      } catch (error) {
+        responseObj.notProcessed.push(person.fullname)
+      }
+    }
+    groupDoc.Save()
+
+    if (responseObj.notProcessed.length > 0) {
+      responseObj.success = true
+      responseObj.code = 101
+      responseObj.message = "Удалено " + responseObj.counterPersons + " из " + personsArray.length + " сотрудников, есть ошибки"
+    }
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции"
+    responseObj.error = error.message
+  }
+  return responseObj
+}
+function moveToGroup(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Все сотрудники успешно перемещены",
+    counterPersons: 0,
+    notProcessed: []
+  }
+
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var personsArray = body.selectedUsers
+    var targetGroup = OptInt(body.targetGroup.id)
+
+    var selectedGroupDoc = tools.open_doc(selectedGroup)
+    var targetGroupDoc = tools.open_doc(targetGroup)
+
+    for(person in personsArray) {
+      try {
+        selectedGroupDoc.TopElem.collaborators.DeleteOptChildByKey(OptInt(person.id))
+        targetGroupDoc.TopElem.collaborators.ObtainChildByKey(person.id);
+        responseObj.counterPersons++
+      } catch (error) {
+        responseObj.notProcessed.push(person.fullname)
+      }
+    }
+
+    selectedGroupDoc.Save()
+    targetGroupDoc.Save()
+
+    if (responseObj.notProcessed.length > 0) {
+      responseObj.success = true
+      responseObj.code = 101
+      responseObj.message = "Перемещено " + responseObj.counterPersons + " из " + personsArray.length + " сотрудников, есть ошибки"
+    }
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции или открытии документа"
+    responseObj.error = error.message
+    log(responseObj)
+  }
+  return responseObj
+}
+function installLeader(body) {
+  var responseObj = {
+    success: true,
+    code: 200,
+    message: "Руководитель успешно установлен",
+    counterPersons: 0,
+    notProcessed: []
+  }
+  var bossTypeId = OptInt("6148914691236517290")
+
+  try {
+    var selectedGroup = OptInt(body.currentGroup.id)
+    var selectedLeadId = OptInt(body.selectedUser.id)
+    var selectedGroupDoc = tools.open_doc(selectedGroup)
+    var arrayGroupColl = selectedGroupDoc.TopElem.collaborators
+    var docCollaborator
+    var teDocCollaborator
+    var funcManagers
+    var leadId
+
+    for(collaborator in arrayGroupColl) {
+      docCollaborator = tools.open_doc(collaborator.collaborator_id)
+      teDocCollaborator = docCollaborator.TopElem
+      funcManagers = teDocCollaborator.func_managers
+      funcManagers.DeleteChildren("This.boss_type_id == " + bossTypeId)
+      docCollaborator.Save()
+    }
+    for(collaborator in arrayGroupColl) {
+      docCollaborator = tools.open_doc(collaborator.collaborator_id)
+      teDocCollaborator = docCollaborator.TopElem
+      funcManagers = teDocCollaborator.func_managers
+
+      leadId = funcManagers.ObtainChildByKey(selectedLeadId)
+      tools.common_filling('collaborator', leadId, selectedLeadId)
+      leadId.boss_type_id = bossTypeId
+      docCollaborator.Save()
+    }
+
+  } catch (error) {
+    responseObj.success = false
+    responseObj.code = 500
+    responseObj.message = "Ошибка при выполнении операции или открытии документа"
+    responseObj.error = error.message
+    log(responseObj)
+  }
+
+  return responseObj
 }
 
 function rewardsUpdate(body) {
@@ -294,7 +927,7 @@ function rewardsUpdate(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -302,8 +935,12 @@ function rewardsUpdate(body) {
 
     col_doc=tools.open_doc(rightPerson.id)
     col_te=col_doc.TopElem
-    col_te.custom_elems.ObtainChildByKey('mentor_award_chick').value = excelData[i].chick
-    col_te.custom_elems.ObtainChildByKey('mentor_award_owl').value = excelData[i].owl
+    if(!IsEmptyValue(excelData[i].chick)) {
+      col_te.custom_elems.ObtainChildByKey('mentor_award_chick').value = excelData[i].chick
+    }
+    if(!IsEmptyValue(excelData[i].owl)) {
+      col_te.custom_elems.ObtainChildByKey('mentor_award_owl').value = excelData[i].owl
+    }
     col_doc.Save()
 
     resultObj.counterPersons++
@@ -321,7 +958,7 @@ function mentorsProfileUpdate(body) {
   }
 
   for(var i = 0; i < excelData.length; i++) {
-    rightPerson = findRightPerson(excelData[i], resultObj);
+    rightPerson = findRightPerson(excelData[i], resultObj, false);
 
     if (rightPerson === null) {
       continue;
@@ -333,6 +970,81 @@ function mentorsProfileUpdate(body) {
     col_doc.Save()
     resultObj.counterPersons++
   }
+  return resultObj;
+}
+
+function checkMentorsData(body) {
+  var excelData = body.excelObj
+  var resultObj = {
+    success: true,
+    code: 200,
+    message: "Проверка выполнена",
+    counterPersons: 0,
+    notFoundPersons: [],
+    dublicatePersons: [],
+    rows: []
+  }
+  var conditions = [];
+
+  for(oMentor in excelData) {
+    conditions.push(
+      "(c.fullname = '" + oMentor.mentor + 
+      "' AND c.position_name = '" + oMentor.mentor_position_name + "')"
+    );
+  }
+
+  var whereClause = conditions.join(" OR ");    
+
+  try {
+    var sqlStr = "\
+      SELECT\
+        c.fullname,\
+        c.position_name,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"mentor_award_chick\"])[1]/value', 'varchar(100)'), 10) AS mentor_award_chick,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"mentor_award_owl\"])[1]/value', 'varchar(100)'), 10) AS mentor_award_owl,\
+        LEFT(cc.data.value('(collaborator/custom_elems/custom_elem[name=\"selection_procedure\"])[1]/value', 'varchar(100)'), 10) AS selection_procedure\
+      FROM\
+        collaborators c\
+      LEFT JOIN\
+        collaborator cc\
+      ON\
+        c.id = cc.id\
+      WHERE " + whereClause
+    var mentorsData = selectAll(sqlStr)
+
+  } catch (error) {
+    log(error.message, 'Ошибка запроса')
+  }
+
+  try {
+    var foundMentors = mentorsData;
+    var foundMap = new Object();
+    var mentorKey
+    var frontMentorKey
+    
+    for (foundMentorsItem in foundMentors) {
+      mentorKey = foundMentorsItem.fullname + '|' + foundMentorsItem.position_name;
+      foundMap[mentorKey] = foundMentorsItem;
+    }
+
+    for (excelMentor in excelData) {
+      frontMentorKey = excelMentor.mentor + '|' + excelMentor.mentor_position_name;
+      if (!foundMap.HasProperty(frontMentorKey)) {
+        resultObj.notFoundPersons.push({
+          mentor: excelMentor.mentor,
+          mentor_position_name: excelMentor.mentor_position_name,
+        });
+      }
+    }
+
+  } catch (error) {
+    log(error.message, "Ошибка в поиске не найденных сотрудников")
+  }
+
+  resultObj.rows = mentorsData;
+
+  resultObj.counterPersons = excelData.length - resultObj.notFoundPersons.length
+
   return resultObj;
 }
 
@@ -441,7 +1153,7 @@ function assignAdaptation(body) {
   }
 
   for (el in excelData) {
-    rightPerson = findRightPerson(el, resultObj);
+    rightPerson = findRightPerson(el, resultObj, true);
 
     if (rightPerson === null) {
       continue;
@@ -680,7 +1392,7 @@ function assignAdaptation(body) {
 				docAdaptation.Save();
 
 				iCountCreated++;
-        resultObj.countCreateAdapt++
+        resultObj.countCreateAdapt = iCountCreated;
 				iAdaptationID = docAdaptation.DocID;
 
         arrBossSendNotification = new Array();
@@ -1006,25 +1718,43 @@ function handler(body, method) {
       case 'getCourses': return getCourses(); break;
       case 'getAssessments': return getAssessments(); break;
       case 'getGroups': return getGroups(); break;
+      case 'getCollaborators': return getCollaborators(body); break;
+      case 'addToGroup': return addToGroup(body); break;
+      case 'deletePersonFromGroup': return deletePersonFromGroup(body); break;
+      case 'moveToGroup': return moveToGroup(body); break;
+      case 'installLeader': return installLeader(body); break;
       case 'getPersonsGroup': return getPersonsGroup(body); break;
       case 'dataReducer': return dataReducer(body); break;
       case 'checkUserRole': return checkUserRole(); break;
       case 'rewardsUpdate': return rewardsUpdate(body); break;
       case 'mentorsProfileUpdate': return mentorsProfileUpdate(body); break;
+      case 'checkMentorsData': return checkMentorsData(body); break;
       case 'assignAdaptation': return assignAdaptation(body); break;
+      case 'uploadingQuestions': return uploadingQuestions(body); break;
+      case 'getRecentQuestions': return getRecentQuestions(); break;
+      case 'createAssessment': return createAssessment(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');
     }
   }
   catch (err) {
-    log(err.message);
+    log("Ошибка в обработчике actions: " + err.message);
+    throw err
   }
 }
 function main(req, res) {
+
+  if(req.Method === 'OPTIONS') {
+    req.SetRespStatus(204, '')
+    res.Write('')
+    return
+  }
+
   try {
     var body = tools.read_object(req.Body);
     var method = req.Query.GetOptProperty("method", "");
+
     if (method === undefined) {
       throw HttpError({
         code: 400,
@@ -1038,7 +1768,11 @@ function main(req, res) {
     var errorObject = tools.read_object(error);
     Request.RespContentType = "application/json";
     Request.SetRespStatus(errorObject.GetOptProperty("code", 500), "");
-    Response.Write(errorObject.GetOptProperty("message", error));
+    Response.Write(tools.object_to_text({
+      success: false,
+      code: errorObject.GetOptProperty("code", 500),
+      message: String(errorObject.message)
+    }, 'json'));
   }
 }
 main(Request, Response);

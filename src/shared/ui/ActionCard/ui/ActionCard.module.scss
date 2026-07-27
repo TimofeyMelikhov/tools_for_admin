@@ -1,0 +1,44 @@
+.actionCard {
+	text-align: left;
+	padding: 16px;
+	border-radius: 12px;
+	border: 1px solid #eaeaea;
+	cursor: pointer;
+	display: grid;
+	color: #000 !important;
+	gap: 6px;
+	opacity: 1;
+	transition:
+		opacity 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		color: #000 !important;
+		background-color: transparent !important;
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	&:not(:disabled):hover {
+		border-color: #ccc;
+	}
+
+	&:not(:disabled):active {
+		border-color: #999;
+	}
+}
+
+.title {
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.description {
+	font-size: 13px;
+	color: #666;
+	line-height: 1.4;
+}
