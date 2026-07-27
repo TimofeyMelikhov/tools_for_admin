@@ -12,6 +12,11 @@ export const trainingManagementActions: ActionNavItem[] = [
 		to: 'assessment'
 	},
 	{
+		title: 'Создать тест',
+		description: 'Создание теста и выбор вопросов, загруженных за последние сутки',
+		to: 'create-assessment'
+	},
+	{
 		title: 'Загрузить вопросы теста',
 		description: 'Загрузка вопросов теста из шаблона excel',
 		to: 'questions'

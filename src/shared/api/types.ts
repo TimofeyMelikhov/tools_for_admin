@@ -75,5 +75,7 @@ export const ApiMethods = {
 	MENTORS_PROFILE_UPDATE: 'mentorsProfileUpdate',
 	CHECK_MENTORS_DATA: 'checkMentorsData',
 	ASSIGN_ADAPTATION: 'assignAdaptation',
-	UPLOADING_QUESTIONS: 'uploadingQuestions'
+	UPLOADING_QUESTIONS: 'uploadingQuestions',
+	GET_RECENT_QUESTIONS: 'getRecentQuestions',
+	CREATE_ASSESSMENT: 'createAssessment'
 } as const

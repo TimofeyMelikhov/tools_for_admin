@@ -12,6 +12,11 @@ Request.RespContentType = "application/json";
 Request.AddRespHeader("Content-Security-Policy", "frame-ancestors 'self'");
 Request.AddRespHeader("X-XSS-Protection", "1");
 Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
+
+var CONFIG = {
+  ASSESSMENT_CATEGORY_ID: '7196223977071540682'
+};
+
 /* --- utils --- */
 function getParam(name) {
   return tools_web.get_web_param(curParams, name, undefined, 0);
@@ -286,6 +291,26 @@ function assignAssessments(body) {
   return resultObj;
 }
 
+function saveAnswerImagesByPosition(answerList) {
+  var savedImages = [];
+  var answer;
+  var savedImage;
+
+  for (answer in answerList) {
+    savedImage = null;
+    if (answer.image.data.HasValue) {
+      savedImage = {
+        name: answer.image.name,
+        data: answer.image.data,
+        location: answer.image.location
+      };
+    }
+    savedImages.push(savedImage);
+  }
+
+  return savedImages;
+}
+
 function uploadingQuestions(body) {
   var responseObj = {
     success: true,
@@ -294,7 +319,8 @@ function uploadingQuestions(body) {
     counterPersons: 0,
   }
 
-  var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId
+  var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId, savedAnswerImages, answerImage, answerIndex
+  var question, existTest, answerChild
   var existingMap = {};
 
   var questionsArray = body.GetOptProperty("excelObj", [])
@@ -319,21 +345,20 @@ function uploadingQuestions(body) {
 
   for(question in questionsArray) {
     answerOptions = question.question_text.split('#')
-    correctAnswerNum = String(question.numbers_correct_answers).split('#')
     existingId = existingMap.GetOptProperty(question.code, null);
     
     try {
       if(existingId) {
         questionDoc =  tools.open_doc(existingId)
         questionDocTE=questionDoc.TopElem
+        savedAnswerImages = saveAnswerImagesByPosition(questionDocTE.answers);
+        questionDocTE.answers.DeleteChildren("This.text !== ''")
       } else {
         questionDoc=OpenNewDoc('x-local://qti/qti_item.xmd')
-        questionDoc.BindToDb()
+        questionDoc.BindToDb(DefaultDb)
         questionDocTE=questionDoc.TopElem
+        savedAnswerImages = [];
       }
-
-      questionDocTE.answers.DeleteChildren("This.text !== ''")
-
       questionDocTE.code = question.code
       questionDocTE.title = question.title
       questionDocTE.type_id = question.question_type
@@ -350,28 +375,375 @@ function uploadingQuestions(body) {
       if(question.instruction_question) {
         questionDocTE.objectives.candidate = question.instruction_question
       }
-
-      for(ans in answerOptions) {
-        _child = questionDocTE.answers.AddChild();
-        _child.text = ans;
-      }
-
-      if (question.numbers_correct_answers != '') {
-        for (_condition in correctAnswerNum) {
-          questionDocTE.answers[Int(_condition) - 1].is_correct_answer = true;
+      for(answerIndex = 0; answerIndex < answerOptions.length; answerIndex++) {
+        answerChild = questionDocTE.answers.AddChild();
+        answerChild.text = answerOptions[answerIndex];
+        answerImage = null;
+        if (answerIndex < savedAnswerImages.length) {
+          answerImage = savedAnswerImages[answerIndex];
+        }
+        if (answerImage !== null && answerImage !== undefined) {
+          answerChild.image.name = answerImage.name;
+          answerChild.image.data = answerImage.data;
+          answerChild.image.location = answerImage.location;
+        }
+        if (StrContains('#' + String(question.numbers_correct_answers) + '#', '#' + String(answerIndex + 1) + '#', false)) {
+          answerChild.is_correct_answer = true;
         }
       }
 
       questionDoc.Save()
       responseObj.counterPersons++
     } catch (err) {
-      log("Ошибка при создании вопроса: " + err.message);
       throw err
-      continue;
     }
   }
 
   return responseObj
+}
+
+/**
+ * Возвращает только вопросы, впервые созданные в системе за последние сутки.
+ * modification_date намеренно не используется: обновление существующего вопроса
+ * не должно повторно делать его доступным для добавления в новый тест.
+ */
+function getRecentQuestions() {
+  return selectAll(
+    "SELECT i.id, i.code, i.title, i.type_id, i.question_points, " +
+    "CONVERT(varchar(10), d.created, 104) AS creation_date " +
+    "FROM items i " +
+    "INNER JOIN item d ON d.id = i.id " +
+    "WHERE d.created >= DATEADD(hour, -24, GETDATE()) " +
+    "ORDER BY d.created DESC, i.id DESC"
+  );
+}
+
+/**
+ * Настраивает тип QTI-плеера и связанные с ним системные визуальные параметры.
+ * Соответствует обработчику поля «Тип QTI-плеера» штатной карточки теста.
+ */
+function setAssessmentPlayerType(assessmentTopElem, playerType) {
+  assessmentTopElem.player.type = playerType;
+  assessmentTopElem.view_templates.css.wvars.Clear();
+
+  if (playerType === 'v3') {
+    assessmentTopElem.view_templates.css.custom_web_template_id = 6408782421228602543;
+    tools_web.set_web_params(
+      assessmentTopElem.view_templates.css.wvars,
+      OpenDoc(UrlFromDocID(6408782421228602543)).TopElem.wvars,
+      false
+    );
+  } else if (playerType === 'v4') {
+    assessmentTopElem.view_templates.css.custom_web_template_id = 7164787964348148432;
+    tools_web.set_web_params(
+      assessmentTopElem.view_templates.css.wvars,
+      OpenDoc(UrlFromDocID(7164787964348148432)).TopElem.wvars,
+      false
+    );
+  }
+}
+
+/**
+ * Помещает опубликованный тест в указанную категорию.
+ */
+function setAssessmentCategory(assessmentDoc, categoryId) {
+  assessmentDoc.TopElem.role_id.Clear();
+  assessmentDoc.TopElem.role_id.ObtainByValue(categoryId);
+  assessmentDoc.Save();
+}
+
+/**
+ * Создаёт тест с разделами, назначает вопросы и публикует его штатным способом.
+ */
+function createAssessment(body) {
+  var code = Trim('' + body.GetOptProperty('code', ''));
+  var title = Trim('' + body.GetOptProperty('title', ''));
+  var playerType = '' + body.GetOptProperty('playerType', 'v3');
+  var duration = OptInt(body.GetOptProperty('duration', 0), 0);
+  var durationDays = OptInt(body.GetOptProperty('durationDays', 0), 0);
+  var attemptsNum = OptInt(body.GetOptProperty('attemptsNum', 1), 1);
+  var passingScore = OptInt(body.GetOptProperty('passingScore', 0), 0);
+  var isOpen = body.GetOptProperty('isOpen', false) === true;
+  var displayResultReport = body.GetOptProperty('displayResultReport', false) === true;
+  var displayResult = body.GetOptProperty('displayResult', false) === true;
+  var showFeedback = body.GetOptProperty('showFeedback', true) !== false;
+  var showUnfinishedScore = body.GetOptProperty('showUnfinishedScore', false) === true;
+  var rawSections = body.GetOptProperty('sections', []);
+  var sectionDefinitions = [];
+  var questionIds = [];
+  var questions;
+  var assessmentDoc;
+  var assessmentTopElem;
+  var section;
+  var sectionItem;
+  var rawSection;
+  var rawQuestionIds;
+  var sectionQuestionIds;
+  var sectionDefinition;
+  var sectionCode;
+  var sectionTitle;
+  var sectionDuration;
+  var sectionPassingScore;
+  var sectionOrder;
+  var sectionSelectionType;
+  var sectionSelectionNum;
+  var questionId;
+  var isDuplicate;
+  var isQuestionFound;
+  var publishResult;
+  var publishErrorText;
+  var duplicateAssessments;
+  var i;
+  var j;
+  var k;
+  var m;
+
+  if (code === '') {
+    throw HttpError({ code: 400, message: 'Укажите код теста.' });
+  }
+
+  if (title === '') {
+    throw HttpError({ code: 400, message: 'Укажите название теста.' });
+  }
+
+  duplicateAssessments = selectAll(
+    "SELECT id FROM assessments WHERE code = " + XQueryLiteral(code)
+  );
+
+  if (duplicateAssessments.length > 0) {
+    throw HttpError({ code: 400, message: 'Тест с таким кодом уже существует.' });
+  }
+
+  if (duration <= 0 || duration > 1440) {
+    throw HttpError({
+      code: 400,
+      message: 'Продолжительность теста должна быть от 1 до 1440 минут.'
+    });
+  }
+
+  if (durationDays < 0 || attemptsNum < 1 || attemptsNum > 99 || passingScore < 0) {
+    throw HttpError({ code: 400, message: 'Проверьте настройки прохождения теста.' });
+  }
+
+  if (playerType !== 'v3' && playerType !== 'v4') {
+    playerType = 'v3';
+  }
+
+  if (rawSections.length === 0) {
+    throw HttpError({ code: 400, message: 'Добавьте хотя бы один раздел теста.' });
+  }
+
+  for (i = 0; i < rawSections.length; i++) {
+    rawSection = rawSections[i];
+    sectionCode = Trim('' + rawSection.GetOptProperty('code', ''));
+    sectionTitle = Trim('' + rawSection.GetOptProperty('title', ''));
+    sectionDuration = OptInt(rawSection.GetOptProperty('duration', 0), 0);
+    sectionPassingScore = OptInt(rawSection.GetOptProperty('passingScore', 0), 0);
+    sectionOrder = '' + rawSection.GetOptProperty('order', 'Sequential');
+    sectionSelectionType = '' + rawSection.GetOptProperty('selectionType', 'all');
+    sectionSelectionNum = OptInt(rawSection.GetOptProperty('selectionNum', 0), 0);
+    rawQuestionIds = rawSection.GetOptProperty('questionIds', []);
+    sectionQuestionIds = [];
+
+    if (sectionCode === '') {
+      sectionCode = '' + (i + 1);
+    }
+
+    if (sectionTitle === '') {
+      throw HttpError({ code: 400, message: 'Укажите название каждого раздела.' });
+    }
+
+    if (sectionDuration < 0 || sectionDuration > 1440 || sectionPassingScore < 0) {
+      throw HttpError({ code: 400, message: 'Проверьте настройки разделов теста.' });
+    }
+
+    if (sectionOrder !== 'Sequential' && sectionOrder !== 'Random') {
+      sectionOrder = 'Sequential';
+    }
+
+    if (sectionSelectionType !== 'all' && sectionSelectionType !== 'num_generate') {
+      sectionSelectionType = 'all';
+    }
+
+    for (j = 0; j < sectionDefinitions.length; j++) {
+      if (sectionDefinitions[j].code === sectionCode) {
+        throw HttpError({ code: 400, message: 'Коды разделов не должны повторяться.' });
+      }
+    }
+
+    for (j = 0; j < rawQuestionIds.length; j++) {
+      questionId = OptInt(rawQuestionIds[j], 0);
+      isDuplicate = false;
+
+      if (questionId === 0) {
+        continue;
+      }
+
+      for (k = 0; k < sectionQuestionIds.length; k++) {
+        if (sectionQuestionIds[k] == questionId) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      for (k = 0; k < questionIds.length; k++) {
+        if (questionIds[k] == questionId) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      if (isDuplicate) {
+        throw HttpError({
+          code: 400,
+          message: 'Один вопрос нельзя добавить в несколько разделов.'
+        });
+      }
+
+      sectionQuestionIds.push(questionId);
+      questionIds.push(questionId);
+    }
+
+    if (sectionQuestionIds.length === 0) {
+      throw HttpError({
+        code: 400,
+        message: 'Добавьте хотя бы один вопрос в каждый раздел.'
+      });
+    }
+
+    if (
+      sectionSelectionType === 'num_generate' &&
+      (sectionSelectionNum < 1 || sectionSelectionNum > sectionQuestionIds.length)
+    ) {
+      throw HttpError({
+        code: 400,
+        message: 'Проверьте число случайно выбираемых вопросов в разделах.'
+      });
+    }
+
+    sectionDefinitions.push({
+      code: sectionCode,
+      title: sectionTitle,
+      duration: sectionDuration,
+      passingScore: sectionPassingScore,
+      order: sectionOrder,
+      selectionType: sectionSelectionType,
+      selectionNum: sectionSelectionNum,
+      questionIds: sectionQuestionIds
+    });
+  }
+
+  questions = selectAll(
+    "SELECT i.id, i.title, i.question_points " +
+    "FROM items i " +
+    "INNER JOIN item d ON d.id = i.id " +
+    "WHERE i.id IN (" + questionIds.join(',') + ") " +
+    "AND d.created >= DATEADD(hour, -24, GETDATE()) " +
+    "ORDER BY i.id DESC"
+  );
+
+  if (questions.length !== questionIds.length) {
+    throw HttpError({
+      code: 400,
+      message: 'Часть вопросов недоступна: обновите список и выберите их заново.'
+    });
+  }
+
+  assessmentDoc = OpenNewDoc('x-local://qti/qti_assessment.xmd');
+  assessmentDoc.BindToDb(DefaultDb);
+  assessmentTopElem = assessmentDoc.TopElem;
+  assessmentTopElem.code = code;
+  assessmentTopElem.title = title;
+  assessmentTopElem.status = 'publish';
+  assessmentTopElem.duration = duration;
+  assessmentTopElem.attempts_num = attemptsNum;
+  assessmentTopElem.passing_score = passingScore;
+  assessmentTopElem.is_open = isOpen;
+  assessmentTopElem.display_result_report = displayResultReport;
+  assessmentTopElem.display_result = displayResult;
+  assessmentTopElem.not_display_feedback = !showFeedback;
+  assessmentTopElem.not_display_unfinished_score = !showUnfinishedScore;
+
+  if (durationDays > 0) {
+    assessmentTopElem.duration_days = durationDays;
+  }
+
+  setAssessmentPlayerType(assessmentTopElem, playerType);
+
+  for (i = 0; i < sectionDefinitions.length; i++) {
+    sectionDefinition = sectionDefinitions[i];
+    section = assessmentTopElem.sections.AddChild();
+    section.code = sectionDefinition.code;
+    section.title = sectionDefinition.title;
+    section.duration = sectionDefinition.duration;
+    section.passing_score = sectionDefinition.passingScore;
+    section.selection_ordering.order = sectionDefinition.order;
+    section.selection_ordering.select_id = sectionDefinition.selectionType;
+
+    if (sectionDefinition.selectionType === 'num_generate') {
+      section.selection_ordering.select_num = sectionDefinition.selectionNum;
+    }
+
+    for (j = 0; j < sectionDefinition.questionIds.length; j++) {
+      questionId = sectionDefinition.questionIds[j];
+      isQuestionFound = false;
+
+      for (k = 0; k < questions.length; k++) {
+        if (questions[k].id == questionId) {
+          sectionItem = section.items.AddChild();
+          sectionItem.id = questions[k].id;
+          sectionItem.title = questions[k].title;
+          sectionItem.question_points = questions[k].question_points;
+          isQuestionFound = true;
+          break;
+        }
+      }
+
+      if (!isQuestionFound) {
+        throw HttpError({
+          code: 400,
+          message: 'Не удалось найти вопрос для добавления в раздел.'
+        });
+      }
+    }
+  }
+
+  assessmentDoc.Save();
+  publishResult = qti_tools.pulish_assessment(assessmentDoc.DocID);
+
+  if (publishResult === undefined || OptInt(publishResult.error, 1) !== 0) {
+    publishErrorText = 'Неизвестная ошибка публикации.';
+    try {
+      if (publishResult.error_text !== undefined && publishResult.error_text !== '') {
+        publishErrorText = '' + publishResult.error_text;
+      }
+    } catch (publishError) {}
+
+    throw HttpError({
+      code: 500,
+      message:
+        'Тест создан, но не опубликован. ID ' + assessmentDoc.DocID + '. ' + publishErrorText
+    });
+  }
+
+  try {
+    setAssessmentCategory(assessmentDoc, CONFIG.ASSESSMENT_CATEGORY_ID);
+  } catch (categoryError) {
+    throw HttpError({
+      code: 500,
+      message: 'Тест создан и опубликован, но не удалось поместить его в целевую категорию. ' + categoryError.message
+    });
+  }
+
+  return {
+    success: true,
+    code: 201,
+    message: 'Тест успешно создан и опубликован.',
+    assessmentId: '' + assessmentDoc.DocID,
+    assessmentCode: '' + assessmentTopElem.code,
+    questionCount: questions.length,
+    published: true
+  };
 }
 
 function addToGroup(body) {
@@ -1359,6 +1731,8 @@ function handler(body, method) {
       case 'checkMentorsData': return checkMentorsData(body); break;
       case 'assignAdaptation': return assignAdaptation(body); break;
       case 'uploadingQuestions': return uploadingQuestions(body); break;
+      case 'getRecentQuestions': return getRecentQuestions(); break;
+      case 'createAssessment': return createAssessment(body); break;
       default:
         Response.SetRespStatus(400, '');
         Response.Write('{"error":"unknown action"}');

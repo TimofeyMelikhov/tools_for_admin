@@ -1,7 +1,7 @@
 import { RouterProvider } from 'react-router-dom'
 
-import { CssBaseline } from '@mui/material'
-import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles'
+import { ScopedCssBaseline } from '@mui/material'
+import { ThemeProvider } from '@mui/material/styles'
 import { SnackbarProvider } from 'notistack'
 
 import { router } from '@/app/router/router'
@@ -13,14 +13,13 @@ import { QueryProvider } from './QueryProvider'
 export const AppProviders = () => {
 	return (
 		<QueryProvider>
-			<StyledEngineProvider injectFirst>
-				<ThemeProvider theme={theme}>
-					<CssBaseline />
+			<ThemeProvider theme={theme}>
+				<ScopedCssBaseline className="admin-tool-root">
 					<SnackbarProvider maxSnack={3}>
 						<RouterProvider router={router} />
 					</SnackbarProvider>
-				</ThemeProvider>
-			</StyledEngineProvider>
+				</ScopedCssBaseline>
+			</ThemeProvider>
 		</QueryProvider>
 	)
 }

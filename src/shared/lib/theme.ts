@@ -3,35 +3,7 @@ import type { Components, ThemeOptions } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
 
 const components: Components<Omit<ThemeOptions, 'components'>> = {
-	// 1) Глобальный reset
-	MuiCssBaseline: {
-		styleOverrides: {
-			'*, *::before, *::after': {
-				boxSizing: 'border-box',
-				margin: 0,
-				padding: 0
-			},
-			html: {
-				width: '100%',
-				height: '100%',
-				fontSize: '16px'
-			},
-			body: {
-				width: '100%',
-				height: '100%',
-				fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-				backgroundColor: '#fff',
-				color: 'rgba(0, 0, 0, 0.87)',
-				fontSize: '16px'
-			},
-			'input[type=text], input[type=number], input[type=password], textarea': {
-				borderRadius: '6px !important',
-				boxShadow: 'none !important'
-			}
-		}
-	},
-
-	// 2) Кнопки
+	// Кнопки
 	MuiButton: {
 		styleOverrides: {
 			root: {
@@ -46,7 +18,7 @@ const components: Components<Omit<ThemeOptions, 'components'>> = {
 		}
 	},
 
-	// 5) Typography
+	// Typography
 	MuiTypography: {
 		styleOverrides: {
 			root: {
@@ -57,7 +29,7 @@ const components: Components<Omit<ThemeOptions, 'components'>> = {
 		}
 	},
 
-	// 6) Snackbar
+	// Snackbar
 	MuiSnackbar: {
 		styleOverrides: {
 			anchorOriginTopCenter: {
@@ -71,7 +43,7 @@ const components: Components<Omit<ThemeOptions, 'components'>> = {
 				'&&': {
 					backgroundColor: '#323232',
 					color: '#fff',
-					fontSize: '26px'
+					fontSize: '14px'
 				}
 			}
 		}
@@ -85,7 +57,8 @@ const theme = createTheme({
 	},
 	typography: {
 		fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-		fontSize: 16 // px-based
+		fontSize: 16,
+		htmlFontSize: 10
 	},
 	components
 })

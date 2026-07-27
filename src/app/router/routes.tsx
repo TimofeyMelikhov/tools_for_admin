@@ -30,6 +30,11 @@ const UploadingQuestionsWidget = lazy(() =>
 		default: module.UploadingQuestionsWidget
 	}))
 )
+const CreateAssessmentWidget = lazy(() =>
+	import('@/features/training/createAssessment').then(module => ({
+		default: module.CreateAssessmentWidget
+	}))
+)
 const GroupManagement = lazy(() =>
 	import('@/pages/groupManagement').then(module => ({
 		default: module.GroupManagement
@@ -117,6 +122,10 @@ export const routesConfig: RouteConfig[] = [
 					{
 						path: 'questions',
 						element: withSuspense(<UploadingQuestionsWidget />)
+					},
+					{
+						path: 'create-assessment',
+						element: withSuspense(<CreateAssessmentWidget />)
 					}
 				]
 			},
