@@ -14,7 +14,8 @@ Request.AddRespHeader("X-XSS-Protection", "1");
 Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
 
 var CONFIG = {
-  ASSESSMENT_CATEGORY_ID: '7196223977071540682'
+  ASSESSMENT_CATEGORY_ID: '7196223977071540682',
+  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score'
 };
 
 /* --- utils --- */
@@ -463,6 +464,7 @@ function createAssessment(body) {
   var durationDays = OptInt(body.GetOptProperty('durationDays', 0), 0);
   var attemptsNum = OptInt(body.GetOptProperty('attemptsNum', 1), 1);
   var passingScore = OptInt(body.GetOptProperty('passingScore', 0), 0);
+  var maxScore = OptReal(body.GetOptProperty('maxScore', 0), 0);
   var isOpen = body.GetOptProperty('isOpen', false) === true;
   var displayResultReport = body.GetOptProperty('displayResultReport', false) === true;
   var displayResult = body.GetOptProperty('displayResult', false) === true;
@@ -521,7 +523,14 @@ function createAssessment(body) {
     });
   }
 
-  if (durationDays < 0 || attemptsNum < 1 || attemptsNum > 99 || passingScore < 0) {
+  if (
+    durationDays < 0 ||
+    attemptsNum < 1 ||
+    attemptsNum > 99 ||
+    passingScore < 0 ||
+    maxScore < 0 ||
+    (maxScore > 0 && passingScore > maxScore)
+  ) {
     throw HttpError({ code: 400, message: 'Проверьте настройки прохождения теста.' });
   }
 
@@ -663,6 +672,7 @@ function createAssessment(body) {
   assessmentTopElem.display_result = displayResult;
   assessmentTopElem.not_display_feedback = !showFeedback;
   assessmentTopElem.not_display_unfinished_score = !showUnfinishedScore;
+  assessmentTopElem.custom_elems.ObtainChildByKey(CONFIG.MAX_SCORE_CUSTOM_FIELD_CODE).value = maxScore;
 
   if (durationDays > 0) {
     assessmentTopElem.duration_days = durationDays;

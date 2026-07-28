@@ -20,6 +20,7 @@ export type CreateAssessmentForm = {
 	durationDays: number
 	attemptsNum: number
 	passingScore: number
+	maxScore: number
 	playerType: AssessmentPlayerType
 	isOpen: boolean
 	displayResultReport: boolean

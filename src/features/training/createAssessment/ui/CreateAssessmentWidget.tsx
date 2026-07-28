@@ -37,6 +37,7 @@ const initialForm: CreateAssessmentForm = {
 	durationDays: 0,
 	attemptsNum: 1,
 	passingScore: 0,
+	maxScore: 0,
 	playerType: 'v3',
 	isOpen: false,
 	displayResultReport: false,
@@ -254,7 +255,7 @@ export const CreateAssessmentWidget = () => {
 						/>
 
 						<TextField
-							label='Срок доступности, дней'
+							label='Срок назначения, дней'
 							type='number'
 							value={form.durationDays}
 							onChange={event =>
@@ -291,6 +292,20 @@ export const CreateAssessmentWidget = () => {
 								}))
 							}
 							helperText='0 — без минимального порога'
+							fullWidth
+						/>
+
+						<TextField
+							label='Максимальный балл'
+							type='number'
+							value={form.maxScore}
+							onChange={event =>
+								setForm(previous => ({
+									...previous,
+									maxScore: Number(event.target.value)
+								}))
+							}
+							inputProps={{ min: 0, step: 0.1 }}
 							fullWidth
 						/>
 					</div>
