@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { enqueueSnackbar } from 'notistack'
 
 import { Preloader } from '@/shared/ui/preloader'
@@ -25,6 +25,7 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 		onSubmit,
 		texts,
 		classes,
+		titleSlot,
 		controlsSlot,
 		submitDisabled,
 		renderErrors
@@ -65,8 +66,17 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 		}
 	}
 
-	return (
-		<div className={`${styles.container} ${classes?.container ?? ''}`.trim()}>
+  return (
+    <Box
+      className={`${styles.container} ${classes?.container ?? ''}`.trim()}
+      sx={{ position: 'relative' }}
+    >
+      {titleSlot ? (
+        <Box sx={{ position: 'absolute', top: 0, right: 0, zIndex: 1 }}>
+          {titleSlot}
+        </Box>
+      ) : null}
+
 			<Typography variant='h4' gutterBottom align='center'>
 				{texts.title}
 			</Typography>
@@ -119,6 +129,6 @@ export const ExcelFlow = <TRes extends ExcelFlowResult>(
 					columnMap={errorsColumnMap ?? columnMap}
 				/>
 			)}
-		</div>
-	)
+    </Box>
+  )
 }

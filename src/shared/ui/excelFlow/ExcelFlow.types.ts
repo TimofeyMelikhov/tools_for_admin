@@ -52,6 +52,7 @@ export type ExcelFlowProps<TRes extends ExcelFlowResult = ExcelFlowResult> = {
 	texts: ExcelFlowTexts
 	classes?: ExcelFlowClasses
 
+	titleSlot?: React.ReactNode
 	controlsSlot?: React.ReactNode
 	submitDisabled?: boolean
 	renderErrors?: (result?: TRes) => React.ReactNode

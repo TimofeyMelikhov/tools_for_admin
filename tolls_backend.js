@@ -15,7 +15,8 @@ Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
 
 var CONFIG = {
   ASSESSMENT_CATEGORY_ID: '7196223977071540682',
-  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score'
+  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score',
+  ASSESSMENT_CODE_ALLOWED_CHARS: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 };
 
 /* --- utils --- */
@@ -454,6 +455,28 @@ function setAssessmentCategory(assessmentDoc, categoryId) {
 }
 
 /**
+ * Проверяет, что код теста состоит только из латинских букв и цифр.
+ */
+function isAssessmentCodeValid(code) {
+  var charIndex;
+  var characters;
+
+  if (code === '') {
+    return false;
+  }
+
+  characters = code.split('');
+
+  for (charIndex = 0; charIndex < characters.length; charIndex++) {
+    if (!StrContains(CONFIG.ASSESSMENT_CODE_ALLOWED_CHARS, characters[charIndex], false)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Создаёт тест с разделами, назначает вопросы и публикует его штатным способом.
  */
 function createAssessment(body) {
@@ -502,6 +525,13 @@ function createAssessment(body) {
 
   if (code === '') {
     throw HttpError({ code: 400, message: 'Укажите код теста.' });
+  }
+
+  if (!isAssessmentCodeValid(code)) {
+    throw HttpError({
+      code: 400,
+      message: 'Код теста может содержать только английские буквы и цифры без пробелов.'
+    });
   }
 
   if (title === '') {
