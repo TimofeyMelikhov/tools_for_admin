@@ -61,7 +61,7 @@ const createSection = (number: number): AssessmentSection => ({
 const createInitialSections = () => [createSection(1)]
 
 const normalizeAssessmentCode = (value: string) =>
-	value.replace(/[^a-zA-Z0-9]/g, '')
+	value.replace(/[^A-Za-z0-9\-_]/g, '')
 
 export const CreateAssessmentWidget = () => {
 	const [form, setForm] = useState<CreateAssessmentForm>(initialForm)
@@ -230,7 +230,7 @@ export const CreateAssessmentWidget = () => {
 								}))
 							}
 							helperText='Только английские буквы и цифры, без пробелов'
-							inputProps={{ inputMode: 'text', pattern: '[A-Za-z0-9]*' }}
+							inputProps={{ inputMode: 'text', pattern: '[A-Za-z0-9\\-_]*' }}
 							required
 							fullWidth
 						/>
