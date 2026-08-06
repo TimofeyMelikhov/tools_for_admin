@@ -313,6 +313,48 @@ function saveAnswerImagesByPosition(answerList) {
   return savedImages;
 }
 
+function isInputQuestionType(questionType) {
+  return questionType == 'gap_fill' || questionType == 'numerical_fill_in_blank';
+}
+
+function getQuestionAnswerOptions(value) {
+  var sourceValue = value == undefined || value == null ? '' : '' + value;
+  var rawOptions = sourceValue.split('#');
+  var answerOptions = [];
+  var rawOption;
+  var optionIndex;
+
+  for (optionIndex = 0; optionIndex < rawOptions.length; optionIndex++) {
+    rawOption = Trim(rawOptions[optionIndex]);
+    if (rawOption != '') {
+      answerOptions.push(rawOption);
+    }
+  }
+
+  return answerOptions;
+}
+
+function addInputQuestionAnswer(questionTopElem, questionType, expectedAnswer) {
+  var answerChild = questionTopElem.answers.AddChild();
+  var conditionChild;
+
+  answerChild.text = '';
+
+  if (expectedAnswer == '') {
+    return;
+  }
+
+  conditionChild = answerChild.conditions.AddChild();
+  conditionChild.value = expectedAnswer;
+
+  if (questionType == 'numerical_fill_in_blank') {
+    conditionChild.grading_option_id = '=';
+  } else {
+    conditionChild.sentence_option_id = 'equal';
+    conditionChild.case_sensitive = false;
+  }
+}
+
 function uploadingQuestions(body) {
   var responseObj = {
     success: true,
@@ -322,7 +364,7 @@ function uploadingQuestions(body) {
   }
 
   var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId, savedAnswerImages, answerImage, answerIndex
-  var question, existTest, answerChild
+  var question, existTest, answerChild, questionType, isInputQuestion
   var existingMap = {};
 
   var questionsArray = body.GetOptProperty("excelObj", [])
@@ -346,15 +388,17 @@ function uploadingQuestions(body) {
   }
 
   for(question in questionsArray) {
-    answerOptions = question.question_text.split('#')
+    questionType = question.question_type == undefined || question.question_type == null ? '' : '' + question.question_type;
+    answerOptions = getQuestionAnswerOptions(question.question_text);
+    isInputQuestion = isInputQuestionType(questionType);
     existingId = existingMap.GetOptProperty(question.code, null);
     
     try {
       if(existingId) {
         questionDoc =  tools.open_doc(existingId)
         questionDocTE=questionDoc.TopElem
-        savedAnswerImages = saveAnswerImagesByPosition(questionDocTE.answers);
-        questionDocTE.answers.DeleteChildren("This.text !== ''")
+        savedAnswerImages = isInputQuestion ? [] : saveAnswerImagesByPosition(questionDocTE.answers);
+        questionDocTE.answers.DeleteChildren('true')
       } else {
         questionDoc=OpenNewDoc('x-local://qti/qti_item.xmd')
         questionDoc.BindToDb(DefaultDb)
@@ -363,7 +407,7 @@ function uploadingQuestions(body) {
       }
       questionDocTE.code = question.code
       questionDocTE.title = question.title
-      questionDocTE.type_id = question.question_type
+      questionDocTE.type_id = questionType
       questionDocTE.question_text = question.question
       questionDocTE.question_points = question.score
       questionDocTE.order = question.sequence_responses ? question.sequence_responses : 'Sequential'
@@ -377,20 +421,30 @@ function uploadingQuestions(body) {
       if(question.instruction_question) {
         questionDocTE.objectives.candidate = question.instruction_question
       }
-      for(answerIndex = 0; answerIndex < answerOptions.length; answerIndex++) {
-        answerChild = questionDocTE.answers.AddChild();
-        answerChild.text = answerOptions[answerIndex];
-        answerImage = null;
-        if (answerIndex < savedAnswerImages.length) {
-          answerImage = savedAnswerImages[answerIndex];
+      if (isInputQuestion) {
+        if (answerOptions.length == 0) {
+          addInputQuestionAnswer(questionDocTE, questionType, '');
+        } else {
+          for(answerIndex = 0; answerIndex < answerOptions.length; answerIndex++) {
+            addInputQuestionAnswer(questionDocTE, questionType, answerOptions[answerIndex]);
+          }
         }
-        if (answerImage !== null && answerImage !== undefined) {
-          answerChild.image.name = answerImage.name;
-          answerChild.image.data = answerImage.data;
-          answerChild.image.location = answerImage.location;
-        }
-        if (StrContains('#' + String(question.numbers_correct_answers) + '#', '#' + String(answerIndex + 1) + '#', false)) {
-          answerChild.is_correct_answer = true;
+      } else {
+        for(answerIndex = 0; answerIndex < answerOptions.length; answerIndex++) {
+          answerChild = questionDocTE.answers.AddChild();
+          answerChild.text = answerOptions[answerIndex];
+          answerImage = null;
+          if (answerIndex < savedAnswerImages.length) {
+            answerImage = savedAnswerImages[answerIndex];
+          }
+          if (answerImage !== null && answerImage !== undefined) {
+            answerChild.image.name = answerImage.name;
+            answerChild.image.data = answerImage.data;
+            answerChild.image.location = answerImage.location;
+          }
+          if (questionType == 'order' || StrContains('#' + String(question.numbers_correct_answers) + '#', '#' + String(answerIndex + 1) + '#', false)) {
+            answerChild.is_correct_answer = true;
+          }
         }
       }
 
