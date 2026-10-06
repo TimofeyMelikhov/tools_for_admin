@@ -61,10 +61,11 @@ const createSection = (number: number): AssessmentSection => ({
 const createInitialSections = () => [createSection(1)]
 
 const normalizeAssessmentCode = (value: string) =>
-	value.replace(/[^A-Za-z0-9\-_]/g, '')
+	value.replace(/[^a-zA-Z0-9_-]/g, '')
 
 export const CreateAssessmentWidget = () => {
 	const [form, setForm] = useState<CreateAssessmentForm>(initialForm)
+	const [codeWasNormalized, setCodeWasNormalized] = useState(false)
 	const [sections, setSections] = useState<AssessmentSection[]>(
 		createInitialSections
 	)
@@ -138,6 +139,13 @@ export const CreateAssessmentWidget = () => {
 		)
 	}
 
+	const handleAssessmentCodeChange = (value: string) => {
+		const normalizedCode = normalizeAssessmentCode(value)
+
+		setCodeWasNormalized(normalizedCode !== value)
+		setForm(previous => ({ ...previous, code: normalizedCode }))
+	}
+
 	const handleSubmit = async () => {
 		if (!form.code.trim()) {
 			enqueueSnackbar('Укажите код теста.', { variant: 'warning' })
@@ -199,6 +207,7 @@ export const CreateAssessmentWidget = () => {
 				{ variant: 'success' }
 			)
 			setForm(initialForm)
+			setCodeWasNormalized(false)
 			setSections(createInitialSections())
 		} catch (error) {
 			enqueueSnackbar(
@@ -223,14 +232,14 @@ export const CreateAssessmentWidget = () => {
 						<TextField
 							label='Код теста'
 							value={form.code}
-							onChange={event =>
-								setForm(previous => ({
-									...previous,
-									code: normalizeAssessmentCode(event.target.value)
-								}))
+							onChange={event => handleAssessmentCodeChange(event.target.value)}
+							error={codeWasNormalized}
+							helperText={
+								codeWasNormalized
+									? 'Удалены недопустимые символы. Используйте английские буквы, цифры, дефис и нижнее подчёркивание.'
+									: 'Английские буквы, цифры, дефис и нижнее подчёркивание, без пробелов'
 							}
-							helperText='Только английские буквы и цифры, без пробелов'
-							inputProps={{ inputMode: 'text', pattern: '[A-Za-z0-9\\-_]*' }}
+							inputProps={{ inputMode: 'text', pattern: '[A-Za-z0-9_-]*' }}
 							required
 							fullWidth
 						/>

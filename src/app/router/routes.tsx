@@ -30,6 +30,16 @@ const UploadingQuestionsWidget = lazy(() =>
 		default: module.UploadingQuestionsWidget
 	}))
 )
+const QuestionsUploadChooser = lazy(() =>
+	import('@/features/training/questionsUploadChooser').then(module => ({
+		default: module.QuestionsUploadChooser
+	}))
+)
+const ManualQuestionsWidget = lazy(() =>
+	import('@/features/training/questionsManualEntry').then(module => ({
+		default: module.ManualQuestionsWidget
+	}))
+)
 const CreateAssessmentWidget = lazy(() =>
 	import('@/features/training/createAssessment').then(module => ({
 		default: module.CreateAssessmentWidget
@@ -121,7 +131,15 @@ export const routesConfig: RouteConfig[] = [
 					},
 					{
 						path: 'questions',
+						element: withSuspense(<QuestionsUploadChooser />)
+					},
+					{
+						path: 'questions/excel',
 						element: withSuspense(<UploadingQuestionsWidget />)
+					},
+					{
+						path: 'questions/manual',
+						element: withSuspense(<ManualQuestionsWidget />)
 					},
 					{
 						path: 'create-assessment',

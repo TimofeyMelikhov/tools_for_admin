@@ -18,7 +18,7 @@ export const trainingManagementActions: ActionNavItem[] = [
 	},
 	{
 		title: 'Загрузить вопросы теста',
-		description: 'Загрузка вопросов теста из шаблона excel',
+		description: 'Загрузка из шаблона Excel или ручное добавление вопросов',
 		to: 'questions'
 	}
 ]

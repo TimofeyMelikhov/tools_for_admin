@@ -15,8 +15,7 @@ Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
 
 var CONFIG = {
   ASSESSMENT_CATEGORY_ID: '7196223977071540682',
-  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score',
-  ASSESSMENT_CODE_ALLOWED_CHARS: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score'
 };
 
 /* --- utils --- */
@@ -355,6 +354,44 @@ function addInputQuestionAnswer(questionTopElem, questionType, expectedAnswer) {
   }
 }
 
+function getQuestionMatchPairs(value) {
+  var sourceValue = value == undefined || value == null ? '' : '' + value;
+  var parsedPairs;
+  var matchPairs = [];
+  var pair;
+  var left;
+  var right;
+
+  if (sourceValue == '') {
+    return matchPairs;
+  }
+
+  try {
+    parsedPairs = ParseJson(sourceValue);
+  } catch (error) {
+    return matchPairs;
+  }
+
+  for (pair in parsedPairs) {
+    left = pair.left == undefined || pair.left == null ? '' : Trim('' + pair.left);
+    right = pair.right == undefined || pair.right == null ? '' : Trim('' + pair.right);
+
+    if (left != '' && right != '') {
+      matchPairs.push({ left: left, right: right });
+    }
+  }
+
+  return matchPairs;
+}
+
+function addMatchItemAnswer(questionTopElem, matchPair) {
+  var answerChild = questionTopElem.answers.AddChild();
+  var valueChild = answerChild.values.AddChild();
+
+  answerChild.text = matchPair.left;
+  valueChild.text = matchPair.right;
+}
+
 function uploadingQuestions(body) {
   var responseObj = {
     success: true,
@@ -363,8 +400,8 @@ function uploadingQuestions(body) {
     counterPersons: 0,
   }
 
-  var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId, savedAnswerImages, answerImage, answerIndex
-  var question, existTest, answerChild, questionType, isInputQuestion
+	var questionDoc, questionDocTE, answerOptions, correctAnswerNum, existingId, savedAnswerImages, answerImage, answerIndex, matchPairs
+	var question, existTest, answerChild, questionType, isInputQuestion
   var existingMap = {};
 
   var questionsArray = body.GetOptProperty("excelObj", [])
@@ -388,18 +425,23 @@ function uploadingQuestions(body) {
   }
 
   for(question in questionsArray) {
-    questionType = question.question_type == undefined || question.question_type == null ? '' : '' + question.question_type;
-    answerOptions = getQuestionAnswerOptions(question.question_text);
-    isInputQuestion = isInputQuestionType(questionType);
+	questionType = question.question_type == undefined || question.question_type == null ? '' : '' + question.question_type;
+	answerOptions = getQuestionAnswerOptions(question.question_text);
+	isInputQuestion = isInputQuestionType(questionType);
+	matchPairs = questionType == 'match_item' ? getQuestionMatchPairs(question.match_pairs) : [];
     existingId = existingMap.GetOptProperty(question.code, null);
     
     try {
       if(existingId) {
         questionDoc =  tools.open_doc(existingId)
         questionDocTE=questionDoc.TopElem
-        savedAnswerImages = isInputQuestion ? [] : saveAnswerImagesByPosition(questionDocTE.answers);
+		savedAnswerImages = isInputQuestion || questionType == 'match_item' ? [] : saveAnswerImagesByPosition(questionDocTE.answers);
         questionDocTE.answers.DeleteChildren('true')
-      } else {
+		} else if (questionType == 'match_item') {
+			for(answerIndex = 0; answerIndex < matchPairs.length; answerIndex++) {
+				addMatchItemAnswer(questionDocTE, matchPairs[answerIndex]);
+			}
+		} else {
         questionDoc=OpenNewDoc('x-local://qti/qti_item.xmd')
         questionDoc.BindToDb(DefaultDb)
         questionDocTE=questionDoc.TopElem
@@ -509,20 +551,31 @@ function setAssessmentCategory(assessmentDoc, categoryId) {
 }
 
 /**
- * Проверяет, что код теста состоит только из латинских букв и цифр.
+ * Проверяет, что код теста состоит из латинских букв, цифр, дефиса и нижнего подчёркивания.
  */
 function isAssessmentCodeValid(code) {
   var charIndex;
-  var characters;
+  var charCodes;
+  var charCode;
 
   if (code === '') {
     return false;
   }
 
-  characters = code.split('');
+  charCodes = StrToCharCodesArray(code);
 
-  for (charIndex = 0; charIndex < characters.length; charIndex++) {
-    if (!StrContains(CONFIG.ASSESSMENT_CODE_ALLOWED_CHARS, characters[charIndex], false)) {
+  for (charIndex = 0; charIndex < charCodes.length; charIndex++) {
+    charCode = charCodes[charIndex];
+
+    if (
+      !(
+        (charCode >= 48 && charCode <= 57) ||
+        (charCode >= 65 && charCode <= 90) ||
+        (charCode >= 97 && charCode <= 122) ||
+        charCode === 45 ||
+        charCode === 95
+      )
+    ) {
       return false;
     }
   }
@@ -584,7 +637,7 @@ function createAssessment(body) {
   if (!isAssessmentCodeValid(code)) {
     throw HttpError({
       code: 400,
-      message: 'Код теста может содержать только английские буквы и цифры без пробелов.'
+      message: 'Код теста может содержать английские буквы, цифры, дефис и нижнее подчёркивание без пробелов.'
     });
   }
 

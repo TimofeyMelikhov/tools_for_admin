@@ -1,0 +1,156 @@
+.container {
+	max-width: 1180px;
+	margin: 0 auto;
+}
+
+.pageHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 20px;
+}
+
+.questionCard {
+	position: relative;
+}
+
+.questionAccordion {
+	overflow: hidden;
+}
+
+.questionSummary {
+	padding-right: 88px;
+}
+
+.summaryContent {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	width: 100%;
+}
+
+.summaryActions {
+	position: absolute;
+	top: 11px;
+	right: 48px;
+	z-index: 1;
+}
+
+.formGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.fullWidth {
+	grid-column: 1 / -1;
+}
+
+.answerSection {
+	margin-top: 24px;
+	padding-top: 24px;
+	border-top: 1px solid var(--mui-palette-divider, rgba(0, 0, 0, 0.12));
+}
+
+.answerSectionHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.answerError {
+	margin-bottom: 16px;
+}
+
+.answerRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 8px;
+}
+
+.choiceAnswerRow {
+	grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.orderAnswerRow {
+	grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.matchAnswerRow {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.orderControls {
+	align-self: stretch;
+	justify-content: center;
+}
+
+.correctAnswerControl {
+	margin-right: 0;
+	white-space: nowrap;
+}
+
+.advancedSettings {
+	margin-top: 24px;
+	border-top: 1px solid var(--mui-palette-divider, rgba(0, 0, 0, 0.12));
+}
+
+.actions {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+	.pageHeader {
+		flex-direction: column;
+	}
+}
+
+@media (max-width: 720px) {
+
+	.formGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.answerSectionHeader {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.answerRow {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.choiceAnswerRow,
+	.matchAnswerRow {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.matchAnswerRow > :nth-child(2) {
+		grid-column: 1;
+	}
+
+	.orderAnswerRow {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+	}
+
+	.orderControls {
+		grid-row: span 2;
+	}
+
+	.correctAnswerControl {
+		grid-column: 1;
+	}
+
+	.actions {
+		align-items: stretch;
+		flex-direction: column;
+	}
+}
