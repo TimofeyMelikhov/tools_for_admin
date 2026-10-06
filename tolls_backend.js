@@ -15,7 +15,12 @@ Request.AddRespHeader("X-Frame-Options", "SAMEORIGIN");
 
 var CONFIG = {
   ASSESSMENT_CATEGORY_ID: '7196223977071540682',
+<<<<<<< HEAD
   MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score'
+=======
+  MAX_SCORE_CUSTOM_FIELD_CODE: 'max_score',
+  ASSESSMENT_CODE_ALLOWED_CHARS: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+>>>>>>> 691516930e14bee22e8e206a5c78c944488e110c
 };
 
 /* --- utils --- */
